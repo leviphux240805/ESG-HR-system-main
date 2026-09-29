@@ -1,0 +1,500 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "description" : "API quản lý chuỗi trường mầm non. Lỗi trả về theo RFC 7807 (application/problem+json).",
+    "title" : "Preschool Management API",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "security" : [ {
+    "bearerAuth" : [ ]
+  } ],
+  "paths" : {
+    "/api/v1/auth/login" : {
+      "post" : {
+        "description" : "Trả access token trong body và đặt refresh token vào cookie httpOnly.",
+        "operationId" : "login",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "security" : [ ],
+        "summary" : "Đăng nhập bằng email hoặc số điện thoại",
+        "tags" : [ "Xác thực" ]
+      }
+    },
+    "/api/v1/auth/logout" : {
+      "post" : {
+        "operationId" : "logout",
+        "responses" : {
+          "204" : {
+            "description" : "Đã đăng xuất"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "security" : [ ],
+        "summary" : "Đăng xuất: thu hồi refresh token và xóa cookie",
+        "tags" : [ "Xác thực" ]
+      }
+    },
+    "/api/v1/auth/refresh" : {
+      "post" : {
+        "operationId" : "refresh",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "security" : [ ],
+        "summary" : "Lấy access token mới bằng refresh token trong cookie",
+        "tags" : [ "Xác thực" ]
+      }
+    },
+    "/api/v1/files/upload-url" : {
+      "post" : {
+        "description" : "Tạo bản ghi file (PENDING) và trả link PUT có hạn. Sau khi PUT xong phải gọi complete.",
+        "operationId" : "uploadUrl",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UploadUrlRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UploadUrlResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xin link upload",
+        "tags" : [ "File" ]
+      }
+    },
+    "/api/v1/files/{id}/complete" : {
+      "post" : {
+        "description" : "Kiểm tra nội dung trên storage đúng loại và dung lượng; sai thì xóa file.",
+        "operationId" : "complete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FileResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xác nhận đã upload",
+        "tags" : [ "File" ]
+      }
+    },
+    "/api/v1/files/{id}/download-url" : {
+      "get" : {
+        "operationId" : "downloadUrl",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DownloadUrlResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xin link tải file (có hạn)",
+        "tags" : [ "File" ]
+      }
+    },
+    "/api/v1/me" : {
+      "get" : {
+        "operationId" : "me",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Thông tin người dùng hiện tại, vai trò và các cơ sở được phép",
+        "tags" : [ "Xác thực" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "DownloadUrlResponse" : {
+        "type" : "object",
+        "properties" : {
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "expiresAt", "url" ]
+      },
+      "FileResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "originalName" : {
+            "type" : "string"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Rỗng = dùng chung toàn chuỗi"
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "READY" ]
+          }
+        },
+        "required" : [ "id", "mimeType", "originalName", "sizeBytes", "status" ]
+      },
+      "LoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "identifier" : {
+            "type" : "string",
+            "description" : "Email hoặc số điện thoại",
+            "example" : "owner@preschool.local",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "rememberMe" : {
+            "type" : "boolean",
+            "description" : "Giữ đăng nhập 7 ngày; bỏ trống/false = hết khi đóng trình duyệt"
+          }
+        },
+        "required" : [ "identifier", "password" ]
+      },
+      "MeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "chainWide" : {
+            "type" : "boolean",
+            "description" : "Có vai trò cấp chuỗi: được chọn \"Tất cả cơ sở\""
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleGrant"
+            }
+          },
+          "schools" : {
+            "type" : "array",
+            "description" : "Các cơ sở được phép chọn trên header",
+            "items" : {
+              "$ref" : "#/components/schemas/SchoolSummary"
+            }
+          }
+        },
+        "required" : [ "chainWide", "email", "fullName", "id", "roles", "schools" ]
+      },
+      "RoleGrant" : {
+        "type" : "object",
+        "properties" : {
+          "role" : {
+            "type" : "string",
+            "enum" : [ "OWNER", "CHAIN_ADMIN", "ACCOUNTANT", "PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "STAFF" ]
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Rỗng = toàn chuỗi"
+          }
+        },
+        "required" : [ "role" ]
+      },
+      "SchoolSummary" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id", "name" ]
+      },
+      "TokenResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "expiresIn" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Số giây còn hiệu lực"
+          },
+          "tokenType" : {
+            "type" : "string",
+            "example" : "Bearer"
+          }
+        },
+        "required" : [ "accessToken", "expiresIn", "tokenType" ]
+      },
+      "UploadUrlRequest" : {
+        "type" : "object",
+        "properties" : {
+          "contentType" : {
+            "type" : "string",
+            "example" : "application/pdf",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "fileName" : {
+            "type" : "string",
+            "example" : "hop-dong.pdf",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Cơ sở sở hữu file; bỏ trống = cơ sở đang chọn (hoặc toàn chuỗi nếu đang chọn \"Tất cả cơ sở\")"
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kích thước file (byte)"
+          }
+        },
+        "required" : [ "contentType", "fileName", "sizeBytes" ]
+      },
+      "UploadUrlResponse" : {
+        "type" : "object",
+        "properties" : {
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "file" : {
+            "$ref" : "#/components/schemas/FileResponse"
+          },
+          "headers" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Header bắt buộc gửi kèm khi PUT"
+          },
+          "method" : {
+            "type" : "string",
+            "example" : "PUT"
+          },
+          "uploadUrl" : {
+            "type" : "string",
+            "description" : "Link PUT nội dung file lên storage"
+          }
+        },
+        "required" : [ "expiresAt", "file", "headers", "method", "uploadUrl" ]
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "bearerFormat" : "JWT",
+        "scheme" : "bearer",
+        "type" : "http"
+      }
+    }
+  }
+}

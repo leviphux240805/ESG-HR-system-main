@@ -7,6 +7,8 @@ import com.preschool.account.service.AuthService.AuthResult;
 import com.preschool.security.AuthProperties;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -45,14 +47,15 @@ public class AuthController {
 	@PostMapping("/refresh")
 	@Operation(summary = "Lấy access token mới bằng refresh token trong cookie")
 	public ResponseEntity<TokenResponse> refresh(
-			@CookieValue(name = AuthProperties.REFRESH_COOKIE_NAME, required = false) String refreshToken) {
+			@Parameter(hidden = true) @CookieValue(name = AuthProperties.REFRESH_COOKIE_NAME, required = false) String refreshToken) {
 		return tokens(authService.refresh(refreshToken));
 	}
 
 	@PostMapping("/logout")
 	@Operation(summary = "Đăng xuất: thu hồi refresh token và xóa cookie")
+	@ApiResponse(responseCode = "204", description = "Đã đăng xuất")
 	public ResponseEntity<Void> logout(
-			@CookieValue(name = AuthProperties.REFRESH_COOKIE_NAME, required = false) String refreshToken) {
+			@Parameter(hidden = true) @CookieValue(name = AuthProperties.REFRESH_COOKIE_NAME, required = false) String refreshToken) {
 		authService.logout(refreshToken);
 		ResponseCookie cleared = cookie("").maxAge(0).build();
 		return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cleared.toString()).build();

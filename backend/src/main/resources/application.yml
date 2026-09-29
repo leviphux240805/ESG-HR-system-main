@@ -42,6 +42,8 @@ app:
     bucket: ${S3_BUCKET:preschool}
 
 springdoc:
+  # Thứ tự key ổn định để snapshot frontend/openapi.json không đổi vô cớ
+  writer-with-order-by-keys: true
   api-docs:
     path: /v3/api-docs
   swagger-ui:
