@@ -1,0 +1,338 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Custom Font Face Declarations - FZ Poppins Family */
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-ThinItalic.ttf') format('truetype');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-ExtraLightItalic.ttf') format('truetype');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+} 
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-ExtraBoldItalic.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FZ Poppins';
+  src: url('/fonts/FZ Poppins-BlackItalic.ttf') format('truetype');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 150 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 30% 10%;
+
+    --primary: 152 85% 16%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 60% 96%;
+    --secondary-foreground: 152 85% 16%;
+
+    --muted: 150 20% 94%;
+    --muted-foreground: 150 10% 45%;
+
+    --accent: 152 70% 25%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 15% 88%;
+    --input: 150 15% 88%;
+    --ring: 152 85% 16%;
+
+    --radius: 0.5rem;
+
+    /* Brand Colors */
+    --brand-900: 152 85% 16%;
+    --brand-800: 152 80% 20%;
+    --brand-700: 152 75% 27%;
+    --brand-600: 152 70% 35%;
+    --brand-500: 152 65% 45%;
+    --brand-400: 152 55% 55%;
+    --brand-300: 152 50% 65%;
+    --brand-200: 150 45% 80%;
+    --brand-100: 150 60% 92%;
+    --brand-50: 138 76% 97%;
+
+    /* Gradients */
+    --gradient-sidebar: linear-gradient(
+      180deg,
+      hsl(var(--brand-900)) 0%,
+      hsl(var(--brand-700)) 100%
+    );
+    --gradient-brand: linear-gradient(
+      135deg,
+      hsl(var(--brand-800)) 0%,
+      hsl(var(--brand-600)) 100%
+    );
+
+    /* Shadows */
+    --shadow-card: 0 1px 3px 0 hsl(150 20% 10% / 0.1),
+      0 1px 2px -1px hsl(150 20% 10% / 0.1);
+    --shadow-elevated: 0 10px 15px -3px hsl(150 20% 10% / 0.1),
+      0 4px 6px -4px hsl(150 20% 10% / 0.1);
+    --shadow-dropdown: 0 4px 6px -1px hsl(150 20% 10% / 0.1),
+      0 2px 4px -2px hsl(150 20% 10% / 0.1);
+
+    --sidebar-background: 152 85% 16%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 152 85% 16%;
+    --sidebar-accent: 152 70% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 152 60% 30%;
+    --sidebar-ring: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 150 30% 8%;
+    --foreground: 150 10% 95%;
+
+    --card: 150 25% 12%;
+    --card-foreground: 150 10% 95%;
+
+    --popover: 150 25% 12%;
+    --popover-foreground: 150 10% 95%;
+
+    --primary: 152 70% 45%;
+    --primary-foreground: 150 30% 8%;
+
+    --secondary: 150 20% 18%;
+    --secondary-foreground: 150 10% 90%;
+
+    --muted: 150 20% 18%;
+    --muted-foreground: 150 10% 60%;
+
+    --accent: 152 60% 35%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 20% 22%;
+    --input: 150 20% 22%;
+    --ring: 152 70% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: "FZ Poppins", "Inter", system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .sidebar-gradient {
+    background: var(--gradient-sidebar);
+  }
+
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .editable-cell {
+    @apply cursor-pointer transition-colors duration-150;
+  }
+
+  .editable-cell:hover {
+    @apply bg-brand-50;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-active {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .status-inactive {
+    @apply bg-gray-100 text-gray-800;
+  }
+
+  .status-paid {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+
+  .status-pending {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .dropzone {
+    @apply border-2 border-dashed border-brand-300 rounded-xl p-12 text-center transition-all duration-200;
+  }
+
+  .dropzone:hover {
+    @apply border-brand-500 bg-brand-50;
+  }
+
+  .metric-card {
+    @apply bg-card rounded-xl p-6 card-shadow transition-all duration-200 hover:card-elevated;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}
