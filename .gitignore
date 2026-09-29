@@ -10,6 +10,9 @@ backend/.mvn/wrapper/maven-wrapper.jar
 # Frontend
 node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
+backend/backend.log
 
 # IDE / OS
 .idea/
