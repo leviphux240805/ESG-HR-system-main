@@ -1,0 +1,4 @@
+spring:
+  flyway:
+    # Seed dữ liệu dev chỉ nạp ở profile này
+    locations: classpath:db/migration,classpath:db/dev
