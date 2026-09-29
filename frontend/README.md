@@ -1,73 +1,28 @@
-# Welcome to your Lovable project
+# Frontend – Preschool Management
 
-## Project info
+React 18 + Vite + TypeScript + shadcn/ui + TanStack Query. Cách chạy toàn bộ dự án: xem [README ở gốc repo](../README.md).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Lệnh
 
-## How can I edit this code?
+| Lệnh | Việc |
+|---|---|
+| `npm run dev` | Dev server http://localhost:8080, proxy `/api` → backend (mặc định `http://localhost:8081`, đổi bằng `VITE_API_PROXY_TARGET`) |
+| `npm run lint` | ESLint |
+| `npm run build` | Kiểm tra kiểu (tsc) rồi build |
+| `npm run gen:api` | Sinh `src/api/schema.d.ts` từ `openapi.json` (backend test ghi file này) |
 
-There are several ways of editing your application.
+## Gọi API
 
-**Use Lovable**
+- `src/api/client.ts`: client có type (`openapi-fetch`). Tự gắn access token và header `X-School-Id` (cơ sở đang
+  chọn), gặp 401 thì refresh một lần rồi gửi lại. Không tự viết type trùng với DTO backend: dùng
+  `components["schemas"][...]` trong `src/api/schema.d.ts`.
+- Dùng `unwrap(await api.GET(...))` trong `queryFn`/`mutationFn`; lỗi là `ApiError` với thông điệp tiếng Việt
+  (`errorMessage(error)` để hiện toast).
+- `useAuth()`: người dùng hiện tại, vai trò, cơ sở đang chọn. `hasRole` chỉ để ẩn/hiện giao diện; quyền thật
+  kiểm tra ở backend.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Trang cũ từ ESG HR
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Các trang Nhân viên, Chấm công, Bảng lương, Phiếu lương, Cài đặt, Dashboard vẫn còn trong `src/` nhưng chưa được
+nối vào router vì còn gọi Supabase. Mỗi trang được chuyển sang API mới ở giai đoạn tương ứng (xem
+`docs/tien-do.md`). Các file này tạm được nới quy tắc `no-explicit-any` trong `eslint.config.js`.

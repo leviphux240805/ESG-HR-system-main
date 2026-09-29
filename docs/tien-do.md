@@ -1,63 +1,70 @@
 # Tiến độ
 
-## Giai đoạn hiện tại: 1 – Nền tảng
+## Giai đoạn hiện tại: 1 – Nền tảng (xong phần cốt lõi, chờ nghiệm thu)
 
-Kế hoạch đã duyệt ngày 2026-09-29. Quyết định đi kèm ghi ở mục "Nhật ký thay đổi thiết kế" trong `thiet-ke.md`.
+Kế hoạch duyệt ngày 2026-09-29. Quyết định đi kèm ghi ở mục "Nhật ký thay đổi thiết kế" trong `thiet-ke.md`.
 
 ### Đã xong
 
-- Khảo sát frontend: 74 lời gọi Supabase trong 14 file, đã nhóm theo giai đoạn chuyển đổi (xem bảng dưới).
-- Chốt quyết định: Spring Boot 4.0 (dùng 4.0.8); đăng nhập bằng email hoặc SĐT; `files` có `school_id` + `status` + bước `complete`; quên mật khẩu làm sau cùng; `git init` mới, chưa có remote.
-- Môi trường: JDK Temurin 21, Git, Docker Desktop (WSL2) đã chạy.
-- **Bước 0** (commit `faa5ed7`, `50dce28`): repo git, commit mốc mã ESG, `.gitignore`/`.gitattributes`, docs.
-- **B1** (commit `a123667`): Spring Boot 4.0.8 + docker-compose (postgres:18-alpine, chainguard/minio) + `.env.example`.
-- **B2** (commit `42a13a3`): Flyway V1 (9 bảng) + entity JPA + seed dev (2 cơ sở, 8 tài khoản).
-- **B3** (commit `2931013`): lỗi RFC 7807 tiếng Việt + OpenAPI (bearer, header X-School-Id).
-
-### Đang dở
-
-- **B4 – Auth** (chưa commit): code + 15 test đã xong, `./mvnw test` xanh 27/27. Chưa chạy thử tay trên server dev và chưa commit vì shell tạm thời bị chặn.
-- **B5 – SchoolScope** (chưa commit, **chưa chạy test**): `SchoolScopeFilter`, `SchoolScope`, `@perm`, Hibernate filter bật qua `SchoolScopedTransactionManager` (dùng `applyToLoadByKey` để lọc cả `findById`), test `SchoolScopeTests`. Cần chạy `./mvnw test`, sửa nếu đỏ, rồi commit B4 và B5 thành hai commit riêng.
-
-### Các bước giai đoạn 1
-
-| # | Bước | Trạng thái |
+| # | Bước | Commit |
 |---|---|---|
-| 0 | `git init`, commit mốc mã ESG, `.gitignore` gốc, docs | Xong |
-| B1 | Skeleton Spring Boot 4 + docker-compose (postgres, minio) + `.env.example` | Xong |
-| B2 | Flyway V1 (9 bảng nền tảng) + seed dev | Xong |
-| B3 | Lỗi RFC 7807 tiếng Việt + OpenAPI | Xong |
-| B4 | Auth: login (email/SĐT), refresh, logout, `/me` | Code + test xanh, chờ commit |
-| B5 | SchoolScope + `X-School-Id` + Hibernate `@Filter` + `@perm` | Code xong, chưa chạy test |
-| B6 | Files: upload-url, complete, download-url (MinIO) | |
-| B7 | Snapshot OpenAPI cho frontend | |
-| F1 | Gỡ lovable-tagger, proxy `/api` | |
-| F2 | API client có type (openapi-typescript + openapi-fetch) | |
-| F3 | AuthContext + Login mới | |
-| F4 | Header chọn cơ sở, Sidebar theo vai trò, đổi tên, ẩn trang cũ | |
-| F5 | README, CI, cập nhật tiến độ | |
+| 0 | Repo git, commit mốc mã ESG, `.gitignore`/`.gitattributes`, docs | `faa5ed7`, `50dce28` |
+| B1 | Spring Boot 4.0.8 + docker-compose (postgres:18-alpine, chainguard/minio) + `.env.example` | `a123667` |
+| B2 | Flyway V1 (9 bảng nền tảng) + entity JPA + seed dev (2 cơ sở, 8 tài khoản) | `42a13a3` |
+| B3 | Lỗi RFC 7807 tiếng Việt + OpenAPI | `2931013` |
+| B4+B5 | Auth (login email/SĐT, refresh xoay vòng, logout, `/me`) + SchoolScope, `X-School-Id`, Hibernate filter, `@perm` | `a5d3eb3` |
+| B6 | Files: upload-url, complete (kiểm tra dung lượng + magic bytes), download-url qua MinIO | `bac134b` |
+| B7 | Snapshot OpenAPI `frontend/openapi.json` + schema `Problem` | `d591147` |
+| F1 | Gỡ lovable-tagger, proxy `/api`, lint xanh | `34a453d` |
+| F2 | API client có type (openapi-typescript + openapi-fetch), tự refresh, build có typecheck | `1d47d79` |
+| F3 | AuthContext + Login mới, route guard, ẩn trang cũ | `c7ba28c` |
+| F4 | Header chọn cơ sở, Sidebar theo vai trò, đổi tên, menu điện thoại, trang "Tệp (thử nghiệm)" | `09afc30` |
+| F5 | README, CI GitHub Actions, CLAUDE.md, tiến độ | commit cuối |
+
+Kiểm tra cuối (2026-09-29): `./mvnw test` 44/44 xanh; `npm run lint` 0 lỗi; `npm run build` xanh. Đã chạy tay qua
+proxy Vite: đăng nhập seed (email và SĐT), refresh bằng cookie, `/me`, upload → complete → tải file qua MinIO
+(kể cả preflight CORS từ `localhost:8080`), user Cơ sở B tải file Cơ sở A bị 404.
+
+### Đang dở / chưa làm của giai đoạn 1
+
+- **Quên mật khẩu qua email**: theo quyết định làm sau cùng; link trên trang đăng nhập đang hướng dẫn liên hệ văn
+  phòng điều hành.
+- **Nghiệm thu giao diện bằng trình duyệt**: bộ chọn cơ sở, menu điện thoại, trang Tệp chưa được xem bằng mắt
+  (chỉ kiểm tra qua API).
+
+### Giả định đang dùng (cần chủ dự án xác nhận)
+
+- `TODO(assumption)` trong `FileService`: link tải file chung = người upload hoặc OWNER/CHAIN_ADMIN/PRINCIPAL. Từ
+  giai đoạn 2 mỗi module (hồ sơ nhân viên, thư viện văn bản) tự kiểm tra quyền trên bản ghi gắn file.
 
 ### Ghi chú kỹ thuật cần nhớ
 
-- Git Bash tự đổi đường dẫn kiểu `/data` khi gọi `docker`; đặt `MSYS_NO_PATHCONV=1`.
+- Hibernate filter bật cho **mọi EntityManager** qua `SchoolFilterInitializer` (không phải lúc mở transaction):
+  query method tự khai báo của Spring Data không mở transaction nên cách cũ bị lọt. Entity nghiệp vụ mới chỉ cần
+  gắn `@Filter(name = SchoolFilter.NAME)`.
+- Test chặn truy cập chéo cơ sở: kế thừa `ApiTestSupport`, dùng `TestData` tạo cơ sở/tài khoản riêng từng test.
 - Jackson 3 (Boot 4) từ chối `null` cho kiểu nguyên thủy: DTO nhận JSON dùng `Boolean`/`Integer` cho trường tùy chọn.
-- Frontend (F2): không gửi `Authorization` tới `/api/v1/auth/*` (token hết hạn làm endpoint công khai trả 401); backend đã bỏ qua `X-School-Id` trên `/auth/*` và `/me`.
-- Dòng `JWT_SECRET=` để trống trong `.env` sẽ ghi đè khóa mặc định dev bằng chuỗi rỗng; chỉ bỏ comment khi có giá trị.
+- springdoc dọn schema chưa dùng trước khi chạy customizer: schema thêm bằng tay phải thêm trong customizer.
+- Frontend không gửi `Authorization` tới `/api/v1/auth/*`; backend bỏ qua `X-School-Id` trên `/auth/*` và `/me`.
+- Dòng `JWT_SECRET=` để trống trong `.env` ghi đè khóa mặc định dev bằng chuỗi rỗng; chỉ bỏ comment khi có giá trị.
+- Git Bash tự đổi đường dẫn kiểu `/data` khi gọi `docker`; đặt `MSYS_NO_PATHCONV=1`.
+- `chainguard/minio` chỉ có tag `latest` (không ghim được phiên bản); chỉ dùng cho dev/test.
+- ESLint: các file cũ còn gọi Supabase được nới `no-explicit-any` (danh sách trong `eslint.config.js`); chuyển
+  đổi xong file nào thì xóa khỏi danh sách.
 
 ### Phụ thuộc Supabase còn lại theo giai đoạn
 
 | Giai đoạn | File |
 |---|---|
-| 1 | `lib/supabase.ts`, `contexts/AuthContext.tsx`, `service/authService.ts`, `lib/authHelpers.ts`, `pages/Login.tsx` |
 | 2 | `hooks/useEmployee.ts`, `lib/fileUploader.ts`, `components/employees/shared/MultiDocumentUploadField.tsx` (+ dùng gián tiếp: `CCCDUploadModal`, `DocumentUploadField`, các tab nhân viên, `pages/Employees`) |
 | 3 | `hooks/useAttendanceData.ts`, `lib/attendanceReconciliation.ts`, `components/attendance/AttendanceUploadModal.tsx`, `AttendanceConfigModal.tsx`, `pages/Attendance.tsx` |
 | 4 | `hooks/usePayrollData.ts`, `pages/Payroll.tsx`, `pages/Payslips.tsx`, `api/send-salary-emails.ts`, `api/_lib/emailService.ts` |
-| 7 | `pages/Dashboard.tsx` |
+| 7 | `pages/Dashboard.tsx`, `pages/Index.tsx` |
 
-`@supabase/supabase-js` chỉ gỡ được khi các file trên đã chuyển xong.
+`lib/supabase.ts` và `@supabase/supabase-js` chỉ gỡ được khi các file trên đã chuyển xong.
 
 ### Việc tiếp theo
 
-1. Chạy `./mvnw test` cho B5, sửa nếu đỏ.
-2. Chạy thử tay đăng nhập seed + `/me`; commit B4, rồi commit B5.
-3. B6 (files + MinIO), B7, rồi phần frontend F1–F5.
+1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1.
+2. Quên mật khẩu qua email (cuối giai đoạn 1 hoặc đầu giai đoạn 2).
+3. Giai đoạn 2 – Nhân sự + Tài liệu: đọc thiết kế, lập kế hoạch, chờ duyệt.
