@@ -33,10 +33,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Bên trái – thương hiệu */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/images/clover.png" alt="" className="w-full h-full object-cover" />
-        </div>
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden sidebar-gradient">
         <div className="relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
