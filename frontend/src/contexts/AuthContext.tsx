@@ -10,9 +10,10 @@ import {
 } from "@/api/client";
 import { queryClient } from "@/api/queryClient";
 import type { components } from "@/api/schema";
+import { type RoleCode, rolesInScope } from "@/lib/permissions";
 
+export type { RoleCode };
 export type Me = components["schemas"]["MeResponse"];
-export type RoleCode = components["schemas"]["RoleGrant"]["role"];
 export type SchoolSummary = components["schemas"]["SchoolSummary"];
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
@@ -133,22 +134,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!me) return;
       if (schoolId === null && !me.chainWide) return;
       if (schoolId !== null && !me.schools.some((s) => s.id === schoolId)) return;
+      // Header X-School-Id đổi ngay; query dùng schoolQueryKey (useCurrentSchool) tự tải lại theo cơ sở mới
       setClientSchool(schoolId);
       setSelectedSchoolId(schoolId);
       storeSchool(me.id, schoolId);
-      // Dữ liệu đang hiển thị thuộc cơ sở cũ: tải lại theo cơ sở mới
-      queryClient.invalidateQueries();
     },
     [me],
   );
 
   const hasRole = useCallback(
-    (...roles: RoleCode[]) =>
-      !!me?.roles.some(
-        (grant) =>
-          roles.includes(grant.role) &&
-          (!grant.schoolId || selectedSchoolId === null || grant.schoolId === selectedSchoolId),
-      ),
+    (...roles: RoleCode[]) => rolesInScope(me?.roles ?? [], selectedSchoolId).some((r) => roles.includes(r)),
     [me, selectedSchoolId],
   );
 
