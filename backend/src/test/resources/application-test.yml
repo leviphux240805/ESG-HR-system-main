@@ -1,0 +1,4 @@
+app:
+  auth:
+    jwt-secret: test-only-secret-0123456789abcdefghijklmnop
+    refresh-cookie-secure: false

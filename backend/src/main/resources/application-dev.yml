@@ -2,3 +2,10 @@ spring:
   flyway:
     # Seed dữ liệu dev chỉ nạp ở profile này
     locations: classpath:db/migration,classpath:db/dev
+
+app:
+  auth:
+    # Khóa chỉ dùng cho dev; môi trường thật phải đặt JWT_SECRET riêng
+    jwt-secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    # Dev chạy http://localhost nên không bật cờ Secure
+    refresh-cookie-secure: ${COOKIE_SECURE:false}

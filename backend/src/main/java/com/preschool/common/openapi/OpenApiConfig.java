@@ -1,6 +1,6 @@
 package com.preschool.common.openapi;
 
-import java.util.List;
+import com.preschool.security.SchoolScope;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -18,11 +18,6 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
 	public static final String BEARER = "bearerAuth";
-
-	public static final String SCHOOL_HEADER = "X-School-Id";
-
-	/** Đường dẫn không cần cơ sở đang chọn (xác thực, thông tin người dùng). */
-	private static final List<String> SCHOOL_AGNOSTIC_PREFIXES = List.of("/api/v1/auth/", "/api/v1/me");
 
 	@Bean
 	OpenAPI preschoolOpenApi() {
@@ -42,11 +37,12 @@ public class OpenApiConfig {
 				return;
 			}
 			openApi.getPaths().forEach((path, item) -> {
-				if (!path.startsWith("/api/v1/") || SCHOOL_AGNOSTIC_PREFIXES.stream().anyMatch(path::startsWith)) {
+				if (!path.startsWith("/api/v1/")
+						|| SchoolScope.SCHOOL_AGNOSTIC_PREFIXES.stream().anyMatch(path::startsWith)) {
 					return;
 				}
 				item.readOperations().forEach(operation -> operation.addParametersItem(new HeaderParameter()
-					.name(SCHOOL_HEADER)
+					.name(SchoolScope.HEADER)
 					.required(false)
 					.description("Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.")
 					.schema(new StringSchema().format("uuid"))));

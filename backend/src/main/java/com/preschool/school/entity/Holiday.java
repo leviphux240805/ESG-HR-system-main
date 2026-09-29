@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.SchoolFilter;
+
+import org.hibernate.annotations.Filter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +15,7 @@ import jakarta.persistence.Table;
 /** Ngày lễ; {@code schoolId} rỗng = áp dụng toàn chuỗi. */
 @Entity
 @Table(name = "holidays")
+@Filter(name = SchoolFilter.NAME)
 public class Holiday extends BaseEntity {
 
 	@Column(name = "school_id")

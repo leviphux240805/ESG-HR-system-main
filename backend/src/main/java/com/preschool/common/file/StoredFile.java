@@ -3,6 +3,9 @@ package com.preschool.common.file;
 import java.util.UUID;
 
 import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.SchoolFilter;
+
+import org.hibernate.annotations.Filter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +16,7 @@ import jakarta.persistence.Table;
 /** Metadata một file trên S3/MinIO (bảng {@code files}); nội dung file không nằm trong DB. */
 @Entity
 @Table(name = "files")
+@Filter(name = SchoolFilter.NAME)
 public class StoredFile extends BaseEntity {
 
 	public enum Status {
