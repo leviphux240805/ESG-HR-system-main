@@ -1,0 +1,39 @@
+# Hạ tầng dev: PostgreSQL + MinIO (S3). Backend và frontend chạy trực tiếp trên máy.
+# Giá trị lấy từ .env (xem .env.example); thiếu .env thì dùng mặc định dev bên dưới.
+name: preschool
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-preschool}
+      POSTGRES_USER: ${DB_USERNAME:-preschool}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-preschool}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # Postgres 18 lưu dữ liệu trong thư mục con theo phiên bản, nên gắn volume vào /var/lib/postgresql
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    # MinIO đã ngừng phát hành image community (minio/minio, quay.io/minio/minio);
+    # Chainguard là nguồn còn cập nhật và chỉ có tag latest.
+    image: chainguard/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-preschool}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-preschool-secret}
+    ports:
+      - "${S3_PORT:-9000}:9000"
+      - "${S3_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+
+volumes:
+  postgres-data:
+  minio-data:
