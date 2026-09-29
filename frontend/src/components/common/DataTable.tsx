@@ -3,6 +3,7 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
+  type RowData,
   type RowSelectionState,
   useReactTable,
   type VisibilityState,
@@ -27,19 +28,16 @@ import type { Action, Resource } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { EmptyState, ErrorState, TableSkeleton } from "./States";
 
-/** Thông tin thêm cho cột DataTable. */
-export interface DataTableColumnMeta {
-  /** Tên cột trong menu ẩn/hiện (mặc định lấy header dạng chữ). */
-  label?: string;
-  /** Chỉ hiện cột khi có quyền (ví dụ cột lương). */
-  permission?: { action: Action; resource: Resource };
-  /** Căn phải (cột tiền, số). */
-  align?: "right";
-}
-
+/** Thông tin thêm cho cột DataTable (khai báo qua `meta` của ColumnDef). */
 declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData, TValue> extends DataTableColumnMeta {}
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /** Tên cột trong menu ẩn/hiện (mặc định lấy header dạng chữ). */
+    label?: string;
+    /** Chỉ hiện cột khi có quyền (ví dụ cột lương). */
+    permission?: { action: Action; resource: Resource };
+    /** Căn phải (cột tiền, số). */
+    align?: "right";
+  }
 }
 
 interface DataTableProps<T> {
@@ -98,7 +96,9 @@ export function DataTable<T>({
       enableHiding: false,
       header: ({ table }) => (
         <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          checked={
+            table.getIsAllPageRowsSelected() ? true : table.getIsSomePageRowsSelected() ? "indeterminate" : false
+          }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(value === true)}
           aria-label="Chọn tất cả dòng trong trang"
         />
