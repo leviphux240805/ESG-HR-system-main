@@ -1,6 +1,6 @@
 # Tiến độ
 
-## Giai đoạn hiện tại: 1 – Nền tảng (xong phần cốt lõi, chờ nghiệm thu)
+## Giai đoạn hiện tại: 1 – Nền tảng (xong, chờ nghiệm thu)
 
 Kế hoạch duyệt ngày 2026-09-29. Quyết định đi kèm ghi ở mục "Nhật ký thay đổi thiết kế" trong `thiet-ke.md`.
 
@@ -19,7 +19,9 @@ Kế hoạch duyệt ngày 2026-09-29. Quyết định đi kèm ghi ở mục "N
 | F2 | API client có type (openapi-typescript + openapi-fetch), tự refresh, build có typecheck | `1d47d79` |
 | F3 | AuthContext + Login mới, route guard, ẩn trang cũ | `c7ba28c` |
 | F4 | Header chọn cơ sở, Sidebar theo vai trò, đổi tên, menu điện thoại, trang "Tệp (thử nghiệm)" | `09afc30` |
-| F5 | README, CI GitHub Actions, CLAUDE.md, tiến độ | commit cuối |
+| F5 | README, CI GitHub Actions, CLAUDE.md, tiến độ | `cedfb2d` |
+| B8 | Quên mật khẩu qua email (V2 `password_reset_tokens`, Mailpit cho dev) | `419ef20` |
+| F6 | Trang Quên mật khẩu / Đặt lại mật khẩu, khung `AuthLayout` dùng chung | commit cuối |
 
 Kiểm tra cuối (2026-09-29): `./mvnw test` 44/44 xanh; `npm run lint` 0 lỗi; `npm run build` xanh. Đã chạy tay qua
 proxy Vite: đăng nhập seed (email và SĐT), refresh bằng cookie, `/me`, upload → complete → tải file qua MinIO
@@ -27,10 +29,9 @@ proxy Vite: đăng nhập seed (email và SĐT), refresh bằng cookie, `/me`, u
 
 ### Đang dở / chưa làm của giai đoạn 1
 
-- **Quên mật khẩu qua email**: theo quyết định làm sau cùng; link trên trang đăng nhập đang hướng dẫn liên hệ văn
-  phòng điều hành.
-- **Nghiệm thu giao diện bằng trình duyệt**: bộ chọn cơ sở, menu điện thoại, trang Tệp chưa được xem bằng mắt
-  (chỉ kiểm tra qua API).
+- Chủ dự án đã chạy thử giao diện (đăng nhập, bộ chọn cơ sở, trang Tệp) ngày 2026-09-29.
+- Quên mật khẩu: backend đã thử với Mailpit thật (email tới đúng người, có link); trang đặt lại mật khẩu chưa
+  được bấm thử trên trình duyệt.
 
 ### Giả định đang dùng (cần chủ dự án xác nhận)
 
@@ -66,5 +67,4 @@ proxy Vite: đăng nhập seed (email và SĐT), refresh bằng cookie, `/me`, u
 ### Việc tiếp theo
 
 1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1.
-2. Quên mật khẩu qua email (cuối giai đoạn 1 hoặc đầu giai đoạn 2).
-3. Giai đoạn 2 – Nhân sự + Tài liệu: đọc thiết kế, lập kế hoạch, chờ duyệt.
+2. Giai đoạn 2 – Nhân sự + Tài liệu: đọc thiết kế, lập kế hoạch, chờ duyệt.

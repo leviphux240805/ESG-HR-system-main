@@ -20,7 +20,7 @@ docs/                thiet-ke.md, tien-do.md
 
 Cập nhật mục này khi lệnh thay đổi.
 
-- Hạ tầng dev: `docker compose up -d` (PostgreSQL 5432, MinIO 9000/console 9001)
+- Hạ tầng dev: `docker compose up -d` (PostgreSQL 5432, MinIO 9000/console 9001, Mailpit SMTP 1025/web 8025)
 - Backend: `cd backend && ./mvnw spring-boot:run` (cổng 8081, profile `dev` có seed) · test: `./mvnw test` (cần Docker; đồng thời ghi `frontend/openapi.json`)
 - Frontend: `cd frontend && npm install && npm run dev` (cổng 8080, proxy `/api` → 8081) · kiểm tra: `npm run lint && npm run build` (build có typecheck)
 - Đổi API: chạy `./mvnw test` rồi `cd frontend && npm run gen:api`, commit cả `openapi.json` và `src/api/schema.d.ts`

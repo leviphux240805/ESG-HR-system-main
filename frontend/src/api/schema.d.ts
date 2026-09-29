@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gửi email đặt lại mật khẩu
+         * @description Luôn trả 204 dù tài khoản có tồn tại hay không, để không lộ thông tin tài khoản.
+         */
+        post: operations["forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -52,6 +72,26 @@ export interface paths {
         put?: never;
         /** Lấy access token mới bằng refresh token trong cookie */
         post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đặt mật khẩu mới bằng link trong email
+         * @description Thành công thì mọi phiên đăng nhập của tài khoản bị đăng xuất.
+         */
+        post: operations["resetPassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -156,6 +196,13 @@ export interface components {
             /** @enum {string} */
             status: "PENDING" | "READY";
         };
+        ForgotPasswordRequest: {
+            /**
+             * @description Email hoặc số điện thoại
+             * @example owner@preschool.local
+             */
+            identifier: string;
+        };
         LoginRequest: {
             /**
              * @description Email hoặc số điện thoại
@@ -195,6 +242,12 @@ export interface components {
             /** @description Tiêu đề tiếng Việt theo mã HTTP */
             title: string;
             type?: string;
+        };
+        ResetPasswordRequest: {
+            /** @description Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số */
+            newPassword: string;
+            /** @description Token trong link email */
+            token: string;
         };
         RoleGrant: {
             /** @enum {string} */
@@ -259,6 +312,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã tiếp nhận */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -336,6 +420,37 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["TokenResponse"];
                 };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã đổi mật khẩu */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {

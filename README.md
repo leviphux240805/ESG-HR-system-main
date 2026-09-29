@@ -9,7 +9,7 @@ Web app quản lý chuỗi trường mầm non nhiều cơ sở (dựng lại t�
 |---|---|
 | `backend/` | Java 21, Spring Boot 4, PostgreSQL, Flyway, S3/MinIO |
 | `frontend/` | React 18, Vite, TypeScript, shadcn/ui, TanStack Query |
-| `docker-compose.yml` | PostgreSQL + MinIO cho môi trường dev |
+| `docker-compose.yml` | PostgreSQL + MinIO + Mailpit (SMTP giả) cho môi trường dev |
 
 ## Cần cài
 
@@ -20,7 +20,7 @@ Web app quản lý chuỗi trường mầm non nhiều cơ sở (dựng lại t�
 ## Chạy toàn bộ dự án
 
 ```bash
-# 1. Hạ tầng: PostgreSQL (5432) + MinIO (9000, console 9001)
+# 1. Hạ tầng: PostgreSQL (5432) + MinIO (9000, console 9001) + Mailpit (SMTP 1025, web 8025)
 docker compose up -d
 
 # 2. Backend: http://localhost:8081 (tự chạy migration + seed dev, tự tạo bucket)
@@ -59,7 +59,9 @@ Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`).
 2. Đăng nhập `0900000005` (giáo viên) → bộ chọn bị khóa ở Cơ sở A.
 3. Vào **Tệp (thử nghiệm)** → tải lên một file PDF/ảnh → **Tải về**. Xem file trên MinIO console
    http://localhost:9001 (tài khoản `preschool` / `preschool-secret`).
-4. API docs: http://localhost:8081/swagger-ui.html
+4. Bấm **Quên mật khẩu?** ở trang đăng nhập, nhập `0900000008` → mở Mailpit http://localhost:8025 xem email,
+   bấm link để đặt mật khẩu mới (tài khoản này sẽ đổi mật khẩu; seed không tự đặt lại).
+5. API docs: http://localhost:8081/swagger-ui.html
 
 ## Kiểm tra
 

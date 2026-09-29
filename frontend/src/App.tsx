@@ -7,6 +7,8 @@ import { Loader2 } from "lucide-react";
 import { queryClient } from "@/api/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Home from "./pages/Home";
 import FilesDemo from "./pages/FilesDemo";
 import NotFound from "./pages/NotFound";
@@ -38,6 +40,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={status === "authenticated" ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/"
         element={
