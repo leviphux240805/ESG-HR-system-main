@@ -1,0 +1,21 @@
+# Bí mật
+.env
+.env.*
+!.env.example
+
+# Backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log
