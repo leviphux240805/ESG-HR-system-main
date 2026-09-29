@@ -13,29 +13,29 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
-import { NAV_ITEMS, ROLE_LABELS } from "@/lib/navigation";
+import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
+import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { SidebarContent } from "./Sidebar";
 
 const ALL_SCHOOLS = "ALL";
 
 /** Bộ chọn cơ sở: cấp chuỗi có "Tất cả cơ sở"; người chỉ có một cơ sở thì bị khóa vào cơ sở đó. */
 function SchoolSelector() {
-  const { me, selectedSchoolId, selectSchool } = useAuth();
-  if (!me) return null;
-  const locked = !me.chainWide && me.schools.length <= 1;
+  const { schoolId, schools, canChooseAll, locked, select } = useCurrentSchool();
+  if (schools.length === 0 && !canChooseAll) return null;
 
   return (
     <Select
-      value={selectedSchoolId ?? ALL_SCHOOLS}
-      onValueChange={(value) => selectSchool(value === ALL_SCHOOLS ? null : value)}
+      value={schoolId ?? ALL_SCHOOLS}
+      onValueChange={(value) => select(value === ALL_SCHOOLS ? null : value)}
       disabled={locked}
     >
-      <SelectTrigger className="w-44 sm:w-56" aria-label="Chọn cơ sở">
+      <SelectTrigger className="w-40 sm:w-56 min-h-11" aria-label="Chọn cơ sở">
         <SelectValue placeholder="Chọn cơ sở" />
       </SelectTrigger>
       <SelectContent>
-        {me.chainWide && <SelectItem value={ALL_SCHOOLS}>Tất cả cơ sở</SelectItem>}
-        {me.schools.map((school) => (
+        {canChooseAll && <SelectItem value={ALL_SCHOOLS}>Tất cả cơ sở</SelectItem>}
+        {schools.map((school) => (
           <SelectItem key={school.id} value={school.id}>
             {school.name}
           </SelectItem>
@@ -77,7 +77,7 @@ function UserMenu() {
 export function Header() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const currentLabel = NAV_ITEMS.find((item) => item.to === location.pathname)?.label ?? "Trang chủ";
+  const current = findNavItem(location.pathname);
 
   return (
     <header className="sticky top-0 z-40 bg-card border-b border-border px-4 md:px-6 py-3">
@@ -86,17 +86,21 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden h-11 w-11"
             onClick={() => setMenuOpen(true)}
             aria-label="Mở menu"
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <div className="hidden sm:flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Trang chủ</span>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium text-foreground truncate">{currentLabel}</span>
-          </div>
+          <nav aria-label="Vị trí" className="hidden sm:flex items-center gap-2 text-sm min-w-0">
+            {current?.group.label && (
+              <>
+                <span className="text-muted-foreground">{current.group.label}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </>
+            )}
+            <span className="font-medium text-foreground truncate">{current?.item.label ?? ""}</span>
+          </nav>
         </div>
 
         <div className="flex items-center gap-2">

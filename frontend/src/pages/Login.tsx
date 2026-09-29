@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { errorMessage } from "@/api/errors";
 
 export default function Login() {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState("");
@@ -21,8 +20,8 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
+      // Đăng nhập xong, route /login tự chuyển về trang đang định mở (App.tsx › LoginRoute)
       await login(identifier.trim(), password, rememberMe);
-      navigate("/", { replace: true });
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {

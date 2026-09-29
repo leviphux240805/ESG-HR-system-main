@@ -2,14 +2,14 @@ import { NavLink, useLocation } from "react-router-dom";
 import { School } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/brand";
-import { NAV_ITEMS } from "@/lib/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { visibleNavGroups } from "@/lib/navigation";
+import { usePermissions } from "@/hooks/useCan";
 
 /** Nội dung sidebar, dùng chung cho sidebar cố định (máy tính) và ngăn kéo (điện thoại). */
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
-  const { hasRole } = useAuth();
-  const items = NAV_ITEMS.filter((item) => !item.roles || hasRole(...item.roles));
+  const check = usePermissions();
+  const groups = visibleNavGroups(check);
 
   return (
     <div className="flex h-full flex-col">
@@ -25,28 +25,37 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-1">
-          {items.map((item) => {
-            const isActive = location.pathname === item.to;
-            return (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  onClick={onNavigate}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
-                    "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-                    isActive && "bg-sidebar-foreground/15 text-sidebar-foreground font-medium",
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
+      <nav className="flex-1 p-4 overflow-y-auto space-y-4" aria-label="Menu chính">
+        {groups.map((group, index) => (
+          <div key={group.label ?? index}>
+            {group.label && (
+              <p className="px-4 pb-1 text-xs font-medium uppercase tracking-wide text-sidebar-foreground/60">
+                {group.label}
+              </p>
+            )}
+            <ul className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <li key={item.path}>
+                    <NavLink
+                      to={item.path}
+                      onClick={onNavigate}
+                      className={cn(
+                        "flex items-center gap-3 px-4 min-h-11 rounded-lg transition-all duration-200",
+                        "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+                        isActive && "bg-sidebar-foreground/15 text-sidebar-foreground font-medium",
+                      )}
+                    >
+                      <item.icon className="w-5 h-5 shrink-0" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
     </div>
   );

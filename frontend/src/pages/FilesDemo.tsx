@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Download, FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDownloadUrl, type StoredFile, uploadFile } from "@/api/files";
@@ -46,8 +45,7 @@ export default function FilesDemo() {
     schoolId ? (me?.schools.find((s) => s.id === schoolId)?.name ?? "Cơ sở khác") : "Toàn chuỗi";
 
   return (
-    <AuthenticatedLayout>
-      <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Tệp (thử nghiệm)</CardTitle>
@@ -104,7 +102,6 @@ export default function FilesDemo() {
             </CardContent>
           </Card>
         )}
-      </div>
-    </AuthenticatedLayout>
+    </div>
   );
 }
