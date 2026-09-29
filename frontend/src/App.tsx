@@ -1,81 +1,67 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // Import thêm Navigate
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Employees from "./pages/Employees";
-import Attendance from "./pages/Attendance";
-import Payroll from "./pages/Payroll";
-import Payslips from "./pages/Payslips";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { queryClient } from "@/api/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Các trang ESG cũ (Employees, Attendance, Payroll, Payslips, Settings, Dashboard) còn gọi Supabase nên chưa được
+// import; mỗi trang được đưa lại vào đây ở giai đoạn chuyển đổi tương ứng (xem docs/tien-do.md).
 
-const AppRoutes = () => {
-  const { user, loading } = useAuth();
+function FullPageSpinner() {
+  return (
+    <div className="flex h-screen items-center justify-center text-muted-foreground">
+      <Loader2 className="w-6 h-6 animate-spin mr-2" />
+      Đang tải...
+    </div>
+  );
+}
 
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center">
-        Loading...
-      </div>
-    );
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { status } = useAuth();
+  const location = useLocation();
+  if (status === "loading") return <FullPageSpinner />;
+  if (status === "anonymous") return <Navigate to="/login" replace state={{ from: location }} />;
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  const { status } = useAuth();
+  if (status === "loading") return <FullPageSpinner />;
 
   return (
     <Routes>
-      <Route
-        path="/login"
-        element={!user ? <Login /> : <Navigate to="/" replace />}
-      />
-
+      <Route path="/login" element={status === "authenticated" ? <Navigate to="/" replace /> : <Login />} />
       <Route
         path="/"
-        element={user ? <Index /> : <Navigate to="/login" replace />}
+        element={
+          <RequireAuth>
+            <Home />
+          </RequireAuth>
+        }
       />
-      <Route
-        path="/employees"
-        element={user ? <Employees /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/attendance"
-        element={user ? <Attendance /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/payroll"
-        element={user ? <Payroll /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/payslips"
-        element={user ? <Payslips /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/settings"
-        element={user ? <Settings /> : <Navigate to="/login" replace />}
-      />
-
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
-};
+}
 
-const App = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <AppRoutes />
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <Toaster />
+          <Sonner />
+        </BrowserRouter>
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

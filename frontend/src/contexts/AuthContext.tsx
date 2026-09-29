@@ -1,62 +1,170 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+  api,
+  refreshAccessToken,
+  setAccessToken,
+  setSelectedSchoolId as setClientSchool,
+  setSessionExpiredHandler,
+  unwrap,
+} from "@/api/client";
+import { queryClient } from "@/api/queryClient";
+import type { components } from "@/api/schema";
+
+export type Me = components["schemas"]["MeResponse"];
+export type RoleCode = components["schemas"]["RoleGrant"]["role"];
+export type SchoolSummary = components["schemas"]["SchoolSummary"];
+
+type AuthStatus = "loading" | "authenticated" | "anonymous";
 
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  loading: boolean;
-  signOut: () => Promise<void>;
+  status: AuthStatus;
+  me: Me | null;
+  /** Cơ sở đang chọn; null = "Tất cả cơ sở" (chỉ vai trò cấp chuỗi). */
+  selectedSchoolId: string | null;
+  selectSchool: (schoolId: string | null) => void;
+  /** Có vai trò áp dụng cho phạm vi đang chọn. Chỉ dùng để ẩn/hiện giao diện; quyền thật kiểm tra ở backend. */
+  hasRole: (...roles: RoleCode[]) => boolean;
+  login: (identifier: string, password: string, rememberMe: boolean) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const schoolStorageKey = (userId: string) => `preschool.selectedSchool.${userId}`;
+
+function readStoredSchool(userId: string): string | null | undefined {
+  try {
+    const value = localStorage.getItem(schoolStorageKey(userId));
+    if (value === null) return undefined;
+    return value === "ALL" ? null : value;
+  } catch {
+    return undefined;
+  }
+}
+
+function storeSchool(userId: string, schoolId: string | null) {
+  try {
+    localStorage.setItem(schoolStorageKey(userId), schoolId ?? "ALL");
+  } catch {
+    // Trình duyệt chặn localStorage: chỉ mất ghi nhớ lựa chọn, không ảnh hưởng chức năng
+  }
+}
+
+/** Chọn cơ sở ban đầu: lựa chọn đã lưu nếu còn hợp lệ, nếu không thì "Tất cả" (cấp chuỗi) hoặc cơ sở đầu tiên. */
+function initialSchool(me: Me): string | null {
+  const stored = readStoredSchool(me.id);
+  if (stored === null && me.chainWide) return null;
+  if (stored && me.schools.some((s) => s.id === stored)) return stored;
+  return me.chainWide ? null : (me.schools[0]?.id ?? null);
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [me, setMe] = useState<Me | null>(null);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // 1. Get initial session
-    const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
-
-    initializeAuth();
-
-    // 2. Listen for auth changes (LOGIN, LOGOUT, AUTO REFRESH)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+  const clearSession = useCallback(() => {
+    setAccessToken(null);
+    setClientSchool(null);
+    setMe(null);
+    setSelectedSchoolId(null);
+    setStatus("anonymous");
+    queryClient.clear();
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  const loadMe = useCallback(async () => {
+    const profile = unwrap(await api.GET("/api/v1/me"));
+    const school = initialSchool(profile);
+    setClientSchool(school);
+    setSelectedSchoolId(school);
+    setMe(profile);
+    setStatus("authenticated");
+  }, []);
 
-  const value = {
-    session,
-    user,
-    loading,
-    signOut,
-  };
+  // Khôi phục phiên khi tải trang: đổi cookie refresh lấy access token rồi nạp /me
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (await refreshAccessToken()) {
+          await loadMe();
+          return;
+        }
+      } catch {
+        // rơi xuống trạng thái chưa đăng nhập
+      }
+      if (!cancelled) clearSession();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [clearSession, loadMe]);
+
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      clearSession();
+      toast.error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+    });
+    return () => setSessionExpiredHandler(null);
+  }, [clearSession]);
+
+  const login = useCallback(
+    async (identifier: string, password: string, rememberMe: boolean) => {
+      const tokens = unwrap(
+        await api.POST("/api/v1/auth/login", { body: { identifier, password, rememberMe } }),
+      );
+      setAccessToken(tokens.accessToken);
+      await loadMe();
+    },
+    [loadMe],
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await api.POST("/api/v1/auth/logout");
+    } finally {
+      clearSession();
+    }
+  }, [clearSession]);
+
+  const selectSchool = useCallback(
+    (schoolId: string | null) => {
+      if (!me) return;
+      if (schoolId === null && !me.chainWide) return;
+      if (schoolId !== null && !me.schools.some((s) => s.id === schoolId)) return;
+      setClientSchool(schoolId);
+      setSelectedSchoolId(schoolId);
+      storeSchool(me.id, schoolId);
+      // Dữ liệu đang hiển thị thuộc cơ sở cũ: tải lại theo cơ sở mới
+      queryClient.invalidateQueries();
+    },
+    [me],
+  );
+
+  const hasRole = useCallback(
+    (...roles: RoleCode[]) =>
+      !!me?.roles.some(
+        (grant) =>
+          roles.includes(grant.role) &&
+          (!grant.schoolId || selectedSchoolId === null || grant.schoolId === selectedSchoolId),
+      ),
+    [me, selectedSchoolId],
+  );
+
+  const value = useMemo(
+    () => ({ status, me, selectedSchoolId, selectSchool, hasRole, login, logout }),
+    [status, me, selectedSchoolId, selectSchool, hasRole, login, logout],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

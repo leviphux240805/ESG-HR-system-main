@@ -21,7 +21,7 @@ const breadcrumbLabels: Record<string, string> = {
 export function Header() {
   const location = useLocation();
   const currentLabel = breadcrumbLabels[location.pathname] || "Bảng điều khiển";
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-card border-b border-border px-6 py-4">
@@ -55,7 +55,7 @@ export function Header() {
           <div className="flex-1">
             <Button
               variant="outline"
-              onClick={signOut}
+              onClick={logout}
               className=" w-44 bg-red-600 text-white border-red-600 hover:bg-transparent hover:text-red-600 hover:border-red-600 transition-colors duration-300"
             >
               Đăng xuất
