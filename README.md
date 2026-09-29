@@ -75,7 +75,8 @@ cd frontend && npm test && npm run lint && npm run build
 cd frontend && npx playwright install chromium && npm run e2e
 ```
 
-E2E tự chạy Vite ở cổng 8080 (hoặc dùng lại server đang chạy) và bật xem trước menu để kiểm tra trang 403.
+E2E tự chạy Vite ở cổng 8080 và bật xem trước menu để kiểm tra trang 403. Nếu `npm run dev` đang chạy ở 8080,
+Playwright sẽ dùng lại server đó (không bật xem trước) và test 403 sẽ đỏ: tắt nó, hoặc chạy `E2E_WEB_PORT=8083 npm run e2e`.
 Đổi cổng/backend bằng `E2E_WEB_PORT`, `E2E_API_TARGET`, `E2E_MAILPIT_URL`. Test quên mật khẩu chỉ nhận email mới
 nếu cách lần chạy trước hơn 1 phút (backend giới hạn 1 yêu cầu/phút mỗi tài khoản).
 
