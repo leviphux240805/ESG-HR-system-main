@@ -1,4 +1,4 @@
-# Hạ tầng dev: PostgreSQL + MinIO (S3). Backend và frontend chạy trực tiếp trên máy.
+# Hạ tầng dev: PostgreSQL + MinIO (S3) + Mailpit (SMTP giả). Backend và frontend chạy trực tiếp trên máy.
 # Giá trị lấy từ .env (xem .env.example); thiếu .env thì dùng mặc định dev bên dưới.
 name: preschool
 
@@ -33,6 +33,13 @@ services:
       - "${S3_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio-data:/data
+
+  mailpit:
+    # SMTP giả cho dev: bắt mọi email gửi đi, xem tại http://localhost:8025
+    image: axllent/mailpit:v1.31
+    ports:
+      - "${MAIL_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
 
 volumes:
   postgres-data:

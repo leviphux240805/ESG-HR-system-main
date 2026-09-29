@@ -83,6 +83,10 @@ public class User extends BaseEntity {
 		return guardianId;
 	}
 
+	public void changePassword(String newPasswordHash) {
+		this.passwordHash = newPasswordHash;
+	}
+
 	public boolean isActive() {
 		return active;
 	}

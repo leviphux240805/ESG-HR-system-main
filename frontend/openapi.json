@@ -12,6 +12,40 @@
     "bearerAuth" : [ ]
   } ],
   "paths" : {
+    "/api/v1/auth/forgot-password" : {
+      "post" : {
+        "description" : "Luôn trả 204 dù tài khoản có tồn tại hay không, để không lộ thông tin tài khoản.",
+        "operationId" : "forgotPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Đã tiếp nhận"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "security" : [ ],
+        "summary" : "Gửi email đặt lại mật khẩu",
+        "tags" : [ "Xác thực" ]
+      }
+    },
     "/api/v1/auth/login" : {
       "post" : {
         "description" : "Trả access token trong body và đặt refresh token vào cookie httpOnly.",
@@ -103,6 +137,40 @@
         },
         "security" : [ ],
         "summary" : "Lấy access token mới bằng refresh token trong cookie",
+        "tags" : [ "Xác thực" ]
+      }
+    },
+    "/api/v1/auth/reset-password" : {
+      "post" : {
+        "description" : "Thành công thì mọi phiên đăng nhập của tài khoản bị đăng xuất.",
+        "operationId" : "resetPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Đã đổi mật khẩu"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "security" : [ ],
+        "summary" : "Đặt mật khẩu mới bằng link trong email",
         "tags" : [ "Xác thực" ]
       }
     },
@@ -325,6 +393,19 @@
         },
         "required" : [ "id", "mimeType", "originalName", "sizeBytes", "status" ]
       },
+      "ForgotPasswordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "identifier" : {
+            "type" : "string",
+            "description" : "Email hoặc số điện thoại",
+            "example" : "owner@preschool.local",
+            "maxLength" : 255,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "identifier" ]
+      },
       "LoginRequest" : {
         "type" : "object",
         "properties" : {
@@ -427,6 +508,24 @@
           }
         },
         "required" : [ "title", "status" ]
+      },
+      "ResetPasswordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "newPassword" : {
+            "type" : "string",
+            "description" : "Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "token" : {
+            "type" : "string",
+            "description" : "Token trong link email",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "newPassword", "token" ]
       },
       "RoleGrant" : {
         "type" : "object",

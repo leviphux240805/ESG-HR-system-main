@@ -1,13 +1,7 @@
 package com.preschool.account.service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-
-	private static final SecureRandom RANDOM = new SecureRandom();
 
 	private final UserRepository users;
 
@@ -90,7 +82,7 @@ public class AuthService {
 		if (rawToken == null || rawToken.isBlank()) {
 			throw refreshInvalid();
 		}
-		RefreshToken token = refreshTokens.findByTokenHash(hash(rawToken)).orElseThrow(AuthService::refreshInvalid);
+		RefreshToken token = refreshTokens.findByTokenHash(SecureTokens.hash(rawToken)).orElseThrow(AuthService::refreshInvalid);
 		Instant now = clock.instant();
 
 		if (token.getRevokedAt() != null) {
@@ -120,18 +112,19 @@ public class AuthService {
 		if (rawToken == null || rawToken.isBlank()) {
 			return;
 		}
-		refreshTokens.findByTokenHash(hash(rawToken))
+		refreshTokens.findByTokenHash(SecureTokens.hash(rawToken))
 			.ifPresent(token -> refreshTokens.revokeFamily(token.getFamilyId(), clock.instant()));
 	}
 
 	private AuthResult issueTokens(User user, UUID familyId, boolean rememberMe, Instant now) {
-		String rawRefresh = newRawToken();
-		refreshTokens.save(new RefreshToken(user, hash(rawRefresh), familyId, rememberMe,
+		String rawRefresh = SecureTokens.newRawToken();
+		refreshTokens.save(new RefreshToken(user, SecureTokens.hash(rawRefresh), familyId, rememberMe,
 				now.plus(props.refreshTokenTtl())));
 		return new AuthResult(jwtService.issue(user.getId()), rawRefresh, rememberMe);
 	}
 
-	private Optional<User> findByIdentifier(String identifier) {
+	/** Tìm tài khoản theo email hoặc số điện thoại (dùng chung cho đăng nhập và quên mật khẩu). */
+	Optional<User> findByIdentifier(String identifier) {
 		String value = identifier.trim();
 		if (value.contains("@")) {
 			return users.findByEmail(value.toLowerCase(Locale.ROOT));
@@ -147,22 +140,6 @@ public class AuthService {
 			return "0" + digits.substring(2);
 		}
 		return digits;
-	}
-
-	static String hash(String rawToken) {
-		try {
-			byte[] digest = MessageDigest.getInstance("SHA-256").digest(rawToken.getBytes(StandardCharsets.UTF_8));
-			return HexFormat.of().formatHex(digest);
-		}
-		catch (NoSuchAlgorithmException ex) {
-			throw new IllegalStateException(ex);
-		}
-	}
-
-	private static String newRawToken() {
-		byte[] bytes = new byte[32];
-		RANDOM.nextBytes(bytes);
-		return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
 	}
 
 	private static ApiException invalidCredentials() {

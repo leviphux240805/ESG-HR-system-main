@@ -215,6 +215,7 @@ Quy ước chung: khóa chính `id` kiểu UUID; mọi bảng có `created_at`, 
 | Nền tảng  | `users`                     | email (unique), phone? (unique, chỉ chữ số), full_name, password_hash, staff_id?, guardian_id?, is_active, last_login_at — đăng nhập bằng email hoặc phone                                                    | Supabase Auth                                    |
 | Nền tảng  | `user_roles`                | user_id, role_code, school_id? (rỗng = toàn chuỗi)                                                                                                                                                           | —                                                |
 | Nền tảng  | `refresh_tokens`            | user_id, token_hash, family_id (chuỗi token xoay vòng), remember_me, expires_at, revoked_at                                                                                                                  | —                                                |
+| Nền tảng  | `password_reset_tokens`     | user_id, token_hash, expires_at (30 phút), used_at — link quên mật khẩu dùng một lần                                                                                                                        | —                                                |
 | Nền tảng  | `school_years`              | name (2026–2027), start_date, end_date, is_current                                                                                                                                                           | —                                                |
 | Nền tảng  | `holidays`                  | school_id?, holiday_date, name, is_custom                                                                                                                                                                    | `holidays`                                       |
 | Nền tảng  | `notifications`             | user_id, type, title, body, link, read_at                                                                                                                                                                    | —                                                |
@@ -338,7 +339,7 @@ Một ứng dụng Spring Boot duy nhất (modular monolith), chia package theo 
 
 | Nhóm          | Endpoint tiêu biểu                                                                                                                           |
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| Xác thực      | `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /me`                                                                     |
+| Xác thực      | `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /me`, `POST /auth/forgot-password`, `POST /auth/reset-password`          |
 | File          | `POST /files/upload-url` (kiểm tra kích thước + loại file, tạo bản ghi PENDING, trả presigned URL), `POST /files/{id}/complete` (kiểm tra object trên storage đúng kích thước/loại đã khai báo → READY, sai thì xóa), `GET /files/{id}/download-url` |
 | Nhân sự       | `GET/POST /staff`, `GET/PUT /staff/{id}`, `POST /staff/{id}/transfer`, `GET/POST /staff/{id}/documents`                                      |
 | Tài liệu      | `GET/POST /library/documents`, `POST /library/documents/{id}/versions`, `POST /library/documents/{id}/ack`                                   |
@@ -437,6 +438,7 @@ Giai đoạn 1 gồm:
 | 2026-09-29 | Chi tiết hóa khi viết V1: `refresh_tokens` thêm `family_id`, `remember_me`; `audit_logs.at` → `created_at`, `before/after` → `before_data/after_data`; `schools` lưu mã tỉnh/phường | Phục vụ xoay vòng refresh token + "Ghi nhớ đăng nhập"; thống nhất quy ước cột chung |
 | 2026-09-29 | Dùng Spring Boot 4.0.8 (4.1.x đã có) | Giữ đúng quyết định 4.0; springdoc 3.0.x chỉ build cho 4.0. Nâng 4.1 là bước nhỏ, làm khi cần |
 | 2026-09-29 | MinIO dev dùng image `chainguard/minio` | MinIO ngừng phát hành image community trên Docker Hub/Quay |
+| 2026-09-29 | Thêm bảng `password_reset_tokens` (V2) và API forgot/reset password; dev dùng Mailpit bắt email | Quên mật khẩu qua email (module Nền tảng); token dùng một lần, chỉ lưu hash |
 
 ## Nguồn
 
