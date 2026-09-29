@@ -8,6 +8,7 @@ import { queryClient } from "@/api/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import FilesDemo from "./pages/FilesDemo";
 import NotFound from "./pages/NotFound";
 
 // Các trang ESG cũ (Employees, Attendance, Payroll, Payslips, Settings, Dashboard) còn gọi Supabase nên chưa được
@@ -42,6 +43,14 @@ function AppRoutes() {
         element={
           <RequireAuth>
             <Home />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/files-demo"
+        element={
+          <RequireAuth>
+            <FilesDemo />
           </RequireAuth>
         }
       />
