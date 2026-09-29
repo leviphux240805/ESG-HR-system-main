@@ -224,6 +224,11 @@ export interface components {
             roles: components["schemas"]["RoleGrant"][];
             /** @description Các cơ sở được phép chọn trên header */
             schools: components["schemas"]["SchoolSummary"][];
+            /**
+             * Format: uuid
+             * @description Hồ sơ nhân viên gắn với tài khoản; rỗng = chưa gắn
+             */
+            staffId?: string;
         };
         /** @description Lỗi theo RFC 7807 */
         Problem: {

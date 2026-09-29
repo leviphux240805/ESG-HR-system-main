@@ -37,7 +37,7 @@ public class MeController {
 		SchoolAccess access = SchoolScope.require().access();
 		User user = users.findById(access.userId())
 			.orElseThrow(() -> ApiException.notFound("Không tìm thấy tài khoản."));
-		return new MeResponse(user.getId(), user.getEmail(), user.getPhone(), user.getFullName(),
+		return new MeResponse(user.getId(), user.getEmail(), user.getPhone(), user.getFullName(), user.getStaffId(),
 				access.grants().stream().map(g -> new MeResponse.RoleGrant(g.role(), g.schoolId())).toList(),
 				access.chainWide(),
 				accessService.allowedSchools(access)

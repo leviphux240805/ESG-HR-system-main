@@ -460,6 +460,11 @@
             "items" : {
               "$ref" : "#/components/schemas/SchoolSummary"
             }
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Hồ sơ nhân viên gắn với tài khoản; rỗng = chưa gắn"
           }
         },
         "required" : [ "chainWide", "email", "fullName", "id", "roles", "schools" ]

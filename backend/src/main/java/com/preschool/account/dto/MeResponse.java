@@ -12,6 +12,7 @@ public record MeResponse(
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email,
 		String phone,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String fullName,
+		@Schema(description = "Hồ sơ nhân viên gắn với tài khoản; rỗng = chưa gắn") UUID staffId,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<RoleGrant> roles,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
 				description = "Có vai trò cấp chuỗi: được chọn \"Tất cả cơ sở\"") boolean chainWide,
