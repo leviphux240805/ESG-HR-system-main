@@ -33,6 +33,13 @@ class OpenApiSnapshotTests extends ApiTestSupport {
 		JsonNode spec = jsonMapper.readTree(json);
 		assertThat(spec.path("paths").has("/api/v1/auth/login")).isTrue();
 		assertThat(spec.path("paths").has("/api/v1/files/upload-url")).isTrue();
+		// Mọi $ref phải trỏ tới schema có thật, nếu không openapi-typescript sẽ lỗi
+		java.util.regex.Matcher refs = java.util.regex.Pattern.compile("\"#/components/schemas/([^\"]+)\"")
+			.matcher(json);
+		while (refs.find()) {
+			assertThat(spec.path("components").path("schemas").has(refs.group(1)))
+				.as("schema %s", refs.group(1)).isTrue();
+		}
 
 		String pretty = jsonMapper.writer().with(SerializationFeature.INDENT_OUTPUT).writeValueAsString(spec) + "\n";
 		Files.writeString(SNAPSHOT, pretty.replace("\r\n", "\n"), StandardCharsets.UTF_8);

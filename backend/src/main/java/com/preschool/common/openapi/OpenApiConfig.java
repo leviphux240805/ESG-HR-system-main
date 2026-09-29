@@ -38,10 +38,8 @@ public class OpenApiConfig {
 				.description("API quản lý chuỗi trường mầm non. Lỗi trả về theo RFC 7807 (application/problem+json)."))
 			// Đường dẫn tương đối: frontend gọi qua proxy cùng origin, snapshot không phụ thuộc máy chạy
 			.servers(List.of(new Server().url("/")))
-			.components(new Components()
-				.addSecuritySchemes(BEARER,
-						new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT"))
-				.addSchemas(PROBLEM, problemSchema()))
+			.components(new Components().addSecuritySchemes(BEARER,
+					new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
 			.addSecurityItem(new SecurityRequirement().addList(BEARER));
 	}
 
@@ -55,6 +53,11 @@ public class OpenApiConfig {
 			if (openApi.getPaths() == null) {
 				return;
 			}
+			// Thêm ở đây (sau bước springdoc dọn schema chưa dùng) để $ref tới Problem không bị gãy
+			if (openApi.getComponents() == null) {
+				openApi.setComponents(new Components());
+			}
+			openApi.getComponents().addSchemas(PROBLEM, problemSchema());
 			openApi.getPaths().forEach((path, item) -> item.readOperations().forEach(operation -> {
 				operation.getResponses().addApiResponse("default", problemResponse());
 				if (path.startsWith("/api/v1/")

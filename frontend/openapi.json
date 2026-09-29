@@ -383,6 +383,51 @@
         },
         "required" : [ "chainWide", "email", "fullName", "id", "roles", "schools" ]
       },
+      "Problem" : {
+        "type" : "object",
+        "description" : "Lỗi theo RFC 7807",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Mã lỗi máy đọc, ví dụ INVALID_CREDENTIALS"
+          },
+          "detail" : {
+            "type" : "string",
+            "description" : "Thông điệp tiếng Việt hiển thị cho người dùng"
+          },
+          "errors" : {
+            "type" : "array",
+            "description" : "Lỗi từng trường khi dữ liệu không hợp lệ",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "field" : {
+                  "type" : "string"
+                },
+                "message" : {
+                  "type" : "string"
+                }
+              },
+              "required" : [ "field", "message" ]
+            }
+          },
+          "instance" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Tiêu đề tiếng Việt theo mã HTTP"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "title", "status" ]
+      },
       "RoleGrant" : {
         "type" : "object",
         "properties" : {
