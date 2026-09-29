@@ -73,7 +73,11 @@ cd frontend && npm run lint && npm run build
 
 ## Sự cố thường gặp
 
-- **`No compiler is provided in this environment`**: terminal đang dùng Java cũ. Mở terminal mới hoặc đặt
-  `JAVA_HOME` trỏ tới JDK 21.
+- **`No compiler is provided in this environment`** hoặc **`class file version 61.0 … up to 52.0`**: Maven đang
+  chạy bằng Java 8. Terminal trong VS Code thừa hưởng môi trường lúc mở VS Code, nên sau khi cài JDK phải **tắt hẳn
+  VS Code rồi mở lại**. Tạm thời trong terminal hiện tại:
+  `$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"; $env:Path="$env:JAVA_HOME\bin;$env:Path"`
+- **`npm.ps1 cannot be loaded because running scripts is disabled`** (PowerShell): dùng `npm.cmd run dev`, hoặc
+  cho phép script cho tài khoản của mình: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 - **Test backend lỗi không kết nối Docker**: mở Docker Desktop trước khi chạy `./mvnw test`.
 - **Git Bash + `docker run -v /data`**: Git Bash tự đổi đường dẫn; đặt `MSYS_NO_PATHCONV=1`.
