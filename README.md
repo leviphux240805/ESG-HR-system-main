@@ -61,14 +61,23 @@ Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`).
    http://localhost:9001 (tài khoản `preschool` / `preschool-secret`).
 4. Bấm **Quên mật khẩu?** ở trang đăng nhập, nhập `0900000008` → mở Mailpit http://localhost:8025 xem email,
    bấm link để đặt mật khẩu mới (tài khoản này sẽ đổi mật khẩu; seed không tự đặt lại).
-5. API docs: http://localhost:8081/swagger-ui.html
+5. Thư viện component (chỉ dev): http://localhost:8080/dev/ui. Xem trước menu các giai đoạn chưa làm:
+   `VITE_PREVIEW_MODULES=true npm run dev`.
+6. API docs: http://localhost:8081/swagger-ui.html
 
 ## Kiểm tra
 
 ```bash
 cd backend && ./mvnw test                 # cần Docker (Testcontainers PostgreSQL + MinIO)
-cd frontend && npm run lint && npm run build
+cd frontend && npm test && npm run lint && npm run build
+
+# E2E (Playwright): cần compose + backend đang chạy; lần đầu cài trình duyệt
+cd frontend && npx playwright install chromium && npm run e2e
 ```
+
+E2E tự chạy Vite ở cổng 8080 (hoặc dùng lại server đang chạy) và bật xem trước menu để kiểm tra trang 403.
+Đổi cổng/backend bằng `E2E_WEB_PORT`, `E2E_API_TARGET`, `E2E_MAILPIT_URL`. Test quên mật khẩu chỉ nhận email mới
+nếu cách lần chạy trước hơn 1 phút (backend giới hạn 1 yêu cầu/phút mỗi tài khoản).
 
 `./mvnw test` cũng ghi lại `frontend/openapi.json`. Khi API đổi: chạy test backend, rồi `npm run gen:api` trong
 `frontend/` để sinh lại type (`src/api/schema.d.ts`), commit cả hai file.

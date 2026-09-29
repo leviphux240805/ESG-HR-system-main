@@ -27,6 +27,25 @@ Kiểm tra cuối (2026-09-29): `./mvnw test` 44/44 xanh; `npm run lint` 0 lỗi
 proxy Vite: đăng nhập seed (email và SĐT), refresh bằng cookie, `/me`, upload → complete → tải file qua MinIO
 (kể cả preflight CORS từ `localhost:8080`), user Cơ sở B tải file Cơ sở A bị 404.
 
+### Khung giao diện dùng chung (làm sau giai đoạn 1, trước giai đoạn 2)
+
+| # | Bước | Commit |
+|---|---|---|
+| U1 | Backend: `PageResponse` + quy ước phân trang (size ≤ 100), `/me.staffId` | `fe510c6` |
+| U2 | Vitest + Testing Library | `7bce75a` |
+| U3 | `format.ts`, ma trận quyền `permissions.ts` + `useCan`, `useCurrentSchool`/`schoolQueryKey`, `applyApiErrors` | `a8e128c` |
+| U4 | Menu theo nhóm từ `navigation.ts`, route guard, trang 403, xem trước bằng `VITE_PREVIEW_MODULES` | `9e7cd75` |
+| U5 | PageHeader, EmptyState/ErrorState/Skeleton, StatusBadge, ConfirmDialog, FormSheet | `674090b` |
+| U6 | useListParams, FilterBar, DataTable, ExportButton | `4711979` (+ sửa `865d4ac`) |
+| U7 | FileUpload/MultiFileUpload trên presigned URL | `3f036c8` |
+| U8 | Trang mẫu `/dev/ui` (chỉ dev) | `80bb2a8` |
+| U9 | Playwright 10 test luồng chính + job e2e trên CI | `abd216f` |
+| U10 | "Quy ước giao diện" trong CLAUDE.md, README | commit cuối |
+
+Kiểm tra: backend 51 test, frontend 44 test Vitest, 10 test Playwright (chạy trên máy với backend + MinIO + Mailpit
+thật) đều xanh. Các đường dẫn module (/nhan-su, /luong, /cua-toi/…) đã có trong cấu hình menu, ẩn cho tới giai
+đoạn tương ứng. `TODO(assumption)`: /cai-dat và /tai-khoan tạm xếp giai đoạn 2.
+
 ### Đang dở / chưa làm của giai đoạn 1
 
 - Chủ dự án đã chạy thử giao diện (đăng nhập, bộ chọn cơ sở, trang Tệp) ngày 2026-09-29.
@@ -66,5 +85,5 @@ proxy Vite: đăng nhập seed (email và SĐT), refresh bằng cookie, `/me`, u
 
 ### Việc tiếp theo
 
-1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1.
+1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1 + khung giao diện.
 2. Giai đoạn 2 – Nhân sự + Tài liệu: đọc thiết kế, lập kế hoạch, chờ duyệt.

@@ -22,7 +22,9 @@ Cập nhật mục này khi lệnh thay đổi.
 
 - Hạ tầng dev: `docker compose up -d` (PostgreSQL 5432, MinIO 9000/console 9001, Mailpit SMTP 1025/web 8025)
 - Backend: `cd backend && ./mvnw spring-boot:run` (cổng 8081, profile `dev` có seed) · test: `./mvnw test` (cần Docker; đồng thời ghi `frontend/openapi.json`)
-- Frontend: `cd frontend && npm install && npm run dev` (cổng 8080, proxy `/api` → 8081) · kiểm tra: `npm run lint && npm run build` (build có typecheck)
+- Frontend: `cd frontend && npm install && npm run dev` (cổng 8080, proxy `/api` → 8081) · kiểm tra: `npm test && npm run lint && npm run build` (build có typecheck)
+- E2E: compose + backend đang chạy, rồi `cd frontend && npm run e2e` (Playwright; lần đầu `npx playwright install chromium`)
+- Xem trước menu các giai đoạn chưa làm (dev): `VITE_PREVIEW_MODULES=true npm run dev`; thư viện component: `/dev/ui`
 - Đổi API: chạy `./mvnw test` rồi `cd frontend && npm run gen:api`, commit cả `openapi.json` và `src/api/schema.d.ts`
 - Tài khoản dev: xem README (mật khẩu `Matkhau@123`)
 
@@ -46,11 +48,36 @@ Cập nhật mục này khi lệnh thay đổi.
 - Giao diện tiếng Việt. Màn hình điểm danh trẻ phải dùng tốt trên điện thoại.
 - Trang cũ chưa tới giai đoạn chuyển đổi thì ẩn khỏi menu, nhưng `npm run build` luôn phải xanh.
 
+## Quy ước giao diện (bắt buộc cho mọi trang)
+
+- **Trạng thái:** mỗi trang có loading skeleton, empty state, error state; không bao giờ có màn hình trắng.
+  Dùng `TableSkeleton`/`PageSkeleton`, `EmptyState`, `ErrorState` (có nút "Thử lại" gọi `refetch`).
+- **Danh sách:** phân trang và lọc ở server (`PageResponse` backend, `page` từ 0, `size` ≤ 100); bộ lọc nằm trên URL
+  để chia sẻ link được. Dùng `useListParams` + `FilterBar` (tìm kiếm debounce 300 ms) + `DataTable`; khai báo
+  `columns` bằng `useMemo`.
+- **Form:** react-hook-form + zod; nút Lưu vô hiệu khi đang gửi; toast khi thành công; hỏi xác nhận trước khi xóa,
+  khóa hoặc duyệt. Dùng `FormSheet` (form panel phải), `ConfirmDialog`; lỗi từ API qua `applyApiErrors`
+  (lỗi theo trường hiện dưới ô nhập, lỗi chung là toast).
+- **Quyền và cơ sở:** nút, cột, menu hiển thị theo quyền (`useCan(action, resource)`, cột có `meta.permission`,
+  mục menu có `permission` trong `lib/navigation.ts`); đây chỉ là ẩn/hiện, backend vẫn kiểm tra. Dữ liệu luôn theo
+  cơ sở đang chọn: query key tạo bằng `useCurrentSchool().queryKey(...)` để đổi cơ sở thì tải lại.
+- **Trang mới:** thêm vào `NAV_GROUPS` (`lib/navigation.ts`) với `phase`, `permission`, `page`; đầu trang dùng
+  `PageHeader`. Ma trận quyền giao diện ở `lib/permissions.ts` phải khớp `docs/thiet-ke.md` và backend.
+- **Màn hình:** dùng tốt từ độ rộng 360px (bảng cuộn ngang, nút xuống dòng); trang giáo viên dùng trên điện thoại
+  phải bấm được bằng ngón tay: vùng chạm ≥ 44px (`min-h-11`, `h-11 w-11`).
+- **Chữ:** tiếng Việt có dấu, xưng hô trung tính ("bạn"); không để lộ mã lỗi kỹ thuật (`code`, stack trace) cho người
+  dùng. Định dạng qua `lib/format.ts`: tiền `formatMoney` ("1.500.000 ₫"), ngày `formatDate` (dd/MM/yyyy), giờ
+  `formatTime` (HH:mm), tháng `formatMonth` ("Tháng 9/2026"). Trạng thái hiển thị bằng `StatusBadge`.
+- **File:** dùng `FileUpload`/`MultiFileUpload` (presigned URL), không gọi storage trực tiếp.
+- **Kiểm thử bắt buộc cho mỗi trang mới:** endpoint backend + test tích hợp (gồm test chặn chéo cơ sở và test theo
+  vai trò); ít nhất một test Playwright cho luồng chính (`frontend/e2e/`); hook/tiện ích mới có test Vitest.
+- Xem mẫu mọi component ở `/dev/ui` (chỉ có khi chạy dev).
+
 ## Cách làm việc
 
 - Làm đúng một giai đoạn tại một thời điểm, theo mục "Lộ trình" trong `docs/thiet-ke.md`.
 - Mỗi giai đoạn: đọc thiết kế → lập kế hoạch từng bước nhỏ → **chờ duyệt** → làm từng bước → chạy kiểm tra → tóm tắt những gì đã làm và cách chạy thử.
-- Một bước chỉ được coi là xong khi: `./mvnw test` xanh, `npm run lint` và `npm run build` không lỗi, và có hướng dẫn chạy thử bằng tay.
+- Một bước chỉ được coi là xong khi: `./mvnw test` xanh, `npm test`, `npm run lint` và `npm run build` không lỗi (luồng chính đổi thì cả `npm run e2e`), và có hướng dẫn chạy thử bằng tay. Chỉ commit khi các lệnh trên đều xanh.
 - Commit nhỏ theo từng bước, message theo Conventional Commits (`feat:`, `fix:`, `chore:`…).
 - Gặp câu hỏi nghiệp vụ chưa chốt: dùng giả định mặc định dưới đây, đánh dấu `TODO(assumption): ...` trong code và nhắc lại trong phần tóm tắt.
 - Cuối mỗi phiên, cập nhật `docs/tien-do.md`: giai đoạn hiện tại, đã xong, đang dở, việc tiếp theo.

@@ -10,6 +10,18 @@ React 18 + Vite + TypeScript + shadcn/ui + TanStack Query. Cách chạy toàn b�
 | `npm run lint` | ESLint |
 | `npm run build` | Kiểm tra kiểu (tsc) rồi build |
 | `npm run gen:api` | Sinh `src/api/schema.d.ts` từ `openapi.json` (backend test ghi file này) |
+| `npm test` | Vitest (hook, tiện ích, component) |
+| `npm run e2e` | Playwright (luồng chính; cần compose + backend) |
+
+## Khung giao diện
+
+Quy ước bắt buộc: mục "Quy ước giao diện" trong `CLAUDE.md`. Tóm tắt:
+
+- Menu, route, breadcrumb: `src/lib/navigation.ts` (một cấu hình duy nhất, lọc theo quyền và giai đoạn).
+- Quyền giao diện: `src/lib/permissions.ts` + `useCan`; cơ sở đang chọn: `useCurrentSchool` (query key có cơ sở).
+- Component dùng chung: `src/components/common/` (PageHeader, DataTable, FilterBar, FormSheet, ConfirmDialog,
+  StatusBadge, EmptyState/ErrorState, FileUpload, ExportButton). Xem mẫu tại `/dev/ui` khi chạy dev.
+- Định dạng: `src/lib/format.ts`; lỗi form từ API: `applyApiErrors` (`src/api/formErrors.ts`).
 
 ## Gọi API
 
