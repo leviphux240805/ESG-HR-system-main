@@ -33,6 +33,13 @@ app:
     access-token-ttl: 15m
     refresh-token-ttl: 7d
     refresh-cookie-secure: ${COOKIE_SECURE:true}
+  storage:
+    # Trình duyệt dùng trực tiếp địa chỉ này để PUT/GET file, nên phải truy cập được từ máy người dùng
+    endpoint: ${S3_ENDPOINT:http://localhost:${S3_PORT:9000}}
+    region: ${S3_REGION:us-east-1}
+    access-key: ${S3_ACCESS_KEY:preschool}
+    secret-key: ${S3_SECRET_KEY:preschool-secret}
+    bucket: ${S3_BUCKET:preschool}
 
 springdoc:
   api-docs:

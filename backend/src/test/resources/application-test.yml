@@ -2,3 +2,8 @@ app:
   auth:
     jwt-secret: test-only-secret-0123456789abcdefghijklmnop
     refresh-cookie-secure: false
+  storage:
+    # endpoint/access-key/secret-key do TestcontainersConfiguration đặt theo container MinIO
+    bucket: test-files
+    create-bucket: true
+    max-size-bytes: 1048576

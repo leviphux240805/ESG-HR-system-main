@@ -9,3 +9,5 @@ app:
     jwt-secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
     # Dev chạy http://localhost nên không bật cờ Secure
     refresh-cookie-secure: ${COOKIE_SECURE:false}
+  storage:
+    create-bucket: true
