@@ -3,8 +3,8 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/common/FileUpload";
-import type { StoredFile } from "@/api/files";
-import type { FileRef } from "../api";
+import type { StoredFile } from "@/api";
+import type { FileRef } from "@/api";
 import { FileLink, FilePreviewDialog } from "./FilePreviewDialog";
 
 interface Props {

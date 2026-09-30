@@ -4,12 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { deleteDependent, saveDependent } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormSheet } from "@/components/common/FormSheet";
 import { formatDate, formatMonth } from "@/lib/format";
-import { type DependentDto, type StaffDetail, updateStaff, useDependents } from "../api";
+import { type DependentDto, type StaffDetail, updateStaff, useDependents } from "@/api";
 import { fromStaffDetail, toStaffFields } from "../staffForm";
 import { TextField } from "./fields";
 import { RecordCard } from "./RecordCard";
@@ -123,11 +123,9 @@ function DependentSheet({
           toMonth: v.toMonth ? `${v.toMonth}-01` : undefined,
         };
         if (dependent) {
-          unwrap(
-            await api.PUT("/api/v1/staff/{staffId}/dependents/{id}", { params: { path: { staffId: staff.id, id: dependent.id } }, body }),
-          );
+          await saveDependent(staff.id, dependent.id, body);
         } else {
-          unwrap(await api.POST("/api/v1/staff/{staffId}/dependents", { params: { path: { staffId: staff.id } }, body }));
+          await saveDependent(staff.id, null, body);
         }
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
@@ -200,7 +198,7 @@ export function InsuranceTab({ staff }: { staff: StaffDetail }) {
         onEdit={(d) => setEditing({ dependent: d })}
         describe={(d) => `Người phụ thuộc ${d.fullName}`}
         onDelete={async (d) => {
-          unwrap(await api.DELETE("/api/v1/staff/{staffId}/dependents/{id}", { params: { path: { staffId: staff.id, id: d.id } } }));
+          await deleteDependent(staff.id, d.id);
           await queryClient.invalidateQueries({ queryKey: ["staff"] });
         }}
       />

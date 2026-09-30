@@ -21,11 +21,11 @@ import {
   type StaffListItem,
   useStaffList,
   useStaffSummary,
-} from "@/features/staff/api";
+} from "@/api";
 import { options, POSITION_LABELS, type Position, STAFF_STATUS } from "@/features/staff/labels";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
 import { daysUntil, WARNING_DAYS } from "@/features/staff/dates";
-import { useClasses } from "@/features/school/api";
+import { useClasses } from "@/api";
 
 function SummaryCards({ schoolId }: { schoolId?: string }) {
   const { data, isLoading } = useStaffSummary(schoolId);

@@ -13,12 +13,13 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import { DEMO } from "@/api/client";
+import { IS_DEMO, resetDemoData } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
 import { APP_NAME } from "@/lib/brand";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { NotificationBell } from "./NotificationBell";
+import { DemoBadge } from "./DemoBadge";
 import { SidebarContent } from "./Sidebar";
 
 const ALL_SCHOOLS = "ALL";
@@ -49,10 +50,9 @@ function SchoolSelector() {
   );
 }
 
-/** Bản demo: xóa mọi thay đổi, sinh lại dữ liệu mẫu. */
-async function resetDemoData() {
-  const mock = await import("@/mock");
-  mock.resetDb();
+/** Bản demo: xóa mọi thay đổi, sinh lại dữ liệu mẫu rồi tải lại trang. */
+async function restoreDemoData() {
+  await resetDemoData();
   window.location.reload();
 }
 
@@ -77,7 +77,7 @@ function UserMenu() {
           <p className="text-xs font-normal text-muted-foreground">{roleNames}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {DEMO && (
+        {IS_DEMO && (
           <DropdownMenuItem onClick={() => setConfirmReset(true)}>
             <RotateCcw className="w-4 h-4 mr-2" />
             Khôi phục dữ liệu demo
@@ -85,13 +85,13 @@ function UserMenu() {
         )}
         <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
           <LogOut className="w-4 h-4 mr-2" />
-          {DEMO ? "Đổi vai trò" : "Đăng xuất"}
+          {IS_DEMO ? "Đổi vai trò" : "Đăng xuất"}
         </DropdownMenuItem>
       </DropdownMenuContent>
       <ConfirmDialog
         open={confirmReset}
         onOpenChange={setConfirmReset}
-        onConfirm={resetDemoData}
+        onConfirm={restoreDemoData}
         title="Khôi phục dữ liệu demo?"
         description="Mọi thay đổi bạn đã làm (duyệt đơn, điểm danh, thu tiền…) sẽ bị xóa và dữ liệu mẫu được sinh lại."
         confirmText="Khôi phục"
@@ -112,6 +112,7 @@ export function Header({ menuOpen, onMenuOpenChange: setMenuOpen }: { menuOpen: 
           <span className="md:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sidebar-gradient" aria-label={APP_NAME} role="img">
             <School className="w-5 h-5 text-sidebar-foreground" />
           </span>
+          <DemoBadge />
           <nav aria-label="Đường dẫn trang" className="hidden sm:flex items-center gap-2 text-sm min-w-0">
             {/* Nhóm trùng tên mục (Nhân sự › Nhân sự) thì bỏ bớt một lần */}
             {current?.group.label && current.group.label !== current.item.label && (

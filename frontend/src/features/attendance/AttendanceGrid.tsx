@@ -3,7 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle } from "lucide-react";
 import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
-import type { DayInfo, MonthSheet, SheetCell, StaffRow } from "./api";
+import type { DayInfo, MonthSheet, SheetCell, StaffRow } from "@/api";
 import { codeTone, formatDays, WEEKDAY_SHORT } from "./codes";
 
 const NAME_WIDTH = 208;

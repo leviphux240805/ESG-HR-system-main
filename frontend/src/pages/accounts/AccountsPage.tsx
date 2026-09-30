@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { api, unwrap } from "@/api/client";
+import { lockAccount, sendAccountReset, unlockAccount } from "@/api";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -16,7 +16,7 @@ import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { useListParams } from "@/hooks/useListParams";
 import { formatDateTime } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/navigation";
-import { ACCOUNT_FILTER_KEYS, type AccountItem, useAccounts } from "@/features/accounts/api";
+import { ACCOUNT_FILTER_KEYS, type AccountItem, useAccounts } from "@/api";
 import { CreateAccountSheet, EditRolesSheet } from "@/features/accounts/AccountSheets";
 
 type Confirm = { kind: "lock" | "unlock" | "reset"; account: AccountItem };
@@ -179,9 +179,9 @@ export default function AccountsPage() {
         variant={confirm?.kind === "lock" ? "destructive" : "default"}
         onConfirm={async () => {
           const id = confirm!.account.id;
-          if (confirm!.kind === "lock") unwrap(await api.POST("/api/v1/accounts/{id}/lock", { params: { path: { id } } }));
-          if (confirm!.kind === "unlock") unwrap(await api.POST("/api/v1/accounts/{id}/unlock", { params: { path: { id } } }));
-          if (confirm!.kind === "reset") unwrap(await api.POST("/api/v1/accounts/{id}/send-reset", { params: { path: { id } } }));
+          if (confirm!.kind === "lock") await lockAccount(id);
+          if (confirm!.kind === "unlock") await unlockAccount(id);
+          if (confirm!.kind === "reset") await sendAccountReset(id);
           toast.success(confirm!.kind === "reset" ? "Đã gửi email đặt lại mật khẩu." : confirm!.kind === "lock" ? "Đã khóa tài khoản." : "Đã mở khóa tài khoản.");
           await queryClient.invalidateQueries({ queryKey: ["accounts"] });
         }}

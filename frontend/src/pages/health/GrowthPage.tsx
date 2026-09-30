@@ -12,10 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/common/States";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { formatDate } from "@/lib/format";
-import { useClasses } from "@/features/school/api";
-import { addMeasurement, type GrowthRow, isNormal, useGrowth } from "@/features/health/api";
+import { useClasses } from "@/api";
+import { addMeasurement, type GrowthRow, isNormal, useGrowth } from "@/api";
 
 const todayIso = () => new Date().toLocaleDateString("sv-SE");
 

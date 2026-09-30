@@ -17,5 +17,5 @@ import "./handlers/reports";
 
 configureDb(() => generateDb(new Date()), () => iso(new Date()));
 
-export { mockFetch } from "./router";
+export { getSessionRole, mockFetch, setSessionRole } from "./router";
 export { resetDb } from "./db";

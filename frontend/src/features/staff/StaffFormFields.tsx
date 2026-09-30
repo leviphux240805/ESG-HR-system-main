@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AddressFields, useAddressData } from "./AddressFields";
 import { GENDER_LABELS, options, POSITION_LABELS, QUALIFICATION_LABELS } from "./labels";
 import type { StaffFormValues } from "./staffForm";
-import { checkStaffDuplicates } from "./api";
+import { checkStaffDuplicates } from "@/api";
 
 type TextField = Exclude<
   keyof StaffFormValues,

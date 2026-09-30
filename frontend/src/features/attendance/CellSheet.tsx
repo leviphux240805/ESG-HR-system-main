@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { updateAttendanceCell } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +12,7 @@ import { FormSheet } from "@/components/common/FormSheet";
 import { ErrorState } from "@/components/common/States";
 import { formatDate } from "@/lib/format";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
-import { type CellDetail, useCellDetail } from "./api";
+import { type CellDetail, useCellDetail } from "@/api";
 import { ATTENDANCE_CODES, CODE_LABELS } from "./codes";
 
 const NONE = "__none__";
@@ -115,17 +115,12 @@ export function CellSheet({ target, editable, onClose }: Props) {
       form={form}
       successMessage="Đã lưu chấm công."
       onSubmit={async (v) => {
-        unwrap(
-          await api.PUT("/api/v1/attendance/staff/{staffId}/{date}", {
-            params: { path: { staffId: target.staffId, date: target.date } },
-            body: {
-              code: v.code === NONE ? undefined : v.code,
-              note: v.note || undefined,
-              leaveTime: v.leaveTime || undefined,
-              returnTime: v.returnTime || undefined,
-            },
-          }),
-        );
+        await updateAttendanceCell(target.staffId, target.date, {
+          code: v.code === NONE ? undefined : v.code,
+          note: v.note || undefined,
+          leaveTime: v.leaveTime || undefined,
+          returnTime: v.returnTime || undefined,
+        });
         await queryClient.invalidateQueries({ queryKey: ["attendance"] });
       }}
     >

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarPlus, Plus, Trash2 } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { addAttendanceConfig, addHolidays, deleteHoliday, useAttendanceConfig, useHolidays } from "@/api";
 import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -120,23 +120,19 @@ function ConfigSheet({ schoolId, base, open, onOpenChange }: { schoolId: string 
       form={form}
       successMessage="Đã lưu cấu hình."
       onSubmit={async (v) => {
-        unwrap(
-          await api.POST("/api/v1/attendance/configs", {
-            body: {
-              schoolId: schoolId ?? undefined,
-              effectiveFrom: v.effectiveFrom,
-              shiftStart: v.shiftStart,
-              shiftEnd: v.shiftEnd,
-              lunchStart: v.lunchStart,
-              lunchEnd: v.lunchEnd,
-              graceMinutes: Number(v.graceMinutes),
-              maxLateAllowed: Number(v.maxLateAllowed),
-              annualLeaveDays: Number(v.annualLeaveDays),
-              workingWeekdays: v.workingWeekdays,
-              halfDayWeekdays: v.halfDayWeekdays,
-            },
-          }),
-        );
+        await addAttendanceConfig({
+          schoolId: schoolId ?? undefined,
+          effectiveFrom: v.effectiveFrom,
+          shiftStart: v.shiftStart,
+          shiftEnd: v.shiftEnd,
+          lunchStart: v.lunchStart,
+          lunchEnd: v.lunchEnd,
+          graceMinutes: Number(v.graceMinutes),
+          maxLateAllowed: Number(v.maxLateAllowed),
+          annualLeaveDays: Number(v.annualLeaveDays),
+          workingWeekdays: v.workingWeekdays,
+          halfDayWeekdays: v.halfDayWeekdays,
+        });
         await queryClient.invalidateQueries({ queryKey: ["attendance"] });
       }}
     >
@@ -161,10 +157,7 @@ const weekdays = (list: number[]) => list.map((d) => WEEKDAY_SHORT[d]).join(", "
 function ConfigSection({ schoolId, scopeLabel }: { schoolId: string | null; scopeLabel: string }) {
   const { queryKey } = useCurrentSchool();
   const [adding, setAdding] = useState(false);
-  const overview = useQuery({
-    queryKey: queryKey("attendance", "configs", schoolId),
-    queryFn: async () => unwrap(await api.GET("/api/v1/attendance/configs", { params: { query: { schoolId: schoolId ?? undefined } } })),
-  });
+  const overview = useAttendanceConfig(schoolId);
   if (overview.isLoading) return <TableSkeleton rows={3} columns={4} />;
   if (overview.isError) return <ErrorState error={overview.error} onRetry={() => overview.refetch()} />;
   const data = overview.data!;
@@ -261,10 +254,7 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState<HolidayDto | null>(null);
-  const holidays = useQuery({
-    queryKey: queryKey("attendance", "holidays", year),
-    queryFn: async () => unwrap(await api.GET("/api/v1/holidays", { params: { query: { year } } })),
-  });
+  const holidays = useHolidays(year);
   const isChainAdmin = !!me?.roles.some((r) => r.role === "CHAIN_ADMIN" && !r.schoolId);
   // Chỉ để ẩn/hiện: chủ chuỗi, kế toán chỉ xem; backend kiểm tra lại
   const canManage = useCan("manage", "attendance");
@@ -342,11 +332,12 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
         successMessage="Đã thêm ngày lễ."
         onSubmit={async (v) => {
           const name = v.preset === CUSTOM ? v.customName : commonHolidays.find((h) => h.id === v.preset)?.name ?? v.preset;
-          unwrap(
-            await api.POST("/api/v1/holidays", {
-              body: { schoolId: v.scope === CHAIN ? undefined : v.scope, fromDate: v.fromDate, toDate: v.toDate || undefined, name },
-            }),
-          );
+          await addHolidays({
+            schoolId: v.scope === CHAIN ? undefined : v.scope,
+            fromDate: v.fromDate,
+            toDate: v.toDate || undefined,
+            name,
+          });
           await queryClient.invalidateQueries({ queryKey: ["attendance"] });
         }}
       >
@@ -366,7 +357,7 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
         confirmText="Xóa"
         variant="destructive"
         onConfirm={async () => {
-          unwrap(await api.DELETE("/api/v1/holidays/{id}", { params: { path: { id: deleting!.id } } }));
+          await deleteHoliday(deleting!.id);
           await queryClient.invalidateQueries({ queryKey: ["attendance"] });
         }}
       />

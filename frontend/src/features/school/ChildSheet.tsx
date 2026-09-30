@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { FormSheet } from "@/components/common/FormSheet";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
-import { type ChildDetail, type ChildFields, saveChild, useClasses } from "./api";
+import { type ChildDetail, type ChildFields, saveChild, useClasses } from "@/api";
 
 const schema = z.object({
   fullName: z.string().trim().min(2, "Vui lòng nhập họ tên trẻ."),

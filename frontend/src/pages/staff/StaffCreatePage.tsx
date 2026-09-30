@@ -12,14 +12,14 @@ import { Form } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
-import { api, unwrap } from "@/api/client";
-import { applyApiErrors } from "@/api/formErrors";
-import { uploadFile } from "@/api/files";
+import { createStaff } from "@/api";
+import { applyApiErrors } from "@/api";
+import { uploadFile } from "@/api";
 import type { components } from "@/api/schema";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { ROLE_LABELS } from "@/lib/navigation";
-import { addStaffDocument, useDocumentTypes } from "@/features/staff/api";
+import { addStaffDocument, useDocumentTypes } from "@/api";
 import { CccdScanDialog, type CccdScanResult } from "@/features/staff/CccdScanDialog";
 import { StaffFormFields } from "@/features/staff/StaffFormFields";
 import { emptyStaffForm, staffFormSchema, type StaffFormValues, SUGGESTED_ROLE, toStaffFields } from "@/features/staff/staffForm";
@@ -85,17 +85,11 @@ export default function StaffCreatePage() {
 
   const create = useMutation({
     mutationFn: async (values: StaffFormValues) => {
-      const created = unwrap(
-        await api.POST("/api/v1/staff", {
-          body: {
-            schoolId,
-            fields: toStaffFields(values),
-            account: createAccount && role
-              ? { roles: [{ role, schoolId }] }
-              : undefined,
-          },
-        }),
-      );
+      const created = await createStaff({
+        schoolId,
+        fields: toStaffFields(values),
+        account: createAccount && role ? { roles: [{ role, schoolId }] } : undefined,
+      });
       await uploadCccdImages(created.id, created.schoolId);
       return created;
     },

@@ -12,9 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { formatDateTime } from "@/lib/format";
-import { type ApprovalItem, type ApprovalType, decideApproval, useApprovals } from "@/features/school/api";
+import { type ApprovalItem, type ApprovalType, decideApproval, useApprovals } from "@/api";
 
 const TYPE_META: Record<ApprovalType, { label: string; icon: typeof Inbox }> = {
   LEAVE: { label: "Đơn nghỉ", icon: CalendarOff },

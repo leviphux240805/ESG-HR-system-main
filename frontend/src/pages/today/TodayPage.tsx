@@ -11,11 +11,11 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDate, formatLongDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { assignSubstitute, MARK_LABELS, type TodaySummary, useToday } from "@/features/school/api";
+import { assignSubstitute, MARK_LABELS, type TodaySummary, useToday } from "@/api";
 
 function Stat({ icon: Icon, label, value, hint, to, tone }: { icon: LucideIcon; label: string; value: string; hint?: string; to?: string; tone?: "warn" }) {
   const body = (

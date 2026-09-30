@@ -11,11 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorState, PageSkeleton } from "@/components/common/States";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { useCan } from "@/hooks/useCan";
 import { formatDate, formatLongDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { type DayMenu, saveDayMenu, useWeekMenu } from "@/features/health/api";
+import { type DayMenu, saveDayMenu, useWeekMenu } from "@/api";
 
 const iso = (d: Date) => d.toLocaleDateString("sv-SE");
 

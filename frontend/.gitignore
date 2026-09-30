@@ -33,3 +33,4 @@ dist-artifact
 .vercel
 .env*
 !.env.example
+dist-demo

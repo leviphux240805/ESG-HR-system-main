@@ -4,8 +4,8 @@ import { ArrowLeft, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AuthLayout, authInputClass } from "@/components/auth/AuthLayout";
-import { api, unwrap } from "@/api/client";
-import { errorMessage } from "@/api/errors";
+import { resetPassword } from "@/api";
+import { errorMessage } from "@/api";
 
 /** Kiểm tra nhanh phía giao diện; backend kiểm tra lại (ít nhất 8 ký tự, gồm chữ và số). */
 function passwordProblem(password: string, confirm: string): string | null {
@@ -33,7 +33,7 @@ export default function ResetPassword() {
     }
     setIsLoading(true);
     try {
-      unwrap(await api.POST("/api/v1/auth/reset-password", { body: { token, newPassword: password } }));
+      await resetPassword(token, password);
       toast.success("Đã đặt mật khẩu mới. Vui lòng đăng nhập lại.");
       navigate("/login", { replace: true });
     } catch (error) {

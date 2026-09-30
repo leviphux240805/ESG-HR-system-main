@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpenCheck, ChevronRight } from "lucide-react";
-import { api, unwrap } from "@/api/client";
+import { useMyDocuments } from "@/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
-import type { LibraryDocumentItem } from "@/features/library/api";
+import type { LibraryDocumentItem } from "@/api";
 import { scopeLabel } from "@/features/library/scope";
 
 function DocumentRow({ doc }: { doc: LibraryDocumentItem }) {
@@ -37,10 +37,7 @@ function DocumentRow({ doc }: { doc: LibraryDocumentItem }) {
 
 /** Văn bản yêu cầu tôi xác nhận: chưa đọc trước; bấm để đọc và "Tôi đã đọc" ở trang văn bản. */
 export default function MyDocumentsPage() {
-  const docs = useQuery({
-    queryKey: ["library", "mine"],
-    queryFn: async () => unwrap(await api.GET("/api/v1/me/library/documents")),
-  });
+  const docs = useMyDocuments();
 
   if (docs.isLoading) return <PageSkeleton />;
   if (docs.isError) {

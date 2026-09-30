@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { Paged } from "@/api/paging";
+import type { Paged } from "@/api";
 import { usePermissions } from "@/hooks/useCan";
 import { type ListParams, PAGE_SIZES } from "@/hooks/useListParams";
 import type { Action, Resource } from "@/lib/permissions";

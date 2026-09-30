@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { AlertTriangle, Inbox, type LucideIcon, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {

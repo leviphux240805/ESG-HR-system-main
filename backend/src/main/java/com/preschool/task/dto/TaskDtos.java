@@ -38,6 +38,18 @@ public final class TaskDtos {
 			@Schema(description = "Ngày kết thúc lặp (bỏ trống = không kết thúc)") LocalDate until) {
 	}
 
+	/** Bộ lọc của danh sách việc (tham số query). */
+	public record TaskQuery(
+			@Schema(description = "Lọc theo cơ sở; bỏ trống = mọi cơ sở trong phạm vi, gồm cả việc toàn chuỗi") UUID schoolId,
+			Status status,
+			Priority priority,
+			@Schema(description = "Chỉ việc giao cho nhân viên này") UUID assigneeStaffId,
+			@Schema(description = "Hạn từ thời điểm này") Instant dueFrom,
+			@Schema(description = "Hạn trước thời điểm này") Instant dueTo,
+			@Schema(description = "Chỉ việc quá hạn mà chưa xong") Boolean overdue,
+			@Schema(description = "Tìm theo tên việc") String q) {
+	}
+
 	public record TaskItem(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
 			@Schema(description = "Rỗng = việc toàn chuỗi") UUID schoolId,

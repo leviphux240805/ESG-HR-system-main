@@ -3,7 +3,7 @@ import { Menu } from "lucide-react";
 import { usePermissions } from "@/hooks/useCan";
 import { mobileTabs } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-import { useApprovals } from "@/features/school/api";
+import { useApprovals } from "@/api";
 
 function ApprovalBadge() {
   const count = useApprovals().data?.length ?? 0;

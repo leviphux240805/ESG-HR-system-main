@@ -9,10 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ErrorState, PageSkeleton } from "@/components/common/States";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { useCan } from "@/hooks/useCan";
 import { formatDate, formatMoney, formatMonth } from "@/lib/format";
-import { INVOICE_STATUS, recordPayment, useInvoice } from "./api";
+import { INVOICE_STATUS, recordPayment, useInvoice } from "@/api";
 
 const todayIso = () => new Date().toLocaleDateString("sv-SE");
 

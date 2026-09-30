@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Folder, FolderOpen, Inbox, Library, type LucideIcon, MoreHorizontal, Plus } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { createFolder, deleteFolder, renameFolder } from "@/api";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,7 @@ import { FormSheet } from "@/components/common/FormSheet";
 import { ErrorState } from "@/components/common/States";
 import { TextField } from "@/features/staff/profile/fields";
 import { cn } from "@/lib/utils";
-import { type FolderDto, UNFILED, useFolders } from "./api";
+import { type FolderDto, UNFILED, useFolders } from "@/api";
 import { buildFolderGroups, type FolderNode, type PublishScope } from "./scope";
 
 const nameSchema = z.object({ name: z.string().trim().min(1, "Vui lòng nhập tên thư mục").max(200) });
@@ -42,13 +42,13 @@ function FolderSheet({ edit, onClose }: { edit: FolderEdit | null; onClose: () =
       successMessage="Đã lưu thư mục."
       onSubmit={async ({ name }) => {
         if (edit?.mode === "rename") {
-          unwrap(await api.PUT("/api/v1/library/folders/{id}", { params: { path: { id: edit.folder.id } }, body: { name } }));
+          await renameFolder(edit.folder.id, { name });
         } else if (edit) {
-          unwrap(
-            await api.POST("/api/v1/library/folders", {
-              body: { name, parentId: edit.parent?.id, schoolId: edit.parent ? undefined : (edit.schoolId ?? undefined) },
-            }),
-          );
+          await createFolder({
+            name,
+            parentId: edit.parent?.id,
+            schoolId: edit.parent ? undefined : (edit.schoolId ?? undefined),
+          });
         }
         await queryClient.invalidateQueries({ queryKey: ["library"] });
       }}
@@ -188,7 +188,7 @@ export function FolderTree({ selected, onSelect, scopes, schools }: Props) {
         confirmText="Xóa"
         variant="destructive"
         onConfirm={async () => {
-          unwrap(await api.DELETE("/api/v1/library/folders/{id}", { params: { path: { id: deleting!.id } } }));
+          await deleteFolder(deleting!.id);
           if (selected === deleting!.id) onSelect(undefined);
           await queryClient.invalidateQueries({ queryKey: ["library"] });
         }}

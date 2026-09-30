@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { StatusBadge } from "./StatusBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { ErrorState } from "./States";
-import { ApiError } from "@/api/errors";
+import { ApiError } from "@/api";
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 

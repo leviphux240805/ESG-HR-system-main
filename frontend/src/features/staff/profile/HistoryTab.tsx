@@ -5,7 +5,7 @@ import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { type FileRef, type StaffDetail, useDocumentTypes, useStaffHistory } from "../api";
+import { type FileRef, type StaffDetail, useDocumentTypes, useStaffHistory } from "@/api";
 import { describeEvent, type HistoryContext } from "../history";
 import { FileLink, FilePreviewDialog } from "./FilePreviewDialog";
 

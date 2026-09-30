@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Landmark, PhoneCall, UserX } from "lucide-react";
-import { api, unwrap } from "@/api/client";
-import { ApiError } from "@/api/errors";
+import { useMyStaff } from "@/api";
+import { ApiError } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -10,12 +10,8 @@ import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { formatDateTime } from "@/lib/format";
 import { useAddressData } from "@/features/staff/AddressFields";
-import {
-  CHANGE_KIND_LABELS,
-  CHANGE_REQUEST_STATUS,
-  describeChanges,
-  useMyChangeRequests,
-} from "@/features/staff/changeRequests";
+import { CHANGE_KIND_LABELS, CHANGE_REQUEST_STATUS, describeChanges } from "@/features/staff/changeRequests";
+import { useMyChangeRequests } from "@/api";
 import { BankRequestSheet, ContactRequestSheet } from "@/features/staff/profile/ChangeRequestSheets";
 import { ProfileHeader, ProfileTabs } from "@/features/staff/profile/ProfileView";
 
@@ -58,11 +54,7 @@ function MyRequests() {
 
 /** Hồ sơ nhân viên của người đang đăng nhập (chỉ xem); sửa SĐT/địa chỉ/ngân hàng bằng đề xuất chờ duyệt. */
 export default function MyProfilePage() {
-  const profile = useQuery({
-    queryKey: ["me", "staff"],
-    queryFn: async () => unwrap(await api.GET("/api/v1/me/staff")),
-    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
-  });
+  const profile = useMyStaff();
   const [sheet, setSheet] = useState<"contact" | "bank" | null>(null);
 
   if (profile.isLoading) return <PageSkeleton />;

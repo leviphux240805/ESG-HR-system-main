@@ -1,4 +1,4 @@
-import type { GrowthChart, GrowthRow, WeekMenu } from "../types";
+import type { GrowthChart, GrowthRow, WeekMenu } from "@/api/contracts";
 import { db, type MenuRec } from "../db";
 import { addDays, ageMonths, weekStart } from "../dates";
 import { nutritionStatus, referenceSeries } from "../growth";

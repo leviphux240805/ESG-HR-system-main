@@ -1,6 +1,6 @@
 import { Paperclip } from "lucide-react";
 import { FilePreviewDialog as BasePreview } from "@/components/common/FilePreviewDialog";
-import { type FileRef, staffFileUrl } from "../api";
+import { type FileRef, staffFileUrl } from "@/api";
 import { canPreview, downloadStaffFile } from "../files";
 
 /** Xem trước tệp thuộc hồ sơ (link ký theo quyền hồ sơ). */

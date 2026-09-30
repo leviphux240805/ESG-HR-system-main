@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { addSalaryConfig, updateStaffBank } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +13,7 @@ import { EmptyState, ErrorState, TableSkeleton } from "@/components/common/State
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { getAllBanks } from "@/data/bankData";
 import { formatDate, formatMoney } from "@/lib/format";
-import { type SalaryConfigDto, type StaffDetail, useSalaryConfigs } from "../api";
+import { type SalaryConfigDto, type StaffDetail, useSalaryConfigs } from "@/api";
 import { todayIso } from "../dates";
 import {
   ALLOWANCE_LABELS,
@@ -101,21 +101,16 @@ function SalarySheet({
         const allowances = Object.fromEntries(
           ALLOWANCE_KEYS.filter((k) => v.allowances[k] !== "").map((k) => [k, Number(v.allowances[k])]),
         );
-        unwrap(
-          await api.POST("/api/v1/staff/{staffId}/salary-configs", {
-            params: { path: { staffId: staff.id } },
-            body: {
-              effectiveFrom: v.effectiveFrom,
-              salaryMode: v.salaryMode,
-              baseSalary: v.salaryMode === "FIXED" ? num(v.baseSalary) : undefined,
-              coefficient: v.salaryMode === "COEFFICIENT" ? num(v.coefficient) : undefined,
-              region: v.region,
-              allowances,
-              insuranceSalary: num(v.insuranceSalary),
-              note: v.note || undefined,
-            },
-          }),
-        );
+        await addSalaryConfig(staff.id, {
+          effectiveFrom: v.effectiveFrom,
+          salaryMode: v.salaryMode,
+          baseSalary: v.salaryMode === "FIXED" ? num(v.baseSalary) : undefined,
+          coefficient: v.salaryMode === "COEFFICIENT" ? num(v.coefficient) : undefined,
+          region: v.region,
+          allowances,
+          insuranceSalary: num(v.insuranceSalary),
+          note: v.note || undefined,
+        });
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
     >
@@ -187,12 +182,11 @@ function BankSheet({ staff, open, onOpenChange }: { staff: StaffDetail; open: bo
       form={form}
       successMessage="Đã lưu tài khoản ngân hàng."
       onSubmit={async (v) => {
-        unwrap(
-          await api.PUT("/api/v1/staff/{staffId}/bank", {
-            params: { path: { staffId: staff.id } },
-            body: { bankName: v.bankName || undefined, bankAccountNo: v.bankAccountNo || undefined, bankAccountHolder: v.bankAccountHolder || undefined },
-          }),
-        );
+        await updateStaffBank(staff.id, {
+          bankName: v.bankName || undefined,
+          bankAccountNo: v.bankAccountNo || undefined,
+          bankAccountHolder: v.bankAccountHolder || undefined,
+        });
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
     >

@@ -1,4 +1,4 @@
-import type { Gender, ReferencePoint } from "./types";
+import type { Gender, ReferencePoint } from "@/api/contracts";
 
 // Chuẩn tăng trưởng WHO (xấp xỉ, làm tròn) theo tháng tuổi 24–72: [-2SD, trung vị, +2SD]. Chỉ dùng cho bản demo.
 const AGES = [24, 36, 48, 60, 72];

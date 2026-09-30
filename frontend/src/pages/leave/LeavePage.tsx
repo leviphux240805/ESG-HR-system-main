@@ -6,9 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CalendarOff, Check, ChevronLeft, ChevronRight, Loader2, Paperclip, Plus, UserX, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
-import { ApiError, errorMessage } from "@/api/errors";
-import type { StoredFile } from "@/api/files";
+import { ApiError, errorMessage } from "@/api";
+import type { StoredFile } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,16 +26,21 @@ import { formatDateTime } from "@/lib/format";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
 import { CODE_LABELS, currentMonth, formatDays, monthLabel, shiftMonth } from "@/features/attendance/codes";
 import {
+  approveLeaveRequest,
+  approveLeaveRequests,
+  cancelLeaveRequest,
+  createLeaveRequest,
   LEAVE_CODES,
   LEAVE_STATUS,
   type LeaveRequestDto,
   leaveFileUrl,
   leaveRange,
+  rejectLeaveRequest,
   useLeaveCalendar,
   useMyLeaveBalance,
   useMyLeaveRequests,
   usePendingLeaves,
-} from "@/features/attendance/leave";
+} from "@/api";
 import { MonthCalendar } from "@/features/attendance/MonthCalendar";
 
 // ---- xin nghỉ
@@ -83,18 +87,14 @@ function RequestSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
       submitLabel="Gửi đơn"
       successMessage="Đã gửi đơn xin nghỉ."
       onSubmit={async (v) => {
-        unwrap(
-          await api.POST("/api/v1/me/leave-requests", {
-            body: {
-              leaveCode: v.leaveCode,
-              fromDate: v.fromDate,
-              toDate: v.toDate,
-              halfDay: halfDayAllowed && v.halfDay,
-              reason: v.reason,
-              fileId: v.file?.id,
-            },
-          }),
-        );
+        await createLeaveRequest({
+          leaveCode: v.leaveCode,
+          fromDate: v.fromDate,
+          toDate: v.toDate,
+          halfDay: halfDayAllowed && v.halfDay,
+          reason: v.reason,
+          fileId: v.file?.id,
+        });
         await queryClient.invalidateQueries({ queryKey: ["me"] });
         await queryClient.invalidateQueries({ queryKey: ["leave"] });
       }}
@@ -263,7 +263,7 @@ function MyRequestsTab({ onPreview }: { onPreview: (r: LeaveRequestDto) => void 
         cancelText="Không"
         variant="destructive"
         onConfirm={async () => {
-          unwrap(await api.POST("/api/v1/me/leave-requests/{id}/cancel", { params: { path: { id: cancelling!.id } } }));
+          await cancelLeaveRequest(cancelling!.id);
           toast.success("Đã hủy đơn.");
           await queryClient.invalidateQueries({ queryKey: ["me"] });
         }}
@@ -298,10 +298,10 @@ function PendingTab({ onPreview }: { onPreview: (r: LeaveRequestDto) => void }) 
     setBusy(true);
     try {
       if (ids.length === 1) {
-        unwrap(await api.POST("/api/v1/leave-requests/{id}/approve", { params: { path: { id: ids[0] } }, body: {} }));
+        await approveLeaveRequest(ids[0]);
         toast.success("Đã duyệt đơn, bảng công đã cập nhật.");
       } else {
-        const result = unwrap(await api.POST("/api/v1/leave-requests/approve", { body: { ids } }));
+        const result = await approveLeaveRequests(ids);
         if (result.failed.length > 0) {
           toast.warning(`Đã duyệt ${result.approved} đơn; ${result.failed.length} đơn lỗi: ${result.failed[0].message}`);
         } else {
@@ -372,7 +372,7 @@ function PendingTab({ onPreview }: { onPreview: (r: LeaveRequestDto) => void }) 
         submitLabel="Từ chối"
         successMessage="Đã từ chối đơn."
         onSubmit={async ({ note }) => {
-          unwrap(await api.POST("/api/v1/leave-requests/{id}/reject", { params: { path: { id: rejecting!.id } }, body: { note } }));
+          await rejectLeaveRequest(rejecting!.id, note);
           await refresh();
         }}
       >

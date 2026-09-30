@@ -1,4 +1,4 @@
-import type { RoleCode } from "./api";
+import type { RoleCode } from "@/api";
 
 /** Phạm vi gán vai trò (khớp RoleCode.Scope ở backend và CHECK user_roles_scope). */
 export const ROLE_SCOPE: Record<RoleCode, "CHAIN" | "SCHOOL" | "CHAIN_OR_SCHOOL"> = {

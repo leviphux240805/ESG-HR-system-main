@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthLayout, authInputClass } from "@/components/auth/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { errorMessage } from "@/api/errors";
-import { DEMO } from "@/api/client";
-import type { DemoRole } from "@/mock/db";
+import { errorMessage } from "@/api";
+import { IS_DEMO } from "@/api";
+import type { DemoRole } from "@/api";
 
 const DEMO_ROLES: { role: DemoRole; label: string; description: string; icon: LucideIcon }[] = [
   { role: "principal", label: "Hiệu trưởng", description: "Điều hành 2 cơ sở: hôm nay, duyệt, nhân sự, học phí, báo cáo", icon: UserCheck },
@@ -57,7 +57,7 @@ function DemoLogin() {
 }
 
 export default function Login() {
-  return DEMO ? <DemoLogin /> : <PasswordLogin />;
+  return IS_DEMO ? <DemoLogin /> : <PasswordLogin />;
 }
 
 function PasswordLogin() {

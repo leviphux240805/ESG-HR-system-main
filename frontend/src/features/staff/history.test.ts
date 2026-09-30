@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { HistoryEvent } from "./api";
+import type { HistoryEvent } from "@/api";
 import { describeEvent, staffChanges } from "./history";
 
 const ctx = {

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, unwrap } from "@/api/client";
-import { errorMessage } from "@/api/errors";
+import { markAllNotificationsRead, markNotificationRead, useNotifications, useUnreadCount } from "@/api";
+import { errorMessage } from "@/api";
 import type { components } from "@/api/schema";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -24,20 +24,12 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  const unread = useQuery({
-    queryKey: [...KEY, "unread-count"],
-    queryFn: async () => unwrap(await api.GET("/api/v1/notifications/unread-count")).count ?? 0,
-    refetchInterval: 60_000,
-  });
-  const list = useQuery({
-    queryKey: [...KEY, "list"],
-    queryFn: async () => unwrap(await api.GET("/api/v1/notifications", { params: { query: { page: 0, size: LIST_SIZE } } })),
-    enabled: open,
-  });
+  const unread = useUnreadCount();
+  const list = useNotifications(0, LIST_SIZE, open);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: KEY });
   const markAll = useMutation({
-    mutationFn: async () => unwrap(await api.POST("/api/v1/notifications/read-all")),
+    mutationFn: markAllNotificationsRead,
     onSuccess: refresh,
     onError: (error) => toast.error(errorMessage(error)),
   });
@@ -46,7 +38,7 @@ export function NotificationBell() {
     setOpen(false);
     if (!item.readAt) {
       try {
-        unwrap(await api.POST("/api/v1/notifications/{id}/read", { params: { path: { id: item.id } } }));
+        await markNotificationRead(item.id);
         refresh();
       } catch {
         // Đánh dấu đã đọc thất bại không chặn việc mở trang

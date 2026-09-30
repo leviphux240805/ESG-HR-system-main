@@ -1,4 +1,4 @@
-import type { DebtItem, FeeSummary, InvoiceDetail, InvoiceItem, InvoiceStatus } from "../types";
+import type { DebtItem, FeeSummary, InvoiceDetail, InvoiceItem, InvoiceStatus } from "@/api/contracts";
 import { db, type InvoiceRec } from "../db";
 import { type Ctx, MockError, matches, newId, notFound, on, paginate, requireBgh } from "../router";
 import { today } from "./common";

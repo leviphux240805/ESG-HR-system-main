@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
-import { AGE_GROUP_LABELS, useClasses } from "@/features/school/api";
+import { AGE_GROUP_LABELS, useClasses } from "@/api";
 
 /** Danh sách lớp của cơ sở: sĩ số, giáo viên, có mặt hôm nay. */
 export default function ClassesPage() {

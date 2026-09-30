@@ -15,7 +15,7 @@ import {
   type ExpiringItem,
   type ExpiryKind,
   useExpiringDocuments,
-} from "@/features/staff/api";
+} from "@/api";
 import { WARNING_DAYS } from "@/features/staff/dates";
 
 const KIND_LABELS: Record<ExpiryKind, string> = {

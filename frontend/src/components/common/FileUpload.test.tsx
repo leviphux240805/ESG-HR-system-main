@@ -3,13 +3,13 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 import { MultiFileUpload } from "./FileUpload";
-import type { StoredFile } from "@/api/files";
+import type { StoredFile } from "@/api";
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const files = vi.hoisted(() => ({ uploadFile: vi.fn(), openFile: vi.fn() }));
-vi.mock("@/api/files", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/api/files")>()),
+vi.mock("@/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api")>()),
   uploadFile: files.uploadFile,
   openFile: files.openFile,
 }));

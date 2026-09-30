@@ -3,8 +3,8 @@ import { Download, FileText, Loader2, Plus, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { FILE_ACCEPT, MAX_FILE_MB, openFile, type StoredFile, uploadFile, validateFile } from "@/api/files";
-import { errorMessage } from "@/api/errors";
+import { FILE_ACCEPT, MAX_FILE_MB, openFile, type StoredFile, uploadFile, validateFile } from "@/api";
+import { errorMessage } from "@/api";
 import { cn } from "@/lib/utils";
 
 interface BaseProps {

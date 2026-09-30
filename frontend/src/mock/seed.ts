@@ -1,5 +1,5 @@
 import { fakerVI as faker } from "@faker-js/faker";
-import type { AgeGroup, ChildMark, Gender, TaskPriority, TaskStatus } from "./types";
+import type { AgeGroup, ChildMark, Gender, TaskPriority, TaskStatus } from "@/api/contracts";
 import { DB_VERSION, type ClassRec, type ChildRec, type DemoDB, type LeaveRec, type StaffRec, type TaskRec } from "./db";
 import { addDays, ageMonths, iso, isSchoolDay, isWorkDay, monthDays, monthOf, range, shiftMonthStr, weekStart, holidayName } from "./dates";
 import { valueAt } from "./growth";
@@ -91,9 +91,10 @@ function address(): { detail: string; ward: string } {
   return { detail: `Số ${faker.number.int({ min: 2, max: 180 })} ${faker.helpers.arrayElement(STREETS)}`, ward: `${ward}|${wardName}` };
 }
 
+/** Một ngày bất kỳ trong khoảng; khoảng rỗng (đầu tháng, ngày lễ) thì lấy ngày đầu. */
 function dateBetween(from: string, to: string): string {
   const days = range(from, to);
-  return faker.helpers.arrayElement(days);
+  return days.length ? faker.helpers.arrayElement(days) : from;
 }
 
 function at(date: string, hour: number): string {
@@ -449,7 +450,8 @@ export function generateDb(todayDate = new Date()): DemoDB {
       const current = m === month;
       const roll = faker.number.float({ min: 0, max: 1 });
       const paid = current ? (roll < 0.62 ? total : roll < 0.68 ? Math.round(total / 2 / 1000) * 1000 : 0) : roll < 0.9 ? total : roll < 0.95 ? Math.round(total / 2 / 1000) * 1000 : 0;
-      const payDay = dateBetween(`${m}-02`, current ? (today < `${m}-12` ? today : `${m}-12`) : `${m}-15`);
+      // Tháng hiện tại chỉ thu tới hôm nay; đầu tháng thì rơi về chính ngày bắt đầu
+      const payDay = dateBetween(`${m}-01`, current ? (today < `${m}-12` ? today : `${m}-12`) : `${m}-15`);
       db.invoices.push({
         id: faker.string.uuid(),
         code: `PT${m.replace("-", "").slice(2)}-${String(invoiceNo).padStart(4, "0")}`,

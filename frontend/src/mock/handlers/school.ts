@@ -1,4 +1,4 @@
-import type { ApprovalItem, ChildDetail, ChildFields, ChildItem, ChildMark, ClassItem, RollCall, TodaySummary } from "../types";
+import type { ApprovalItem, ChildDetail, ChildFields, ChildItem, ChildMark, ClassItem, RollCall, TodaySummary } from "@/api/contracts";
 import { db, type ChildRec, type ClassRec } from "../db";
 import { addDays, isSchoolDay, lastSchoolDay } from "../dates";
 import { nutritionStatus } from "../growth";

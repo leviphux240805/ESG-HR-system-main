@@ -1,4 +1,4 @@
-import type { TaskFields, TaskItem, TaskStatus } from "../types";
+import type { TaskFields, TaskItem, TaskStatus } from "@/api/contracts";
 import { db, type TaskRec } from "../db";
 import { type Ctx, MockError, matches, newId, notFound, nowIso, on, requireBgh } from "../router";
 import { notify, positionLabel, schoolStaff, staffName, today } from "./common";

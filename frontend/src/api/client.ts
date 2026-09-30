@@ -1,13 +1,10 @@
 import createClient, { type Middleware } from "openapi-fetch";
 import type { components, paths } from "./schema";
 import { ApiError, type Problem } from "./errors";
+import { IS_DEMO } from "./source";
+import { transport } from "./transport";
 
 export type TokenResponse = components["schemas"]["TokenResponse"];
-
-/** Bản demo: mọi request đi qua API giả trong trình duyệt (src/mock), không cần backend. Tắt bằng VITE_DEMO=false. */
-export const DEMO = import.meta.env.VITE_DEMO !== "false";
-
-const demoFetch: typeof fetch = async (input, init) => (await import("@/mock")).mockFetch(input, init);
 
 /** Tên header chứa cơ sở đang chọn (khớp backend SchoolScope.HEADER). */
 export const SCHOOL_HEADER = "X-School-Id";
@@ -43,7 +40,7 @@ export function setSessionExpiredHandler(handler: (() => void) | null) {
  * backend xoay vòng refresh token nên gọi song song sẽ bị coi là dùng lại token.
  */
 export function refreshAccessToken(): Promise<boolean> {
-  if (DEMO) return Promise.resolve(false);
+  if (IS_DEMO) return Promise.resolve(false);
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
@@ -103,7 +100,7 @@ const authMiddleware: Middleware = {
 };
 
 /** Client có type sinh từ OpenAPI (src/api/schema.d.ts, chạy `npm run gen:api` khi backend đổi API). */
-export const api = createClient<paths>({ baseUrl: "", credentials: "same-origin", fetch: DEMO ? demoFetch : undefined });
+export const api = createClient<paths>({ baseUrl: "", credentials: "same-origin", fetch: transport });
 api.use(authMiddleware);
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -129,7 +126,7 @@ export async function apiRequest<T>(
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     }),
   );
-  const response = await (DEMO ? demoFetch : fetch)(request);
+  const response = await transport(request);
   const text = await response.text();
   const data = text ? JSON.parse(text) : undefined;
   if (!response.ok) throw new ApiError(response.status, data as Problem | undefined);

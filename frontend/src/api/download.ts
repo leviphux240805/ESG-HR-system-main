@@ -1,3 +1,4 @@
+import { ApiError, type Problem } from "./errors";
 /** Lấy tên file từ header Content-Disposition (ưu tiên filename* UTF-8 để giữ tên tiếng Việt). */
 export function fileNameFromDisposition(header: string | null, fallback: string): string {
   if (!header) return fallback;
@@ -23,4 +24,15 @@ export function saveBlob(blob: Blob, fileName: string) {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Kết quả của một lời gọi API trả file (openapi-fetch với `parseAs: "blob"`). */
+export type ExportResult = { data?: Blob; error?: unknown; response: Response };
+
+/** Tải file từ API xuất dữ liệu: ném ApiError nếu lỗi, còn lại lưu về máy với tên do API đặt. */
+export async function saveExport(result: ExportResult, fallbackName: string) {
+  if (!result.response.ok) {
+    throw new ApiError(result.response.status, result.error as Problem | undefined);
+  }
+  saveBlob(result.data as Blob, fileNameFromDisposition(result.response.headers.get("Content-Disposition"), fallbackName));
 }

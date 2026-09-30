@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Trash2, Upload } from "lucide-react";
-import { api, unwrap } from "@/api/client";
+import { deleteStaffDocument } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -17,7 +17,7 @@ import {
   type StaffDocumentDto,
   useDocumentTypes,
   useStaffDocuments,
-} from "../api";
+} from "@/api";
 import { daysUntil, WARNING_DAYS } from "../dates";
 import { DocumentSheet } from "./DocumentSheet";
 import { FileLink, FilePreviewDialog } from "./FilePreviewDialog";
@@ -212,11 +212,7 @@ export function DocumentsTab({ staff }: { staff: StaffDetail }) {
         confirmText="Xóa"
         variant="destructive"
         onConfirm={async () => {
-          unwrap(
-            await api.DELETE("/api/v1/staff/{staffId}/documents/{documentId}", {
-              params: { path: { staffId: staff.id, documentId: deleting!.id } },
-            }),
-          );
+          await deleteStaffDocument(staff.id, deleting!.id);
           await queryClient.invalidateQueries({ queryKey: ["staff"] });
         }}
       />

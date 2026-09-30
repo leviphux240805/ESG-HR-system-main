@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSheet } from "@/components/common/FormSheet";
-import { addStaffDocument, type DocumentTypeDto, type FileRef, type StaffDetail } from "../api";
+import { addStaffDocument, type DocumentTypeDto, type FileRef, type StaffDetail } from "@/api";
 import { AttachmentField } from "./AttachmentField";
 
 const schema = z

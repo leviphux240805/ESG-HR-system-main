@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, X } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { createAccount, updateAccountRoles, useStaffSearch } from "@/api";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ROLE_LABELS } from "@/lib/navigation";
 import { TextField } from "@/features/staff/profile/fields";
-import type { AccountItem, RoleCode } from "./api";
+import type { AccountItem, RoleCode } from "@/api";
 import { ROLE_SCOPE, type RoleRow, roleRowErrors, toAccountRoles } from "./roles";
 
 const CHAIN = "__chain__";
@@ -129,12 +129,7 @@ interface PickedStaff {
 function StaffPicker({ value, onChange }: { value: PickedStaff | null; onChange: (staff: PickedStaff | null) => void }) {
   const [q, setQ] = useState("");
   const debounced = useDebouncedValue(q, 300);
-  const results = useQuery({
-    queryKey: ["staff", "picker", debounced],
-    queryFn: async () =>
-      unwrap(await api.GET("/api/v1/staff", { params: { query: { q: debounced, size: 8, status: "ACTIVE" } } })).items,
-    enabled: !value && debounced.trim().length >= 2,
-  });
+  const results = useStaffSearch(debounced, !value && debounced.trim().length >= 2);
 
   if (value) {
     return (
@@ -205,17 +200,13 @@ export function CreateAccountSheet({ open, onOpenChange }: { open: boolean; onOp
       submitLabel="Tạo và gửi email mời"
       successMessage="Đã tạo tài khoản và gửi email mời."
       onSubmit={async (v) => {
-        unwrap(
-          await api.POST("/api/v1/accounts", {
-            body: {
-              email: v.email,
-              phone: v.phone || undefined,
-              fullName: v.fullName || undefined,
-              staffId: v.staff?.id,
-              roles: toAccountRoles(v.roles),
-            },
-          }),
-        );
+        await createAccount({
+          email: v.email,
+          phone: v.phone || undefined,
+          fullName: v.fullName || undefined,
+          staffId: v.staff?.id,
+          roles: toAccountRoles(v.roles),
+        });
         await queryClient.invalidateQueries({ queryKey: ["accounts"] });
       }}
     >
@@ -263,12 +254,7 @@ export function EditRolesSheet({ account, onClose }: { account: AccountItem | nu
       form={form}
       successMessage="Đã lưu vai trò."
       onSubmit={async (v) => {
-        unwrap(
-          await api.PUT("/api/v1/accounts/{id}/roles", {
-            params: { path: { id: account!.id } },
-            body: { roles: toAccountRoles(v.roles) },
-          }),
-        );
+        await updateAccountRoles(account!.id, toAccountRoles(v.roles));
         await queryClient.invalidateQueries({ queryKey: ["accounts"] });
       }}
     >

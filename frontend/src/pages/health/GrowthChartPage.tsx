@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorState, PageSkeleton } from "@/components/common/States";
 import { formatDate } from "@/lib/format";
-import { type GrowthChart, useGrowthChart } from "@/features/health/api";
+import { type GrowthChart, useGrowthChart } from "@/api";
 
 type Kind = "weight" | "height";
 

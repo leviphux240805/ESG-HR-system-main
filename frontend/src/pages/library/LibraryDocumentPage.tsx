@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellRing, CheckCircle2, Download, Eye, FileUp, Loader2, Pencil, SearchX, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { api, unwrap } from "@/api/client";
-import { ApiError, errorMessage } from "@/api/errors";
+import { ackDocument, deleteDocument, remindDocument } from "@/api";
+import { ApiError, errorMessage } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -26,7 +26,7 @@ import {
   useFolders,
   useLibraryDocument,
   useReaders,
-} from "@/features/library/api";
+} from "@/api";
 import { DocumentFormSheet, VersionSheet } from "@/features/library/DocumentSheets";
 import { publishScopes, scopeLabel } from "@/features/library/scope";
 
@@ -114,7 +114,7 @@ function ReadersCard({ detail }: { detail: LibraryDocumentDetail }) {
 
   const remind = useMutation({
     mutationFn: async () =>
-      unwrap(await api.POST("/api/v1/library/documents/{id}/remind", { params: { path: { id: document.id } } })),
+      remindDocument(document.id),
     onSuccess: (result) => {
       toast.success(`Đã nhắc ${result.reminded} người chưa đọc.`);
       queryClient.invalidateQueries({ queryKey: ["library"] });
@@ -181,7 +181,7 @@ export default function LibraryDocumentPage() {
   const [preview, setPreview] = useState<{ file: PreviewFile; versionNo: number } | null>(null);
 
   const ack = useMutation({
-    mutationFn: async () => unwrap(await api.POST("/api/v1/library/documents/{id}/ack", { params: { path: { id } } })),
+    mutationFn: () => ackDocument(id),
     onSuccess: () => {
       toast.success("Đã xác nhận đã đọc.");
       queryClient.invalidateQueries({ queryKey: ["library"] });
@@ -341,7 +341,7 @@ export default function LibraryDocumentPage() {
             confirmText="Xóa"
             variant="destructive"
             onConfirm={async () => {
-              unwrap(await api.DELETE("/api/v1/library/documents/{id}", { params: { path: { id: doc.id } } }));
+              await deleteDocument(doc.id);
               toast.success("Đã xóa văn bản.");
               navigate("/tai-lieu");
               queryClient.invalidateQueries({ queryKey: ["library", "documents"] });

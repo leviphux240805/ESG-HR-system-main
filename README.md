@@ -19,14 +19,17 @@ Bản giới thiệu khách hàng, **không cần backend**: mọi request đi q
 "Khôi phục dữ liệu demo".
 
 ```bash
-cd frontend && npm install && npm run dev     # http://localhost:8080, chọn vai trò để vào
-npm run build                                  # bản tĩnh trong frontend/dist
+cd frontend && npm install && npm run dev:demo   # http://localhost:8080, chọn vai trò để vào
+npm run demo                                      # build rồi xem thử bản tĩnh (frontend/dist-demo)
 ```
 
 - Vai trò: Hiệu trưởng (2 cơ sở), Phó hiệu trưởng, Giáo viên (trang mặc định: Điểm danh trên điện thoại).
 - Vercel: Root Directory = `frontend`, framework Vite (đã có `frontend/vercel.json` rewrite SPA).
-- Nối backend thật: build với `VITE_DEMO=false`; module mới (Hôm nay, Hộp duyệt, trẻ, học phí, thực đơn,
-  cân đo, báo cáo) gọi qua `apiRequest` với kiểu tạm ở `src/mock/types.ts`, thay bằng type OpenAPI khi backend có.
+- Cùng một codebase chạy hai chế độ, chọn bằng `VITE_DATA_SOURCE`: `npm run dev` / `npm run build` dùng backend
+  thật, `npm run dev:demo` / `npm run build:demo` dùng dữ liệu giả. Giao diện chỉ import từ `src/api`; đổi chế độ
+  chỉ thay lớp transport (`src/api/transport/`), không đụng vào code màn hình.
+- Module backend chưa có (Hôm nay, Hộp duyệt, trẻ, học phí, thực đơn, cân đo, báo cáo) khai kiểu tạm ở
+  `src/api/contracts.ts`; thay bằng type sinh từ OpenAPI khi backend có.
 
 ## Cần cài
 

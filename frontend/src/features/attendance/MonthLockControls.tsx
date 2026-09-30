@@ -5,12 +5,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Lock, LockOpen } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { lockMonth, unlockMonth } from "@/api";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { FormSheet } from "@/components/common/FormSheet";
 import { TextAreaField } from "@/features/staff/profile/fields";
-import type { MonthSheet } from "./api";
+import type { MonthSheet } from "@/api";
 import { monthLabel } from "./codes";
 
 const unlockSchema = z.object({ reason: z.string().trim().min(1, "Vui lòng ghi lý do mở khóa").max(500) });
@@ -43,7 +43,7 @@ export function MonthLockControls({ sheet }: { sheet: MonthSheet }) {
           submitLabel="Mở khóa"
           successMessage="Đã mở khóa công tháng."
           onSubmit={async ({ reason }) => {
-            unwrap(await api.POST("/api/v1/attendance/months/{month}/unlock", { params: { path: { month } }, body: { reason } }));
+            await unlockMonth(month, reason);
             await queryClient.invalidateQueries({ queryKey: ["attendance"] });
           }}
         >
@@ -69,7 +69,7 @@ export function MonthLockControls({ sheet }: { sheet: MonthSheet }) {
         }
         confirmText="Khóa công"
         onConfirm={async () => {
-          unwrap(await api.POST("/api/v1/attendance/months/{month}/lock", { params: { path: { month } } }));
+          await lockMonth(month);
           toast.success("Đã khóa công tháng.");
           await queryClient.invalidateQueries({ queryKey: ["attendance"] });
         }}

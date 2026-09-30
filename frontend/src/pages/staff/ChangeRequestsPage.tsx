@@ -7,7 +7,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -18,15 +17,8 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { useListParams } from "@/hooks/useListParams";
 import { formatDateTime } from "@/lib/format";
 import { useAddressData } from "@/features/staff/AddressFields";
-import {
-  CHANGE_KIND_LABELS,
-  CHANGE_REQUEST_STATUS,
-  type ChangeRequestDto,
-  describeChanges,
-  REVIEW_FILTER_KEYS,
-  REVIEW_STATUSES,
-  useChangeRequests,
-} from "@/features/staff/changeRequests";
+import { CHANGE_KIND_LABELS, CHANGE_REQUEST_STATUS, type ChangeRequestDto, describeChanges, REVIEW_FILTER_KEYS, REVIEW_STATUSES } from "@/features/staff/changeRequests";
+import { approveChangeRequest, rejectChangeRequest, useChangeRequests } from "@/api";
 import { TextAreaField } from "@/features/staff/profile/fields";
 
 const STATUS_TABS: Record<(typeof REVIEW_STATUSES)[number], string> = {
@@ -55,7 +47,7 @@ function RejectSheet({ request, onClose }: { request: ChangeRequestDto | null; o
       submitLabel="Từ chối"
       successMessage="Đã từ chối đề xuất."
       onSubmit={async ({ note }) => {
-        unwrap(await api.POST("/api/v1/staff/change-requests/{id}/reject", { params: { path: { id: request!.id } }, body: { note } }));
+        await rejectChangeRequest(request!.id, note);
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
     >
@@ -184,7 +176,7 @@ export default function ChangeRequestsPage() {
         }
         confirmText="Duyệt"
         onConfirm={async () => {
-          unwrap(await api.POST("/api/v1/staff/change-requests/{id}/approve", { params: { path: { id: approving!.id } }, body: {} }));
+          await approveChangeRequest(approving!.id);
           toast.success("Đã duyệt, hồ sơ đã được cập nhật.");
           await queryClient.invalidateQueries({ queryKey: ["staff"] });
         }}

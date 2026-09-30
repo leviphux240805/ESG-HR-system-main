@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { FolderDto } from "./api";
+import type { FolderDto } from "@/api";
 import { buildFolderGroups, foldersForScope, publishScopes } from "./scope";
 
 const schools = [

@@ -1,5 +1,5 @@
 import type { components } from "@/api/schema";
-import type { AgeGroup, ChildFields, ChildMark, DayMenu, Measurement, TaskPriority, TaskStatus } from "./types";
+import type { AgeGroup, ChildFields, ChildMark, DayMenu, Measurement, TaskPriority, TaskStatus } from "@/api/contracts";
 
 type S = components["schemas"];
 

@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { api, unwrap } from "@/api/client";
-import { errorMessage } from "@/api/errors";
+import { resolveDiscrepancies } from "@/api";
+import { errorMessage } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/common/States";
 import { formatDate } from "@/lib/format";
-import { useDiscrepancies } from "./api";
+import { useDiscrepancies } from "@/api";
 import { ATTENDANCE_CODES, CODE_LABELS, monthLabel } from "./codes";
 
 const key = (staffId: string, date: string) => `${staffId}|${date}`;
@@ -35,14 +35,10 @@ export function DiscrepancyDialog({ open, onOpenChange, month }: { open: boolean
     if (!list.data?.length) return;
     setSaving(true);
     try {
-      unwrap(
-        await api.POST("/api/v1/attendance/discrepancies/resolve", {
-          body: {
-            month,
-            items: list.data.map((d) => ({ staffId: d.staffId, date: d.date, code: choices.get(key(d.staffId, d.date)) ?? "X" })),
-          },
-        }),
-      );
+      await resolveDiscrepancies({
+        month,
+        items: list.data.map((d) => ({ staffId: d.staffId, date: d.date, code: choices.get(key(d.staffId, d.date)) ?? "X" })),
+      });
       toast.success(`Đã xác nhận ${list.data.length} ngày sai lệch.`);
       await queryClient.invalidateQueries({ queryKey: ["attendance"] });
       onOpenChange(false);

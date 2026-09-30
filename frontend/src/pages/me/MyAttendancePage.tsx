@@ -1,14 +1,14 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { AlertTriangle, ChevronLeft, ChevronRight, Lock, UserX } from "lucide-react";
-import { ApiError } from "@/api/errors";
+import { ApiError } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
 import { cn } from "@/lib/utils";
-import { useMySheet } from "@/features/attendance/api";
+import { useMySheet } from "@/api";
 import { codeTone, currentMonth, formatDays, isMonth, monthLabel, shiftMonth } from "@/features/attendance/codes";
-import { useMyLeaveBalance } from "@/features/attendance/leave";
+import { useMyLeaveBalance } from "@/api";
 import { MonthCalendar } from "@/features/attendance/MonthCalendar";
 import { AttendanceLegend } from "@/features/attendance/AttendanceLegend";
 

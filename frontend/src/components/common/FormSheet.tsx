@@ -12,7 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { applyApiErrors } from "@/api/formErrors";
+import { applyApiErrors } from "@/api";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 interface FormSheetProps<T extends FieldValues> {

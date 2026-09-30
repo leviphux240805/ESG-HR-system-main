@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
-import type { StoredFile } from "@/api/files";
+import { addDocumentVersion, createDocument, updateDocument } from "@/api";
+import type { StoredFile } from "@/api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
@@ -13,7 +13,7 @@ import { FileUpload } from "@/components/common/FileUpload";
 import { FormSheet } from "@/components/common/FormSheet";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
 import { ROLE_LABELS } from "@/lib/navigation";
-import { type FolderDto, type LibraryDocumentItem, type LibraryRole } from "./api";
+import { type FolderDto, type LibraryDocumentItem, type LibraryRole } from "@/api";
 import { foldersForScope, type PublishScope } from "./scope";
 
 const ROLES = Object.keys(ROLE_LABELS) as LibraryRole[];
@@ -116,15 +116,16 @@ export function DocumentFormSheet({ open, onOpenChange, folders, scopes, documen
           requireAck: v.requireAck,
         };
         if (document) {
-          unwrap(await api.PUT("/api/v1/library/documents/{id}", { params: { path: { id: document.id } }, body: common }));
+          await updateDocument(document.id, common);
           await queryClient.invalidateQueries({ queryKey: ["library"] });
           return;
         }
-        const created = unwrap(
-          await api.POST("/api/v1/library/documents", {
-            body: { ...common, schoolId: schoolId ?? undefined, fileId: v.file!.id, note: v.note || undefined },
-          }),
-        );
+        const created = await createDocument({
+          ...common,
+          schoolId: schoolId ?? undefined,
+          fileId: v.file!.id,
+          note: v.note || undefined,
+        });
         await queryClient.invalidateQueries({ queryKey: ["library"] });
         navigate(`/tai-lieu/${created.document.id}`);
       }}
@@ -243,12 +244,11 @@ export function VersionSheet({
       submitLabel="Tải lên"
       successMessage="Đã thêm phiên bản mới."
       onSubmit={async (v) => {
-        unwrap(
-          await api.POST("/api/v1/library/documents/{id}/versions", {
-            params: { path: { id: document.id } },
-            body: { fileId: v.file!.id, note: v.note || undefined, requireReack: document.requireAck && v.requireReack },
-          }),
-        );
+        await addDocumentVersion(document.id, {
+          fileId: v.file!.id,
+          note: v.note || undefined,
+          requireReack: document.requireAck && v.requireReack,
+        });
         await queryClient.invalidateQueries({ queryKey: ["library"] });
       }}
     >

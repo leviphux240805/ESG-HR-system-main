@@ -2,16 +2,11 @@ import { useState } from "react";
 import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { unwrap } from "@/api/client";
-import { errorMessage } from "@/api/errors";
-import { fileNameFromDisposition, saveBlob } from "@/api/download";
+import { errorMessage, type ExportResult, saveExport } from "@/api";
 
 interface ExportButtonProps {
-  /**
-   * Gọi API xuất file, ví dụ:
-   *   () => api.GET("/api/v1/reports/{name}/export", { params: { path: { name }, query }, parseAs: "blob" })
-   */
-  request: () => Promise<{ data?: Blob; error?: unknown; response: Response }>;
+  /** Gọi hàm xuất file của module api, ví dụ `() => exportMonth(month)`. */
+  request: () => Promise<ExportResult>;
   /** Tên file dùng khi API không gửi Content-Disposition. */
   fileName?: string;
   label?: string;
@@ -24,9 +19,7 @@ export function ExportButton({ request, fileName = "du-lieu.xlsx", label = "Xu�
   const handleClick = async () => {
     setPending(true);
     try {
-      const result = await request();
-      const blob = unwrap(result);
-      saveBlob(blob, fileNameFromDisposition(result.response.headers.get("Content-Disposition"), fileName));
+      await saveExport(await request(), fileName);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {

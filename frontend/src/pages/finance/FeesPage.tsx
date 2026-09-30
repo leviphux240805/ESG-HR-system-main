@@ -16,8 +16,8 @@ import { useListParams } from "@/hooks/useListParams";
 import { formatMoney, formatMonth } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { currentMonth, isMonth, shiftMonth } from "@/features/attendance/codes";
-import { useClasses } from "@/features/school/api";
-import { INVOICE_FILTER_KEYS, INVOICE_STATUS, type InvoiceItem, useDebts, useFeeSummary, useInvoices } from "@/features/finance/api";
+import { useClasses } from "@/api";
+import { INVOICE_FILTER_KEYS, INVOICE_STATUS, type InvoiceItem, useDebts, useFeeSummary, useInvoices } from "@/api";
 import { InvoiceSheet } from "@/features/finance/InvoiceSheet";
 
 function Summary({ month }: { month: string }) {

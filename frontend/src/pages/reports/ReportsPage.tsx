@@ -6,9 +6,9 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorState, PageSkeleton } from "@/components/common/States";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDate, formatMoney, formatMonth } from "@/lib/format";
-import { AGE_GROUP_LABELS } from "@/features/school/api";
-import { TASK_COLUMNS } from "@/features/tasks/api";
-import { useDashboard } from "@/features/reports/api";
+import { AGE_GROUP_LABELS } from "@/api";
+import { TASK_COLUMNS } from "@/api";
+import { useDashboard } from "@/api";
 
 // Bảng màu phân loại cố định (đã kiểm tra mù màu): xanh, cam; lưới và trục dùng màu nhạt
 const SERIES = { blue: "#2a78d6", orange: "#eb6834" };

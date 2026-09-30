@@ -11,7 +11,7 @@ import { useCan } from "@/hooks/useCan";
 import { useListParams } from "@/hooks/useListParams";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { CHILD_FILTER_KEYS, type ChildItem, useChildren, useClasses } from "@/features/school/api";
+import { CHILD_FILTER_KEYS, type ChildItem, useChildren, useClasses } from "@/api";
 import { formatAge } from "@/features/school/age";
 import { ChildSheet } from "@/features/school/ChildSheet";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";

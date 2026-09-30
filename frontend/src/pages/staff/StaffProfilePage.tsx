@@ -4,8 +4,8 @@ import { ArrowLeftRight, SearchX, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
-import { ApiError } from "@/api/errors";
-import { useStaffDetail } from "@/features/staff/api";
+import { ApiError } from "@/api";
+import { useStaffDetail } from "@/api";
 import { TerminateSheet, TransferSheet } from "@/features/staff/profile/LifecycleSheets";
 import { ProfileHeader, ProfileTabs } from "@/features/staff/profile/ProfileView";
 

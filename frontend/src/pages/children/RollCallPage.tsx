@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { cn } from "@/lib/utils";
-import { type ChildMark, saveRollCall, useClasses, useRollCall } from "@/features/school/api";
+import { type ChildMark, saveRollCall, useClasses, useRollCall } from "@/api";
 
 const OPTIONS: { mark: ChildMark; label: string; active: string }[] = [
   { mark: "P", label: "Có mặt", active: "bg-green-600 text-white border-green-600" },

@@ -1,5 +1,5 @@
 import { canPreviewMime, openDownload } from "@/lib/filePreview";
-import { type FileRef, staffFileUrl } from "./api";
+import { type FileRef, staffFileUrl } from "@/api";
 
 export const canPreview = canPreviewMime;
 

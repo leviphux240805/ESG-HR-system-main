@@ -1,9 +1,5 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { api, unwrap } from "@/api/client";
 import type { components } from "@/api/schema";
 import type { Province } from "@/data/addressDataLoader";
-import { useCurrentSchool } from "@/hooks/useCurrentSchool";
-import type { ListParams } from "@/hooks/useListParams";
 import type { StatusMeta } from "@/components/common/StatusBadge";
 
 type S = components["schemas"];
@@ -56,32 +52,9 @@ export function describeChanges(changes: readonly FieldChange[], provinces: read
   );
 }
 
-export function useMyChangeRequests() {
-  return useQuery({
-    queryKey: ["me", "change-requests"],
-    queryFn: async () => unwrap(await api.GET("/api/v1/me/change-requests")),
-  });
-}
 
-export async function submitChangeRequest(changes: Record<string, string>) {
-  return unwrap(await api.POST("/api/v1/me/change-requests", { body: { changes } }));
-}
 
 /** Bộ lọc trạng thái trên URL; không có = chờ duyệt. */
 export const REVIEW_FILTER_KEYS = ["status"] as const;
 export const REVIEW_STATUSES = ["PENDING", "APPROVED", "REJECTED", "ALL"] as const;
 
-export function useChangeRequests(params: ListParams) {
-  const { queryKey } = useCurrentSchool();
-  const { page, size, status } = params.apiParams as Record<string, string | number | undefined>;
-  const query = {
-    page: page as number,
-    size: size as number,
-    status: status === "ALL" ? undefined : ((status as ChangeRequestStatus | undefined) ?? "PENDING"),
-  };
-  return useQuery({
-    queryKey: queryKey("staff", "change-requests", query),
-    queryFn: async () => unwrap(await api.GET("/api/v1/staff/change-requests", { params: { query } })),
-    placeholderData: keepPreviousData,
-  });
-}

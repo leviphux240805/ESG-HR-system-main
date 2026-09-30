@@ -9,13 +9,13 @@ import { Toggle } from "@/components/ui/toggle";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorState, TableSkeleton } from "@/components/common/States";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { useCan } from "@/hooks/useCan";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
-import { changeStatus, PRIORITY, TASK_COLUMNS, type TaskItem, type TaskStatus, useTasks } from "@/features/tasks/api";
+import { changeStatus, PRIORITY, TASK_COLUMNS, type TaskItem, type TaskStatus, useTasks } from "@/api";
 import { TaskDetailSheet, TaskFormSheet } from "@/features/tasks/TaskSheets";
 
 const ALL = "ALL";

@@ -1,4 +1,4 @@
-import type { AgeGroup, Dashboard, TaskStatus } from "../types";
+import type { AgeGroup, Dashboard, TaskStatus } from "@/api/contracts";
 import { db } from "../db";
 import { addDays, ageMonths, isWorkDay, monthOf, range, shiftMonthStr } from "../dates";
 import { nutritionStatus } from "../growth";

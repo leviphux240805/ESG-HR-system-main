@@ -1,4 +1,4 @@
-import type { FolderDto, LibraryRole } from "./api";
+import type { FolderDto, LibraryRole } from "@/api";
 
 interface Grant {
   role: LibraryRole;

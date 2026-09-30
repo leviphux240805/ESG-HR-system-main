@@ -5,9 +5,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { FormSheet } from "@/components/common/FormSheet";
 import { getAllBanks } from "@/data/bankData";
-import type { StaffDetail } from "../api";
+import type { StaffDetail } from "@/api";
 import { AddressFields, useAddressData } from "../AddressFields";
-import { submitChangeRequest } from "../changeRequests";
+import { submitChangeRequest } from "@/api";
 import { SelectField, TextField } from "./fields";
 
 interface Props {

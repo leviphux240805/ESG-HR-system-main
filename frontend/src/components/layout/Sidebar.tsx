@@ -3,6 +3,7 @@ import { School } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { visibleNavGroups } from "@/lib/navigation";
+import { DemoBadge } from "./DemoBadge";
 import { usePermissions } from "@/hooks/useCan";
 
 /** Nội dung sidebar, dùng chung cho sidebar cố định (máy tính) và ngăn kéo (điện thoại). */
@@ -19,7 +20,10 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <School className="w-6 h-6 text-sidebar-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold leading-tight text-sidebar-foreground">{APP_NAME}</h1>
+            <h1 className="flex items-center gap-2 text-lg font-semibold leading-tight text-sidebar-foreground">
+              {APP_NAME}
+              <DemoBadge />
+            </h1>
             <p className="text-xs text-sidebar-foreground/70">{APP_TAGLINE}</p>
           </div>
         </div>

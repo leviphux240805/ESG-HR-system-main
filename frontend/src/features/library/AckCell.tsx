@@ -1,6 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import type { LibraryDocumentItem } from "./api";
+import type { LibraryDocumentItem } from "@/api";
 
 /** Tỷ lệ đã đọc (người quản lý) hoặc trạng thái xác nhận của chính mình (người đọc). */
 export function AckCell({ doc }: { doc: LibraryDocumentItem }) {

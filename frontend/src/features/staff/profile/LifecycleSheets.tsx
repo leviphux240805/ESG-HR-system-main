@@ -4,13 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { terminateStaff, transferStaff } from "@/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { FormSheet } from "@/components/common/FormSheet";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDate } from "@/lib/format";
-import type { FileRef, StaffDetail } from "../api";
+import type { FileRef, StaffDetail } from "@/api";
 import { todayIso } from "../dates";
 import { AttachmentField } from "./AttachmentField";
 import { SelectField, TextAreaField, TextField } from "./fields";
@@ -68,12 +68,12 @@ export function TransferSheet({ staff, open, onOpenChange }: Props) {
       submitLabel="Điều chuyển"
       successMessage="Đã ghi nhận điều chuyển."
       onSubmit={async (v) => {
-        unwrap(
-          await api.POST("/api/v1/staff/{staffId}/transfer", {
-            params: { path: { staffId: staff.id } },
-            body: { schoolId: v.schoolId, effectiveDate: v.effectiveDate, decisionFileId: v.decisionFile?.id, note: v.note || undefined },
-          }),
-        );
+        await transferStaff(staff.id, {
+          schoolId: v.schoolId,
+          effectiveDate: v.effectiveDate,
+          decisionFileId: v.decisionFile?.id,
+          note: v.note || undefined,
+        });
         const target = schools.find((s) => s.id === v.schoolId)?.name ?? "cơ sở mới";
         if (v.effectiveDate <= todayIso()) {
           // Đang xem riêng cơ sở cũ thì hồ sơ sẽ không còn trong phạm vi: chuyển sang xem cơ sở mới
@@ -130,12 +130,11 @@ export function TerminateSheet({ staff, open, onOpenChange }: Props) {
       submitLabel="Cho nghỉ việc"
       successMessage="Đã cho nhân viên nghỉ việc."
       onSubmit={async (v) => {
-        unwrap(
-          await api.POST("/api/v1/staff/{staffId}/terminate", {
-            params: { path: { staffId: staff.id } },
-            body: { endDate: v.endDate, reason: v.reason, decisionFileId: v.decisionFile?.id },
-          }),
-        );
+        await terminateStaff(staff.id, {
+          endDate: v.endDate,
+          reason: v.reason,
+          decisionFileId: v.decisionFile?.id,
+        });
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
     >

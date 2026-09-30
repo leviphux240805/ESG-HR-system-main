@@ -1,5 +1,5 @@
 import { formatDate, formatMoney } from "@/lib/format";
-import type { HistoryEvent } from "./api";
+import type { HistoryEvent } from "@/api";
 import { CONTRACT_TYPE_LABELS, type ContractType, GENDER_LABELS, POSITION_LABELS, QUALIFICATION_LABELS } from "./labels";
 
 /** Tra cứu tên để mô tả sự kiện (cơ sở, loại giấy tờ theo id hoặc mã). */

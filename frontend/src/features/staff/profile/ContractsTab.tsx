@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { deleteContract, saveContract } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -26,7 +26,7 @@ import {
   useDocumentTypes,
   useStaffContracts,
   useStaffDocuments,
-} from "../api";
+} from "@/api";
 import { daysUntil, todayIso, WARNING_DAYS } from "../dates";
 import { CONTRACT_TYPE_LABELS, options } from "../labels";
 import { AttachmentField } from "./AttachmentField";
@@ -116,14 +116,9 @@ function ContractSheet({
           note: v.note || undefined,
         };
         if (contract) {
-          unwrap(
-            await api.PUT("/api/v1/staff/{staffId}/contracts/{contractId}", {
-              params: { path: { staffId: staff.id, contractId: contract.id } },
-              body,
-            }),
-          );
+          await saveContract(staff.id, contract!.id, body);
         } else {
-          unwrap(await api.POST("/api/v1/staff/{staffId}/contracts", { params: { path: { staffId: staff.id } }, body }));
+          await saveContract(staff.id, null, body);
         }
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
@@ -345,11 +340,7 @@ export function ContractsTab({ staff }: { staff: StaffDetail }) {
         confirmText="Xóa"
         variant="destructive"
         onConfirm={async () => {
-          unwrap(
-            await api.DELETE("/api/v1/staff/{staffId}/contracts/{contractId}", {
-              params: { path: { staffId: staff.id, contractId: deleting!.id } },
-            }),
-          );
+          await deleteContract(staff.id, deleting!.id);
           await queryClient.invalidateQueries({ queryKey: ["staff"] });
         }}
       />

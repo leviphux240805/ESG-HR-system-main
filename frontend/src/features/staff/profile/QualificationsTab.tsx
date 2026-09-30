@@ -3,12 +3,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { api, unwrap } from "@/api/client";
+import { deleteCertificate, deleteTraining, saveCertificate, saveTraining } from "@/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { FormSheet } from "@/components/common/FormSheet";
 import { formatDate } from "@/lib/format";
-import { type CertificateDto, type FileRef, type StaffDetail, type TrainingDto, useCertificates, useTrainings } from "../api";
+import { type CertificateDto, type FileRef, type StaffDetail, type TrainingDto, useCertificates, useTrainings } from "@/api";
 import { QUALIFICATION_LABELS } from "../labels";
 import { AttachmentField } from "./AttachmentField";
 import { ExpiryBadge } from "./DocumentsTab";
@@ -103,9 +103,9 @@ function CertificateSheet({ staff, row, open, onOpenChange }: SheetProps<Certifi
       onSubmit={async (v) => {
         const body = { name: v.name, issuedBy: blank(v.issuedBy), issueDate: blank(v.issueDate), expiryDate: blank(v.expiryDate), fileId: v.file?.id };
         if (row) {
-          unwrap(await api.PUT("/api/v1/staff/{staffId}/certificates/{id}", { params: { path: { staffId: staff.id, id: row.id } }, body }));
+          await saveCertificate(staff.id, row.id, body);
         } else {
-          unwrap(await api.POST("/api/v1/staff/{staffId}/certificates", { params: { path: { staffId: staff.id } }, body }));
+          await saveCertificate(staff.id, null, body);
         }
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
@@ -144,9 +144,9 @@ function TrainingSheet({ staff, row, open, onOpenChange }: SheetProps<TrainingDt
           fileId: v.file?.id,
         };
         if (row) {
-          unwrap(await api.PUT("/api/v1/staff/{staffId}/trainings/{id}", { params: { path: { staffId: staff.id, id: row.id } }, body }));
+          await saveTraining(staff.id, row.id, body);
         } else {
-          unwrap(await api.POST("/api/v1/staff/{staffId}/trainings", { params: { path: { staffId: staff.id } }, body }));
+          await saveTraining(staff.id, null, body);
         }
         await queryClient.invalidateQueries({ queryKey: ["staff"] });
       }}
@@ -232,7 +232,7 @@ export function QualificationsTab({ staff }: { staff: StaffDetail }) {
         onEdit={(row) => setCertificate({ row })}
         describe={(c) => `Chứng chỉ “${c.name}”`}
         onDelete={async (c) => {
-          unwrap(await api.DELETE("/api/v1/staff/{staffId}/certificates/{id}", { params: { path: { staffId: staff.id, id: c.id } } }));
+          await deleteCertificate(staff.id, c.id);
           await invalidate();
         }}
       />
@@ -258,7 +258,7 @@ export function QualificationsTab({ staff }: { staff: StaffDetail }) {
         onEdit={(row) => setTraining({ row })}
         describe={(t) => `Khóa “${t.courseName}”`}
         onDelete={async (t) => {
-          unwrap(await api.DELETE("/api/v1/staff/{staffId}/trainings/{id}", { params: { path: { staffId: staff.id, id: t.id } } }));
+          await deleteTraining(staff.id, t.id);
           await invalidate();
         }}
       />

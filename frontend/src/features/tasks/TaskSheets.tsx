@@ -12,11 +12,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { FormSheet } from "@/components/common/FormSheet";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
-import { addComment, changeStatus, PRIORITY, saveTask, TASK_COLUMNS, type TaskFields, type TaskItem, toggleChecklist, useAssignees } from "./api";
+import { addComment, changeStatus, PRIORITY, saveTask, TASK_COLUMNS, type TaskFields, type TaskItem, toggleChecklist, useAssignees } from "@/api";
 
 const schema = z.object({
   title: z.string().trim().min(3, "Nhập tên việc (ít nhất 3 ký tự)."),

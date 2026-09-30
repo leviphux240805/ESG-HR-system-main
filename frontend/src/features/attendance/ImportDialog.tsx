@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, FileSpreadsheet, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { api, unwrap } from "@/api/client";
-import { errorMessage } from "@/api/errors";
-import { uploadFile } from "@/api/files";
+import { importPunches } from "@/api";
+import { errorMessage } from "@/api";
+import { uploadFile } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { ImportResult, MonthSheet } from "./api";
+import type { ImportResult, MonthSheet } from "@/api";
 import { monthLabel } from "./codes";
 import type { MachinePunchRow } from "./machineExcel";
 
@@ -85,21 +85,17 @@ export function ImportDialog({ open, onOpenChange, month, sheet, onReview }: Pro
     setBusy("upload");
     try {
       const stored = await uploadFile(parsed.file, sheet.schoolId);
-      const response = unwrap(
-        await api.POST("/api/v1/attendance/imports", {
-          body: {
-            month,
-            fileId: stored.id,
-            rows: parsed.rows.map((r) => ({
-              machineCode: r.machineCode,
-              name: r.name,
-              workDate: r.workDate,
-              checkIn: r.checkIn ?? undefined,
-              checkOut: r.checkOut ?? undefined,
-            })),
-          },
-        }),
-      );
+      const response = await importPunches({
+        month,
+        fileId: stored.id,
+        rows: parsed.rows.map((r) => ({
+          machineCode: r.machineCode,
+          name: r.name,
+          workDate: r.workDate,
+          checkIn: r.checkIn ?? undefined,
+          checkOut: r.checkOut ?? undefined,
+        })),
+      });
       setResult(response);
       await queryClient.invalidateQueries({ queryKey: ["attendance"] });
       toast.success(`Đã import và đối soát ${response.matchedRows} dòng chấm công.`);

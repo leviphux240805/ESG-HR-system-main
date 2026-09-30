@@ -1,23 +1,24 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  api,
-  DEMO,
+  type DemoRole,
+  demoRole,
+  fetchMe,
+  IS_DEMO,
+  login as loginRequest,
+  logout as logoutRequest,
+  type Me,
+  queryClient,
   refreshAccessToken,
   setAccessToken,
+  setDemoRole,
   setSelectedSchoolId as setClientSchool,
   setSessionExpiredHandler,
-  unwrap,
-} from "@/api/client";
-import { queryClient } from "@/api/queryClient";
-import type { components } from "@/api/schema";
+  type SchoolSummary,
+} from "@/api";
 import { type RoleCode, rolesInScope } from "@/lib/permissions";
-import { getSessionRole, setSessionRole } from "@/mock/router";
-import type { DemoRole } from "@/mock/db";
 
-export type { RoleCode };
-export type Me = components["schemas"]["MeResponse"];
-export type SchoolSummary = components["schemas"]["SchoolSummary"];
+export type { Me, RoleCode, SchoolSummary };
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 
@@ -80,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const loadMe = useCallback(async () => {
-    const profile = unwrap(await api.GET("/api/v1/me"));
+    const profile = await fetchMe();
     const school = initialSchool(profile);
     setClientSchool(school);
     setSelectedSchoolId(school);
@@ -93,7 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let cancelled = false;
     (async () => {
       try {
-        if (DEMO ? getSessionRole() !== null : await refreshAccessToken()) {
+        if (IS_DEMO ? (await demoRole()) !== null : await refreshAccessToken()) {
           await loadMe();
           return;
         }
@@ -117,10 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = useCallback(
     async (identifier: string, password: string, rememberMe: boolean) => {
-      const tokens = unwrap(
-        await api.POST("/api/v1/auth/login", { body: { identifier, password, rememberMe } }),
-      );
-      setAccessToken(tokens.accessToken);
+      await loginRequest(identifier, password, rememberMe);
       await loadMe();
     },
     [loadMe],
@@ -128,7 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginAs = useCallback(
     async (role: DemoRole) => {
-      setSessionRole(role);
+      await setDemoRole(role);
       await loadMe();
     },
     [loadMe],
@@ -136,8 +134,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = useCallback(async () => {
     try {
-      if (DEMO) setSessionRole(null);
-      else await api.POST("/api/v1/auth/logout");
+      if (IS_DEMO) await setDemoRole(null);
+      else await logoutRequest();
     } finally {
       clearSession();
     }

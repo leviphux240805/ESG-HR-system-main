@@ -5,7 +5,7 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "./DataTable";
 import { useListParams } from "@/hooks/useListParams";
-import type { Paged } from "@/api/paging";
+import type { Paged } from "@/api";
 
 const auth = vi.hoisted(() => ({ me: { roles: [{ role: "TEACHER" }] }, selectedSchoolId: null }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => auth }));

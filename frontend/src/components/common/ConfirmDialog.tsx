@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { errorMessage } from "@/api/errors";
+import { errorMessage } from "@/api";
 
 interface ConfirmDialogProps {
   open: boolean;

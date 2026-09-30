@@ -4,8 +4,8 @@ import { ArrowLeft, Loader2, MailCheck, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AuthLayout, authInputClass } from "@/components/auth/AuthLayout";
-import { api, unwrap } from "@/api/client";
-import { errorMessage } from "@/api/errors";
+import { forgotPassword } from "@/api";
+import { errorMessage } from "@/api";
 
 export default function ForgotPassword() {
   const [identifier, setIdentifier] = useState("");
@@ -16,7 +16,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      unwrap(await api.POST("/api/v1/auth/forgot-password", { body: { identifier: identifier.trim() } }));
+      await forgotPassword(identifier);
       setSent(true);
     } catch (error) {
       toast.error(errorMessage(error));
