@@ -1,5 +1,15 @@
 # Tiến độ
 
+## Nhánh `demo` – bản giới thiệu khách hàng "Mầm Non Việt" (2026-09-30)
+
+Chỉ frontend, API giả trong trình duyệt (`frontend/src/mock`); người dùng chính là ban giám hiệu. Không merge vào
+`main`. Đã xong (mỗi trang một commit, `npm test`/lint/build xanh): lớp API giả + đăng nhập theo vai trò + Hôm nay +
+Hộp duyệt; lớp học, hồ sơ trẻ, điểm danh (điện thoại); nhân sự; chấm công tháng, nghỉ phép; công việc (Kanban);
+học phí; thực đơn tuần, cân đo; báo cáo. Đã gỡ Supabase và các trang ESG cũ trên nhánh này.
+
+Chưa làm: e2e Playwright chưa chạy lại cho chế độ demo (các test cũ cần backend); cấu hình chấm công và import máy
+chấm công bị ẩn; upload file trả "Bản demo chưa hỗ trợ". Việc dở trên `main`: W1 (backend công việc, chưa commit).
+
 ## Giai đoạn hiện tại: 3 – Chấm công, nghỉ phép, công việc (đang làm)
 
 Kế hoạch 17 bước (C1–C11 chấm công/nghỉ phép, W1–W4 công việc, Z1 dọn legacy) duyệt ngày 2026-09-30; quyết định chốt

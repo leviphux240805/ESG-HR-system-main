@@ -11,6 +11,23 @@ Web app quản lý chuỗi trường mầm non nhiều cơ sở (dựng lại t�
 | `frontend/` | React 18, Vite, TypeScript, shadcn/ui, TanStack Query |
 | `docker-compose.yml` | PostgreSQL + MinIO + Mailpit (SMTP giả) cho môi trường dev |
 
+## Bản demo "Mầm Non Việt" (nhánh `demo`)
+
+Bản giới thiệu khách hàng, **không cần backend**: mọi request đi qua API giả trong trình duyệt
+(`frontend/src/mock`, trễ 300 ms), dữ liệu mẫu tiếng Việt sinh bằng faker với seed cố định (2 trường, 8 lớp,
+~200 trẻ, 30 nhân viên, 3 tháng gần nhất). Thay đổi lưu ở localStorage; menu tài khoản có
+"Khôi phục dữ liệu demo".
+
+```bash
+cd frontend && npm install && npm run dev     # http://localhost:8080, chọn vai trò để vào
+npm run build                                  # bản tĩnh trong frontend/dist
+```
+
+- Vai trò: Hiệu trưởng (2 cơ sở), Phó hiệu trưởng, Giáo viên (trang mặc định: Điểm danh trên điện thoại).
+- Vercel: Root Directory = `frontend`, framework Vite (đã có `frontend/vercel.json` rewrite SPA).
+- Nối backend thật: build với `VITE_DEMO=false`; module mới (Hôm nay, Hộp duyệt, trẻ, học phí, thực đơn,
+  cân đo, báo cáo) gọi qua `apiRequest` với kiểu tạm ở `src/mock/types.ts`, thay bằng type OpenAPI khi backend có.
+
 ## Cần cài
 
 - JDK 21 (ví dụ `winget install EclipseAdoptium.Temurin.21.JDK`), **mở terminal mới sau khi cài**
