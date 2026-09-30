@@ -94,7 +94,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/bao-cao", label: "Báo cáo", icon: BarChart3, phase: 7, permission: view("reports") },
       // TODO(assumption): màn hình cấu hình và quản lý tài khoản chưa chốt giai đoạn; tạm xếp giai đoạn 2
       { path: "/cai-dat", label: "Cài đặt", icon: Settings, phase: 2, permission: view("settings") },
-      { path: "/tai-khoan", label: "Tài khoản", icon: UserCog, phase: 2, permission: manage("settings") },
+      { path: "/tai-khoan", label: "Tài khoản", icon: UserCog, phase: 2, permission: manage("settings"), page: () => import("@/pages/accounts/AccountsPage") },
     ],
   },
   {
