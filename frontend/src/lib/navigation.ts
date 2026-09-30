@@ -63,7 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Nhân sự",
     items: [
       { path: "/nhan-su", label: "Nhân sự", icon: Users, phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffListPage") },
-      { path: "/tai-lieu", label: "Tài liệu", icon: FolderOpen, phase: 2, permission: view("documents") },
+      { path: "/tai-lieu", label: "Tài liệu", icon: FolderOpen, phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryPage") },
       { path: "/cong-viec", label: "Công việc", icon: ListTodo, phase: 3, permission: view("tasks") },
       { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 3, permission: view("attendance") },
       { path: "/nghi-phep", label: "Nghỉ phép", icon: CalendarOff, phase: 3, permission: view("attendance") },
@@ -124,6 +124,7 @@ export interface SubRoute {
 export const SUB_ROUTES: SubRoute[] = [
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 2, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
   { path: "/nhan-su/giay-to-het-han", label: "Giấy tờ sắp hết hạn", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffExpiringPage") },
+  { path: "/tai-lieu/:id", label: "Văn bản", parent: "/tai-lieu", phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryDocumentPage") },
   // Đặt sau các đường dẫn cố định: tìm breadcrumb duyệt theo thứ tự
   { path: "/nhan-su/:id", label: "Hồ sơ nhân viên", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffProfilePage") },
 ];
