@@ -7,3 +7,6 @@ app:
     bucket: test-files
     create-bucket: true
     max-size-bytes: 1048576
+  jobs:
+    # Test gọi trực tiếp service của job; không để lịch @Scheduled chạy xen giữa
+    enabled: false

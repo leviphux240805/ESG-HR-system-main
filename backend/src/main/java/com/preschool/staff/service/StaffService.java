@@ -158,6 +158,11 @@ public class StaffService {
 		return staffRepo.findById(id).orElseThrow(() -> ApiException.notFound("Không tìm thấy nhân viên."));
 	}
 
+	/** Cho job nền (không có SchoolScope nên không lọc cơ sở). */
+	public Staff findUnscoped(UUID id) {
+		return staffRepo.findById(id).orElseThrow(() -> new IllegalStateException("Không có nhân viên " + id));
+	}
+
 	// ------------------------------------------------------------ ghi
 
 	@Transactional

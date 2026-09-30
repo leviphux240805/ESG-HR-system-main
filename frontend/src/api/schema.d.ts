@@ -224,6 +224,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xuất Excel danh sách nhân sự (theo bộ lọc hoặc theo danh sách id) */
+        get: operations["export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/staff/summary": {
         parameters: {
             query?: never;
@@ -252,6 +269,23 @@ export interface paths {
         get: operations["get"];
         /** Sửa hồ sơ (không gồm cơ sở, trạng thái, lương, ngân hàng) */
         put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}/bank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cập nhật tài khoản ngân hàng nhận lương */
+        put: operations["updateBank"];
         post?: never;
         delete?: never;
         options?: never;
@@ -409,6 +443,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/{staffId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch sử: điều chuyển, thay đổi lương (nếu được xem), nhật ký chỉnh sửa */
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}/salary-configs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch sử cấu hình lương (hiệu trưởng không xem được) */
+        get: operations["salaryConfigs"];
+        put?: never;
+        /** Điều chỉnh lương: thêm cấu hình mới có ngày hiệu lực (không sửa bản cũ) */
+        post: operations["addSalaryConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{staffId}/terminate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cho nghỉ việc (khóa tài khoản đăng nhập) */
+        post: operations["terminate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/staff/{staffId}/trainings": {
         parameters: {
             query?: never;
@@ -441,11 +527,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/{staffId}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Điều chuyển cơ sở
+         * @description Ngày hiệu lực tương lai: hệ thống tự chuyển khi tới ngày.
+         */
+        post: operations["transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AssignmentDto: {
+            decisionFile?: components["schemas"]["FileRef"];
+            /** Format: date */
+            fromDate: string;
+            /** Format: uuid */
+            id: string;
+            note?: string;
+            /** @description Điều chuyển có hiệu lực trong tương lai, chưa áp dụng */
+            pending: boolean;
+            /** Format: uuid */
+            schoolId: string;
+            schoolName: string;
+            /** Format: date */
+            toDate?: string;
+        };
         BankInfo: {
+            bankAccountHolder?: string;
+            bankAccountNo?: string;
+            bankName?: string;
+        };
+        BankRequest: {
             bankAccountHolder?: string;
             bankAccountNo?: string;
             bankName?: string;
@@ -599,6 +725,23 @@ export interface components {
              */
             identifier: string;
         };
+        HistoryEvent: {
+            /** @enum {string} */
+            action: "CREATE" | "UPDATE" | "DELETE";
+            after?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            at: string;
+            before?: {
+                [key: string]: unknown;
+            };
+            /** @description staff, staff.contract, staff.document, staff.salary, staff.transfer… */
+            entity: string;
+            /** Format: uuid */
+            id: string;
+            userName?: string;
+        };
         LinkedAccount: {
             active: boolean;
             email: string;
@@ -686,6 +829,44 @@ export interface components {
              * @description Rỗng = toàn chuỗi
              */
             schoolId?: string;
+        };
+        SalaryConfigDto: {
+            allowances: {
+                [key: string]: number;
+            };
+            baseSalary?: number;
+            coefficient?: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdByName?: string;
+            /** @description Bản đang áp dụng hôm nay */
+            current: boolean;
+            /** Format: date */
+            effectiveFrom: string;
+            /** Format: uuid */
+            id: string;
+            insuranceSalary?: number;
+            note?: string;
+            /** @enum {string} */
+            region?: "I" | "II" | "III" | "IV";
+            /** @enum {string} */
+            salaryMode: "FIXED" | "COEFFICIENT";
+        };
+        SalaryConfigRequest: {
+            /** @description Phụ cấp theo khóa: lunch, transport, phone, responsibility, position, seniorityPercent, other */
+            allowances?: {
+                [key: string]: number;
+            };
+            baseSalary?: number;
+            coefficient?: number;
+            /** Format: date */
+            effectiveFrom: string;
+            insuranceSalary?: number;
+            note?: string;
+            /** @enum {string} */
+            region?: "I" | "II" | "III" | "IV";
+            /** @enum {string} */
+            salaryMode: "FIXED" | "COEFFICIENT";
         };
         SchoolSummary: {
             code: string;
@@ -797,6 +978,12 @@ export interface components {
             /** Format: date */
             startDate: string;
         };
+        StaffHistory: {
+            assignments: components["schemas"]["AssignmentDto"][];
+            events: components["schemas"]["HistoryEvent"][];
+            /** @description Rỗng nếu người xem không được xem lương */
+            salaryConfigs?: components["schemas"]["SalaryConfigDto"][];
+        };
         StaffListItem: {
             /**
              * Format: date
@@ -843,6 +1030,13 @@ export interface components {
              */
             total: number;
         };
+        TerminateRequest: {
+            /** Format: uuid */
+            decisionFileId?: string;
+            /** Format: date */
+            endDate: string;
+            reason: string;
+        };
         TokenResponse: {
             accessToken: string;
             /**
@@ -875,6 +1069,18 @@ export interface components {
             result?: string;
             /** Format: date */
             startDate?: string;
+        };
+        TransferRequest: {
+            /** Format: uuid */
+            decisionFileId?: string;
+            /**
+             * Format: date
+             * @description Ngày hiệu lực; tương lai thì hệ thống tự chuyển khi tới ngày
+             */
+            effectiveDate: string;
+            note?: string;
+            /** Format: uuid */
+            schoolId: string;
         };
         UploadUrlRequest: {
             /** @example application/pdf */
@@ -1351,6 +1557,45 @@ export interface operations {
             };
         };
     };
+    export: {
+        parameters: {
+            query?: {
+                q?: string;
+                schoolId?: string;
+                position?: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
+                status?: "ACTIVE" | "TERMINATED";
+                contractExpiring?: boolean;
+                ids?: string[];
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     summary: {
         parameters: {
             query?: {
@@ -1434,6 +1679,44 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["StaffFields"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StaffDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateBank: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankRequest"];
             };
         };
         responses: {
@@ -2031,6 +2314,150 @@ export interface operations {
             };
         };
     };
+    history: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StaffHistory"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    salaryConfigs: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SalaryConfigDto"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addSalaryConfig: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryConfigRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SalaryConfigDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    terminate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TerminateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StaffDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     trainings: {
         parameters: {
             query?: never;
@@ -2163,6 +2590,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    transfer: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StaffDetail"];
+                };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {
