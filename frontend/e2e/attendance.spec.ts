@@ -95,3 +95,44 @@ test("import file máy chấm công mẫu, xử lý sai lệch, khóa công, m�
   await expect(admin.getByText("Đã mở khóa công tháng.")).toBeVisible();
   await admin.close();
 });
+
+test("cấu hình chấm công: xem bản đang áp dụng, thêm bản mới, thêm và xóa ngày lễ của cơ sở", async ({ page }) => {
+  await login(page, "0900000004");
+  await page.goto("/cham-cong");
+  await page.getByRole("link", { name: "Cấu hình" }).click();
+  await expect(page.getByRole("heading", { name: "Cấu hình chấm công" })).toBeVisible();
+  await expect(page.getByTestId("effective-config")).toContainText("07:30 – 17:00");
+
+  // Bản mới hiệu lực xa trong tương lai (không đổi cấu hình đang dùng của các test khác)
+  const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, "0");
+  const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, "0");
+  const year = 2040 + Math.floor(Math.random() * 50);
+  await page.getByRole("button", { name: "Cấu hình mới" }).click();
+  const sheet = page.getByRole("dialog");
+  await sheet.getByLabel("Hiệu lực từ ngày").fill(`${year}-${month}-${day}`);
+  await sheet.getByLabel("Giờ vào ca").fill("07:00");
+  await sheet.getByRole("checkbox", { name: "Ngày làm nửa buổi T7" }).click();
+  await sheet.getByRole("button", { name: "Lưu" }).click();
+  await expect(page.getByText("Đã lưu cấu hình.")).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: `${day}/${month}/${year}` })).toContainText("07:00 – 17:00");
+  // Bản đang áp dụng không đổi
+  await expect(page.getByTestId("effective-config")).toContainText("07:30 – 17:00");
+
+  await page.getByRole("tab", { name: "Ngày lễ" }).click();
+  await page.getByRole("button", { name: "Thêm ngày lễ" }).click();
+  const holiday = page.getByRole("dialog");
+  await holiday.getByLabel("Ngày lễ").click();
+  await page.getByRole("option", { name: "Khác (tự nhập)" }).click();
+  await holiday.getByLabel("Tên ngày nghỉ").fill("Hội thao cơ sở");
+  const nextYear = new Date().getFullYear() + 1;
+  await holiday.getByLabel("Từ ngày").fill(`${nextYear}-03-10`);
+  await holiday.getByRole("button", { name: "Lưu" }).click();
+  await expect(page.getByText("Đã thêm ngày lễ.")).toBeVisible();
+  await page.getByLabel("Năm").click();
+  await page.getByRole("option", { name: String(nextYear) }).click();
+  const item = page.getByRole("list", { name: "Danh sách ngày lễ" }).getByRole("listitem").filter({ hasText: "Hội thao cơ sở" });
+  await expect(item).toContainText("Cơ sở A – Hoa Sen");
+  await item.getByRole("button", { name: /^Xóa ngày lễ/ }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Xóa" }).click();
+  await expect(item).toHaveCount(0);
+});

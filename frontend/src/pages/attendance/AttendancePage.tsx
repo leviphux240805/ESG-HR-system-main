@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AlertTriangle, CalendarCheck, ChevronLeft, ChevronRight, FileUp, Lock, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -58,6 +58,11 @@ export default function AttendancePage() {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
+            <Button asChild variant="outline" className="min-h-11">
+              <Link to="/cham-cong/cau-hinh">
+                <Settings2 className="w-4 h-4 mr-2" /> Cấu hình
+              </Link>
+            </Button>
           </>
         }
       />
@@ -71,7 +76,12 @@ export default function AttendancePage() {
           <EmptyState
             icon={Settings2}
             title="Chưa có cấu hình chấm công"
-            description="Văn phòng điều hành cần tạo cấu hình giờ ca, ân hạn và ngày làm việc trước khi dùng bảng công."
+            description="Cần cấu hình giờ ca, ân hạn và ngày làm việc trước khi dùng bảng công."
+            action={
+              <Button asChild className="min-h-11">
+                <Link to="/cham-cong/cau-hinh">Mở cấu hình</Link>
+              </Button>
+            }
           />
         ) : (
           <ErrorState error={sheet.error} onRetry={() => sheet.refetch()} />
