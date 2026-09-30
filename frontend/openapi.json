@@ -163,7 +163,7 @@
     },
     "/api/v1/accounts/{id}/lock" : {
       "post" : {
-        "operationId" : "lock",
+        "operationId" : "lock_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -307,7 +307,7 @@
     },
     "/api/v1/accounts/{id}/unlock" : {
       "post" : {
-        "operationId" : "unlock",
+        "operationId" : "unlock_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -595,6 +595,158 @@
           }
         },
         "summary" : "Import dữ liệu máy chấm công (đã đọc từ Excel ở trình duyệt) và đối soát cả tháng",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/months/{month}/export" : {
+      "get" : {
+        "operationId" : "export_1",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xuất Excel bảng công tháng",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/months/{month}/lock" : {
+      "post" : {
+        "operationId" : "lock",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Khóa công tháng (chốt tổng tháng; sau đó chỉ xem)",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/months/{month}/unlock" : {
+      "post" : {
+        "operationId" : "unlock",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UnlockRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Mở khóa công tháng (văn phòng điều hành, bắt buộc lý do)",
         "tags" : [ "Chấm công" ]
       }
     },
@@ -7125,6 +7277,17 @@
           }
         },
         "required" : [ "effectiveDate", "schoolId" ]
+      },
+      "UnlockRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
       },
       "UnmatchedCode" : {
         "type" : "object",

@@ -103,6 +103,9 @@ public final class AttendanceDtos {
 			@Schema(type = "string", example = "10:15", description = "Giờ vào lại") LocalTime returnTime) {
 	}
 
+	public record UnlockRequest(@NotBlank @Size(max = 500) String reason) {
+	}
+
 	// ---- import
 
 	public record ImportRow(

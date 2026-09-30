@@ -35,7 +35,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Khóa tài khoản (thu hồi mọi phiên đăng nhập) */
-        post: operations["lock"];
+        post: operations["lock_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -85,7 +85,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["unlock"];
+        post: operations["unlock_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -158,6 +158,57 @@ export interface paths {
         put?: never;
         /** Import dữ liệu máy chấm công (đã đọc từ Excel ở trình duyệt) và đối soát cả tháng */
         post: operations["importPunches"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/months/{month}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xuất Excel bảng công tháng */
+        get: operations["export_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/months/{month}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Khóa công tháng (chốt tổng tháng; sau đó chỉ xem) */
+        post: operations["lock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/months/{month}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mở khóa công tháng (văn phòng điều hành, bắt buộc lý do) */
+        post: operations["unlock"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2218,6 +2269,9 @@ export interface components {
             /** Format: uuid */
             schoolId: string;
         };
+        UnlockRequest: {
+            reason: string;
+        };
         UnmatchedCode: {
             machineCode: string;
             name?: string;
@@ -2383,7 +2437,7 @@ export interface operations {
             };
         };
     };
-    lock: {
+    lock_1: {
         parameters: {
             query?: never;
             header?: {
@@ -2487,7 +2541,7 @@ export interface operations {
             };
         };
     };
-    unlock: {
+    unlock_1: {
         parameters: {
             query?: never;
             header?: {
@@ -2687,6 +2741,115 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    lock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unlock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnlockRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthSheet"];
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */

@@ -33,7 +33,8 @@ public class StaffExportService {
 
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-	private static final Map<Position, String> POSITION_LABELS = Map.of(Position.TEACHER, "Giáo viên", Position.NANNY,
+	/** Nhãn vị trí tiếng Việt (dùng chung cho các file Excel). */
+	public static final Map<Position, String> POSITION_LABELS = Map.of(Position.TEACHER, "Giáo viên", Position.NANNY,
 			"Bảo mẫu", Position.COOK, "Cấp dưỡng", Position.NURSE, "Nhân viên y tế", Position.ACCOUNTANT, "Kế toán",
 			Position.SECURITY, "Bảo vệ", Position.MANAGER, "Quản lý", Position.OTHER, "Khác");
 
