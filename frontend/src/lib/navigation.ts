@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { matchPath } from "react-router-dom";
-import { Baby, CalendarCheck, CalendarOff, ClipboardCheck, Clock, Inbox, type LucideIcon, School, Sun, Users } from "lucide-react";
+import { Baby, CalendarCheck, CalendarOff, ClipboardCheck, Clock, Inbox, ListTodo, type LucideIcon, School, Sun, Users } from "lucide-react";
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. Bản demo: mở mọi mục đã có trang. */
@@ -50,6 +50,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 1, permission: view("attendance"), page: () => import("@/pages/attendance/AttendancePage") },
       // Mọi người xin nghỉ được; tab "Chờ duyệt", "Lịch nghỉ" hiện theo quyền trong trang
       { path: "/nghi-phep", label: "Nghỉ phép", icon: CalendarOff, phase: 1, page: () => import("@/pages/leave/LeavePage") },
+      { path: "/cong-viec", label: "Công việc", icon: ListTodo, phase: 1, permission: view("tasks"), page: () => import("@/pages/tasks/TasksPage") },
     ],
   },
   {
