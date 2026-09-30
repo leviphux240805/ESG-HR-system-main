@@ -75,6 +75,11 @@ class SchemaTests {
 		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.schools", Integer.class)).isEqualTo(2);
 		assertThat(jdbc.queryForObject("SELECT count(DISTINCT role_code) FROM dev_seed_check.user_roles", Integer.class))
 			.isEqualTo(RoleCode.values().length);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.staff", Integer.class)).isEqualTo(12);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.users WHERE staff_id IS NOT NULL",
+				Integer.class)).isEqualTo(6);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.staff_school_assignments", Integer.class))
+			.isEqualTo(12);
 	}
 
 	private void insertRole(UUID userId, RoleCode role, UUID schoolId) {

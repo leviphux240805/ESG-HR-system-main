@@ -29,7 +29,20 @@ public class Notification extends BaseEntity {
 	@Column(name = "read_at")
 	private Instant readAt;
 
+	/** Khóa chống trùng cho thông báo do job tạo (ví dụ "expiring:contract:{id}:30"). */
+	@Column(name = "dedupe_key")
+	private String dedupeKey;
+
 	protected Notification() {
+	}
+
+	public Notification withDedupeKey(String key) {
+		this.dedupeKey = key;
+		return this;
+	}
+
+	public String getDedupeKey() {
+		return dedupeKey;
 	}
 
 	public Notification(UUID userId, String type, String title, String body, String link) {
