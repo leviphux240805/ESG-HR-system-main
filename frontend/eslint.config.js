@@ -12,13 +12,8 @@ const legacyFiles = [
   "api/**/*.ts",
   "src/components/attendance/AttendanceConfigModal.tsx",
   "src/components/attendance/AttendanceUploadModal.tsx",
-  "src/components/employees/DependentModal.tsx",
-  "src/components/employees/EmployeeModal.tsx",
-  "src/components/employees/shared/CCCDUploadModal.tsx",
   "src/hooks/useAttendanceData.ts",
-  "src/hooks/useEmployee.ts",
   "src/lib/attendanceReconciliation.ts",
-  "src/pages/Employees.tsx",
   "src/pages/Payroll.tsx",
 ];
 

@@ -10,8 +10,8 @@ const paths = (roles: RoleCode[], phase: number, preview: boolean) =>
 describe("visibleNavGroups", () => {
   it("giai đoạn 1: chỉ có trang chung, mục của giai đoạn sau bị ẩn với mọi vai trò", () => {
     // Trang chung luôn hiện
-    expect(paths(["OWNER"], 1, false)).toEqual(["/", "/files-demo"]);
-    expect(paths(["TEACHER"], 1, false)).toEqual(["/", "/files-demo"]);
+    expect(paths(["OWNER"], 1, false)).toEqual(["/"]);
+    expect(paths(["TEACHER"], 1, false)).toEqual(["/"]);
   });
 
   it("xem trước: lọc đúng theo ma trận quyền", () => {

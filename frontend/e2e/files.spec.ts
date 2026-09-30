@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { ACCOUNTS, login } from "./helpers";
 
+// Ô FileUpload trên trang mẫu /dev/ui (chỉ có ở dev): upload rồi người upload tải lại qua API file chung
 test("upload file PDF qua presigned URL rồi tải về", async ({ page, request }) => {
   await login(page, ACCOUNTS.teacherA);
-  await page.getByRole("link", { name: "Tệp (thử nghiệm)" }).click();
+  await page.goto("/dev/ui");
 
   const name = `hop-dong-${Date.now()}.pdf`;
   await page.getByTestId("file-input").setInputFiles({
@@ -24,7 +25,7 @@ test("upload file PDF qua presigned URL rồi tải về", async ({ page, reques
 
 test("file sai loại bị chặn ngay trên giao diện", async ({ page }) => {
   await login(page, ACCOUNTS.teacherA);
-  await page.goto("/files-demo");
+  await page.goto("/dev/ui");
   await page.getByTestId("file-input").setInputFiles({
     name: "virus.exe",
     mimeType: "application/x-msdownload",

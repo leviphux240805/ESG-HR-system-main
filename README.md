@@ -51,19 +51,28 @@ Mọi tài khoản dùng mật khẩu **`Matkhau@123`**; đăng nhập bằng em
 | Cấp dưỡng | capduong.b@preschool.local | 0900000007 | Cơ sở B |
 | Nhân viên | nhanvien.b@preschool.local | 0900000008 | Cơ sở B |
 
-Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`).
+Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`). Seed có 12 hồ sơ nhân viên ở 2 cơ sở; các tài
+khoản từ `0900000003` tới `0900000008` gắn với một hồ sơ (xem được ở **Của tôi › Hồ sơ của tôi**), chủ chuỗi và văn
+phòng điều hành không gắn hồ sơ. Nguyễn Thị Lan (Cơ sở A) có hợp đồng hết hạn sau 20 ngày để thử cảnh báo.
 
 ## Thử nhanh
 
 1. Đăng nhập `owner@preschool.local` → bộ chọn cơ sở trên header có "Tất cả cơ sở", Cơ sở A, Cơ sở B.
 2. Đăng nhập `0900000005` (giáo viên) → bộ chọn bị khóa ở Cơ sở A.
-3. Vào **Tệp (thử nghiệm)** → tải lên một file PDF/ảnh → **Tải về**. Xem file trên MinIO console
-   http://localhost:9001 (tài khoản `preschool` / `preschool-secret`).
-4. Bấm **Quên mật khẩu?** ở trang đăng nhập, nhập `0900000008` → mở Mailpit http://localhost:8025 xem email,
+3. Nhân sự (`admin@preschool.local`, chọn Cơ sở A): **Nhân sự › Thêm nhân viên** → **Quét CCCD** (ảnh mặt trước có
+   mã QR) → lưu → hồ sơ mở ra; tab **Hợp đồng & quyết định** tải hợp đồng PDF; nút **Điều chuyển** sang Cơ sở B;
+   tab **Lịch sử** có 2 giai đoạn công tác. File nằm trên MinIO console http://localhost:9001
+   (`preschool` / `preschool-secret`).
+4. Tài liệu (`0900000004`, hiệu trưởng A): **Tài liệu › Ban hành văn bản**, bật "Yêu cầu xác nhận đã đọc" →
+   giáo viên `0900000005` thấy chuông thông báo và mục **Của tôi › Văn bản cần đọc** → **Tôi đã đọc** → hiệu
+   trưởng tải lại trang văn bản thấy tỷ lệ đã đọc tăng.
+5. Tự phục vụ: giáo viên vào **Hồ sơ của tôi › Đổi SĐT, địa chỉ** → hiệu trưởng duyệt ở **Nhân sự › Đề xuất cập
+   nhật**. Tài khoản đăng nhập quản lý ở **Quản trị › Tài khoản** (chủ chuỗi, văn phòng điều hành).
+6. Bấm **Quên mật khẩu?** ở trang đăng nhập, nhập `0900000008` → mở Mailpit http://localhost:8025 xem email,
    bấm link để đặt mật khẩu mới (tài khoản này sẽ đổi mật khẩu; seed không tự đặt lại).
-5. Thư viện component (chỉ dev): http://localhost:8080/dev/ui. Xem trước menu các giai đoạn chưa làm:
+7. Thư viện component (chỉ dev): http://localhost:8080/dev/ui. Xem trước menu các giai đoạn chưa làm:
    `VITE_PREVIEW_MODULES=true npm run dev`.
-6. API docs: http://localhost:8081/swagger-ui.html
+8. API docs: http://localhost:8081/swagger-ui.html
 
 ## Kiểm tra
 

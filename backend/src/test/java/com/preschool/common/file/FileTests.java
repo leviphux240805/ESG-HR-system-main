@@ -83,13 +83,13 @@ class FileTests extends ApiTestSupport {
 		call(principalB, post("/api/v1/files/" + fileId + "/complete"), null).andExpect(status().isNotFound());
 		call(principalB, get("/api/v1/files/" + fileId + "/download-url"), schoolA.getId())
 			.andExpect(status().isForbidden());
-		// Chủ chuỗi chọn cơ sở B thì không thấy file cơ sở A; chọn "Tất cả" thì thấy
+		// Chủ chuỗi chọn cơ sở B thì không thấy file cơ sở A; chọn "Tất cả" thì thấy nhưng không phải người upload
 		call(owner, get("/api/v1/files/" + fileId + "/download-url"), schoolB.getId()).andExpect(status().isNotFound());
-		call(owner, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isOk());
+		call(owner, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isForbidden());
 	}
 
 	@Test
-	void onlyUploaderOrManagerCanDownloadWithinSchool() throws Exception {
+	void onlyUploaderCanDownloadThroughGenericFileApi() throws Exception {
 		User teacherA = data.user(RoleCode.TEACHER, schoolA);
 		String fileId = uploadReady(teacherA, PDF);
 		User otherTeacherA = data.user(RoleCode.TEACHER, schoolA);
@@ -98,7 +98,9 @@ class FileTests extends ApiTestSupport {
 		call(otherTeacherA, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.code").value("FILE_FORBIDDEN"));
 		call(otherTeacherA, post("/api/v1/files/" + fileId + "/complete"), null).andExpect(status().isForbidden());
-		call(principalA, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isOk());
+		// File gắn vào bản ghi được tải qua endpoint của module (hồ sơ, thư viện), không qua API file chung
+		call(principalA, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isForbidden());
+		call(teacherA, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isOk());
 	}
 
 	@Test

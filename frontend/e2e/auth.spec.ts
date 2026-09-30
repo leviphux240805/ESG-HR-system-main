@@ -2,15 +2,15 @@ import { expect, test } from "@playwright/test";
 import { ACCOUNTS, login } from "./helpers";
 
 test("chưa đăng nhập bị chuyển tới /login, đăng nhập xong quay lại trang định mở", async ({ page }) => {
-  await page.goto("/files-demo");
+  await page.goto("/cua-toi/van-ban");
   await expect(page).toHaveURL(/\/login$/);
 
   await page.getByLabel("Email hoặc số điện thoại").fill(ACCOUNTS.owner);
   await page.getByLabel("Mật khẩu", { exact: true }).fill("Matkhau@123");
   await page.getByRole("button", { name: "Đăng nhập" }).click();
 
-  await expect(page).toHaveURL(/\/files-demo$/);
-  await expect(page.getByRole("heading", { name: "Tệp (thử nghiệm)" })).toBeVisible();
+  await expect(page).toHaveURL(/\/cua-toi\/van-ban$/);
+  await expect(page.getByRole("heading", { name: "Văn bản cần đọc" })).toBeVisible();
 });
 
 test("sai mật khẩu hiện thông báo tiếng Việt", async ({ page }) => {

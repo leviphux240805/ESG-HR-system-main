@@ -20,7 +20,7 @@ import { Settings, Save, Loader2, Plus, Trash2, Calendar } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { commonHolidays, Holiday } from "@/data/vietnameseHolidays";
-import { DatePickerCustom } from "@/components/employees/shared/DatePickerCustom";
+import { DatePickerCustom } from "@/components/legacy/DatePickerCustom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AttendanceConfig {

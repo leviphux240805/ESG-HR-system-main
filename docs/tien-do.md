@@ -1,6 +1,6 @@
 # Tiến độ
 
-## Giai đoạn hiện tại: 2 – Nhân sự + Tài liệu (đang làm)
+## Giai đoạn hiện tại: 2 – Nhân sự + Tài liệu (xong, chờ nghiệm thu)
 
 Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định chốt ghi trong `thiet-ke.md` (commit `95df613`).
 
@@ -20,31 +20,32 @@ Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định ch�
 | S12 | `/tai-lieu` (cây thư mục, ban hành, tỷ lệ đã đọc) và `/tai-lieu/:id` (xem trước, phiên bản, "Tôi đã đọc", nhắc) | `c1f9053` |
 | S13 | `/cua-toi/ho-so`, `/cua-toi/van-ban`, đề xuất cập nhật hồ sơ + `/nhan-su/de-xuat` (duyệt theo loại) | `a50f707`, `d090151` |
 | S14 | `/tai-khoan`: tạo, vai trò theo cơ sở, khóa/mở khóa, gửi đặt lại mật khẩu | `08ca6ae`, `4a1a1eb` |
+| S15 | Dọn trang/hook nhân viên cũ (Supabase), bỏ quy tắc tải file tạm, README, nghiệm thu | commit cuối |
 
-Kiểm tra sau S10: frontend 57 test Vitest, 25 test Playwright (gồm luồng "xong" phần nhân sự: quét CCCD → hợp
-đồng → điều chuyển → lịch sử), lint 0 lỗi, build xanh; backend không đổi từ S5 (78 test xanh).
+Kiểm tra cuối (2026-09-30): backend 94 test; frontend 64 test Vitest, 33 test Playwright; `npm run lint` 0 lỗi
+(30 cảnh báo, đều ở file cũ chờ giai đoạn 3–4); `npm run build` xanh. Hai luồng "xong" có e2e:
+`staff-lifecycle.spec.ts` (quét CCCD → hợp đồng → điều chuyển → lịch sử) và `library.spec.ts` (ban hành cần xác
+nhận → giáo viên "Tôi đã đọc" → tỷ lệ tăng). Test bắt buộc: hiệu trưởng A không thấy nhân viên B
+(`StaffApiTests`), hiệu trưởng không đọc lương kể cả trong lịch sử (`StaffLifecycleTests`), giáo viên chỉ xem hồ sơ
+mình (`StaffApiTests`), điều chuyển giữ lịch sử (`StaffLifecycleTests`).
 
-Thử tay phần nhân sự (tài khoản trong README, mật khẩu `Matkhau@123`):
+Thử tay: mục "Thử nhanh" trong README (bước 3–5). Backend đang chạy bằng mã cũ cần khởi động lại để chạy
+migration V4 (thư viện văn bản).
 
-1. `admin@preschool.local`, chọn Cơ sở A → Nhân sự → Thêm nhân viên → Quét CCCD (ảnh mặt trước có mã QR) → chọn
-   vị trí, ngày vào làm → Thêm. Trang chuyển tới hồ sơ; tab Giấy tờ có ảnh CCCD.
-2. Tab Hợp đồng & quyết định → Thêm hợp đồng kèm PDF → bấm tên tệp để xem trước.
-3. Nút Điều chuyển → Cơ sở B, hôm nay → header tự đổi sang Cơ sở B; tab Lịch sử có 2 giai đoạn công tác.
-4. `0900000004` (hiệu trưởng A): không mở được hồ sơ vừa chuyển; hồ sơ khác không có tab Lương, không có nút
-   Điều chuyển, có nút Cho nghỉ việc.
-5. Thẻ "Giấy tờ hết hạn" ở /nhan-su → Nguyễn Thị Lan (hợp đồng còn 20 ngày) → bấm mở tab hợp đồng.
+### Giả định giai đoạn 2 (cần chủ dự án xác nhận)
 
-Kiểm tra sau S12: backend 84 test, frontend 61 test Vitest, 27 test Playwright (gồm luồng "xong" phần tài liệu:
-ban hành cần xác nhận → giáo viên bấm "Tôi đã đọc" → tỷ lệ tăng), lint 0 lỗi, build xanh.
+- `TODO(assumption)` trong `AccountAdminService`: chỉ chủ chuỗi được gán/gỡ vai trò chủ chuỗi và khóa tài khoản
+  chủ chuỗi (văn phòng điều hành không tự nâng quyền được).
+- Đề xuất cập nhật: mỗi đề xuất chỉ một nhóm (liên hệ hoặc ngân hàng); còn đề xuất cùng nhóm đang chờ thì không gửi
+  thêm. Người duyệt đúng theo quyết định chốt (chủ chuỗi không nằm trong danh sách duyệt).
+- API file chung `/files/{id}/download-url` chỉ cho người upload; file đã gắn vào hồ sơ/văn bản tải qua endpoint
+  của module (quyền theo bản ghi). Đã bỏ quy tắc tạm của giai đoạn 1.
+- Trang "Hồ sơ của tôi" ẩn tab Lịch sử (nhật ký chỉnh sửa) và Phân công lớp.
 
-Thử tay phần tài liệu: `0900000004` (hiệu trưởng A) → Tài liệu → Ban hành văn bản, bật "Yêu cầu xác nhận đã đọc"
-→ trang chi tiết hiện 0/N. `0900000005` (giáo viên A) → chuông có thông báo → mở văn bản → "Tôi đã đọc". Hiệu trưởng
-tải lại: 1/N, tab "Đã đọc" có giáo viên; "Nhắc người chưa đọc" (email xem ở Mailpit http://localhost:8025).
-Lưu ý: backend đang chạy bằng mã cũ cần khởi động lại để chạy migration V4.
+### Việc tiếp theo
 
-Kiểm tra sau S14: backend 94 test, frontend 64 test Vitest, 33 test Playwright, lint 0 lỗi, build xanh.
-
-Việc tiếp theo: S15 (dọn legacy nhân viên, bỏ quy tắc tải file tạm, nghiệm thu, README).
+1. Chủ dự án nghiệm thu giai đoạn 2 theo README (Thử nhanh 3–5) và xác nhận các giả định trên.
+2. Giai đoạn 3 – Chấm công, nghỉ phép, công việc: đọc thiết kế, lập kế hoạch, chờ duyệt.
 
 ## Giai đoạn 1 – Nền tảng (xong, chờ nghiệm thu)
 
@@ -100,8 +101,7 @@ thật) đều xanh. Các đường dẫn module (/nhan-su, /luong, /cua-toi/…
 
 ### Giả định đang dùng (cần chủ dự án xác nhận)
 
-- `TODO(assumption)` trong `FileService`: link tải file chung = người upload hoặc OWNER/CHAIN_ADMIN/PRINCIPAL. Từ
-  giai đoạn 2 mỗi module (hồ sơ nhân viên, thư viện văn bản) tự kiểm tra quyền trên bản ghi gắn file.
+- (Đã xử lý ở giai đoạn 2) quy tắc tạm tải file chung trong `FileService`.
 
 ### Ghi chú kỹ thuật cần nhớ
 
@@ -122,14 +122,13 @@ thật) đều xanh. Các đường dẫn module (/nhan-su, /luong, /cua-toi/…
 
 | Giai đoạn | File |
 |---|---|
-| 2 | `hooks/useEmployee.ts`, `lib/fileUploader.ts`, `components/employees/shared/MultiDocumentUploadField.tsx` (+ dùng gián tiếp: `CCCDUploadModal`, `DocumentUploadField`, các tab nhân viên, `pages/Employees`) |
 | 3 | `hooks/useAttendanceData.ts`, `lib/attendanceReconciliation.ts`, `components/attendance/AttendanceUploadModal.tsx`, `AttendanceConfigModal.tsx`, `pages/Attendance.tsx` |
 | 4 | `hooks/usePayrollData.ts`, `pages/Payroll.tsx`, `pages/Payslips.tsx`, `api/send-salary-emails.ts`, `api/_lib/emailService.ts` |
-| 7 | `pages/Dashboard.tsx`, `pages/Index.tsx` |
 
-`lib/supabase.ts` và `@supabase/supabase-js` chỉ gỡ được khi các file trên đã chuyển xong.
+`lib/supabase.ts` và `@supabase/supabase-js` chỉ gỡ được khi các file trên đã chuyển xong. Giai đoạn 2 đã xóa
+trang/hook nhân viên cũ và Dashboard cũ; `components/legacy/` giữ `DatePickerCustom`, `EditableCell` cho trang chấm
+công, lương cũ.
 
 ### Việc tiếp theo
 
 1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1 + khung giao diện.
-2. Giai đoạn 2: xem bảng ở đầu tệp.

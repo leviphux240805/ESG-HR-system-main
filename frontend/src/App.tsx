@@ -14,8 +14,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
-// Các trang ESG cũ (Employees, Attendance, Payroll, Payslips, Settings, Dashboard) còn gọi Supabase nên chưa được
-// import; mỗi trang được nối vào lib/navigation.ts ở giai đoạn chuyển đổi tương ứng (xem docs/tien-do.md).
+// Các trang ESG cũ còn gọi Supabase (Attendance, Payroll, Payslips, Settings) chưa được import; mỗi trang được nối
+// vào lib/navigation.ts ở giai đoạn chuyển đổi tương ứng (xem docs/tien-do.md).
 
 const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 

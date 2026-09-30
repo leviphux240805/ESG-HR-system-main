@@ -10,7 +10,6 @@ import {
   ClipboardCheck,
   Clock,
   FileText,
-  FileUp,
   FolderOpen,
   HeartPulse,
   LayoutDashboard,
@@ -57,7 +56,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { path: "/", label: "Trang chủ", icon: LayoutDashboard, phase: 1, page: () => import("@/pages/Home") },
       // Trang thử upload/tải file của giai đoạn 1; bỏ khi module Tài liệu (giai đoạn 2) hoàn thành
-      { path: "/files-demo", label: "Tệp (thử nghiệm)", icon: FileUp, phase: 1, page: () => import("@/pages/FilesDemo") },
     ],
   },
   {
@@ -92,7 +90,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Quản trị",
     items: [
       { path: "/bao-cao", label: "Báo cáo", icon: BarChart3, phase: 7, permission: view("reports") },
-      // TODO(assumption): màn hình cấu hình và quản lý tài khoản chưa chốt giai đoạn; tạm xếp giai đoạn 2
+      // TODO(assumption): màn hình cấu hình chưa chốt giai đoạn (chưa có trang nên chưa hiện)
       { path: "/cai-dat", label: "Cài đặt", icon: Settings, phase: 2, permission: view("settings") },
       { path: "/tai-khoan", label: "Tài khoản", icon: UserCog, phase: 2, permission: manage("settings"), page: () => import("@/pages/accounts/AccountsPage") },
     ],

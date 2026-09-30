@@ -37,7 +37,7 @@ import {
   yearOptions,
 } from "@/data/attendanceTypes";
 import { usePayrollData, PayrollRecord } from "@/hooks/usePayrollData";
-import { EditableCell } from "@/components/employees/EditableCell";
+import { EditableCell } from "@/components/legacy/EditableCell";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 

@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.preschool.account.entity.RoleCode;
 import com.preschool.common.error.ApiException;
 import com.preschool.common.file.FileDtos.DownloadUrlResponse;
 import com.preschool.common.file.FileDtos.FileResponse;
@@ -46,12 +45,6 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 public class FileService {
 
 	private static final Logger log = LoggerFactory.getLogger(FileService.class);
-
-	/**
-	 * TODO(assumption): quyền tải file chung ở giai đoạn 1 = người upload hoặc vai trò quản lý. Từ giai đoạn 2, mỗi
-	 * module (hồ sơ nhân viên, thư viện văn bản…) tự kiểm tra quyền trên bản ghi gắn file.
-	 */
-	private static final Set<RoleCode> MANAGER_ROLES = Set.of(RoleCode.OWNER, RoleCode.CHAIN_ADMIN, RoleCode.PRINCIPAL);
 
 	private final StoredFileRepository files;
 
@@ -148,13 +141,14 @@ public class FileService {
 		return FileResponse.of(file);
 	}
 
+	/**
+	 * Link tải qua API file chung: chỉ người upload (xem lại file vừa tải lên trước khi gắn vào bản ghi). File đã gắn
+	 * vào hồ sơ nhân viên, văn bản… tải qua endpoint của module đó, nơi quyền được kiểm tra theo bản ghi.
+	 */
 	@Transactional(readOnly = true)
 	public DownloadUrlResponse downloadUrl(UUID fileId) {
-		SchoolScope scope = SchoolScope.require();
 		StoredFile file = find(fileId);
-		boolean allowed = file.getUploadedBy().equals(scope.userId())
-				|| MANAGER_ROLES.stream().anyMatch(scope::hasRole);
-		if (!allowed) {
+		if (!file.getUploadedBy().equals(SchoolScope.require().userId())) {
 			throw ApiException.forbidden("FILE_FORBIDDEN", "Bạn không có quyền tải file này.");
 		}
 		return presignDownload(file, false);
