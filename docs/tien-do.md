@@ -13,6 +13,10 @@ ghi trong `thiet-ke.md` (commit `ae38a2a`).
 | C4 | Import máy chấm công, đối soát, bảng công tháng, sửa ô, xử lý sai lệch | `7b23822` |
 | C5 | Khóa/mở khóa công tháng, xuất Excel | `4a1d0ab` |
 | C6+C7 | Đơn nghỉ (xin, duyệt, lịch nghỉ, phép năm), bảng công của tôi | `d8ffcc0` |
+| C8 | `/cham-cong` lưới (ảo hóa hàng, sửa ô, sai lệch, tổng) | `a944010` |
+| C9 | Import máy chấm công, xử lý sai lệch hàng loạt, khóa/mở khóa, xuất Excel | `9c8b4e7` |
+| C10 | `/cham-cong/cau-hinh` (giờ ca theo ngày hiệu lực, ngày lễ) | `a14b824` |
+| C11 | `/nghi-phep` (đơn của tôi, chờ duyệt, lịch nghỉ), `/cua-toi/cham-cong` | `05a4ba0` |
 
 Kiểm tra sau C7: backend 119 test (gồm đối chiếu bản TS cũ trên file mẫu, duyệt đơn ghi đúng mã, tháng khóa không
 sửa được, giáo viên không xem bảng công người khác); frontend 66 test Vitest, lint 0 lỗi, build xanh.
@@ -25,7 +29,18 @@ Khi có file thật: sửa đường dẫn trong `frontend/src/lib/legacy/attend
 Ghi nhận khi đối chiếu (giữ đúng bản cũ theo quyết định): ngày HR chấm P/NL/NB/NN mà máy không có dữ liệu bị báo sai
 lệch "Máy: Vắng mặt"; đi làm ngày lễ về trưa bị gợi ý 1/2K (bản cũ không biết ngày lễ). Có thể sửa ở giai đoạn sau.
 
-Việc tiếp theo: C8 (/cham-cong lưới) → C9 → C10 → C11 → W1–W4 → Z1.
+Kiểm tra sau C11: backend 119 test; frontend 70 test Vitest, 40 test Playwright (gồm luồng "xong" (1) import file
+mẫu → đối soát → khóa tháng và (2) giáo viên xin nghỉ trên điện thoại → hiệu trưởng duyệt → bảng công thành P).
+
+Thử tay phần chấm công (tài khoản trong README):
+
+1. `0900000004` (hiệu trưởng A) → Chấm công → tháng 9/2026 → "Import máy chấm công" → chọn
+   `docs/mau/may-cham-cong-gia-lap-2026-09.xlsx` → xem mã 999 bị bỏ qua → "Import và đối soát" → "Xử lý sai lệch" →
+   "Xác nhận tất cả" → "Khóa công"; ô chỉ xem được. `admin@preschool.local` (chọn Cơ sở A) → "Mở khóa công" + lý do.
+2. `0900000005` (giáo viên A, trên điện thoại) → Nghỉ phép → "Xin nghỉ" → hiệu trưởng → Nghỉ phép › Chờ duyệt →
+   "Duyệt" → ô bảng công thành P; giáo viên xem ở Của tôi › Chấm công của tôi.
+
+Việc tiếp theo: W1 (backend công việc) → W2 (việc lặp lại, nhắc hạn) → W3 (/cong-viec) → W4 (/cua-toi/viec) → Z1.
 
 ## Giai đoạn 2 – Nhân sự + Tài liệu (xong, chờ nghiệm thu)
 
