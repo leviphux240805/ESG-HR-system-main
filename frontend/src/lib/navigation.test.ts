@@ -13,6 +13,10 @@ describe("visibleNavGroups (bản demo)", () => {
     }
   });
 
+  it("giáo viên: Điểm danh là trang đầu tiên", () => {
+    expect(paths(["TEACHER"])[0]).toBe("/diem-danh");
+  });
+
   it("giáo viên không thấy Hôm nay, Hộp duyệt", () => {
     expect(paths(["TEACHER"])).not.toContain("/hom-nay");
     expect(paths(["TEACHER"])).not.toContain("/hop-duyet");

@@ -262,7 +262,8 @@ export function generateDb(todayDate = new Date()): DemoDB {
   });
 
   // ---- Điểm danh trẻ ----
-  const tendency = new Map(db.children.map((c) => [c.id, faker.number.float({ min: 0.8, max: 1.25 })]));
+  // Mỗi trẻ có xác suất vắng riêng: vắng có phép 2–9%, không phép 0,5–2,5%
+  const tendency = new Map(db.children.map((c) => [c.id, { e: faker.number.float({ min: 0.02, max: 0.09 }), a: faker.number.float({ min: 0.005, max: 0.025 }) }]));
   const schoolDays = range(startDate, today).filter(isSchoolDay);
   const lateClass = db.classes[3].id; // lớp chưa điểm danh hôm nay
   for (const date of schoolDays) {
@@ -270,8 +271,9 @@ export function generateDb(todayDate = new Date()): DemoDB {
     for (const child of db.children) {
       if (child.enrolledOn > date) continue;
       if (date === today && child.classId === lateClass) continue;
-      const r = faker.number.float({ min: 0, max: 1 }) * tendency.get(child.id)!;
-      marks[child.id] = r > 0.965 ? "A" : r > 0.91 ? "E" : "P";
+      const r = faker.number.float({ min: 0, max: 1 });
+      const t = tendency.get(child.id)!;
+      marks[child.id] = r < t.a ? "A" : r < t.a + t.e ? "E" : "P";
     }
     db.childAttendance[date] = marks;
   }

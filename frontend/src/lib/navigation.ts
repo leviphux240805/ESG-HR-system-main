@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { matchPath } from "react-router-dom";
-import { Inbox, type LucideIcon, Sun } from "lucide-react";
+import { Baby, ClipboardCheck, Inbox, type LucideIcon, School, Sun } from "lucide-react";
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. Bản demo: mở mọi mục đã có trang. */
@@ -33,6 +33,15 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/hop-duyet", label: "Hộp duyệt", icon: Inbox, phase: 1, permission: view("approvals"), page: () => import("@/pages/approvals/ApprovalsPage") },
     ],
   },
+  {
+    label: "Lớp & trẻ",
+    items: [
+      // Đầu nhóm: trang mặc định của giáo viên
+      { path: "/diem-danh", label: "Điểm danh", icon: ClipboardCheck, phase: 1, permission: view("classes"), page: () => import("@/pages/children/RollCallPage") },
+      { path: "/lop-hoc", label: "Lớp học", icon: School, phase: 1, permission: view("classes"), page: () => import("@/pages/classes/ClassesPage") },
+      { path: "/tre", label: "Hồ sơ trẻ", icon: Baby, phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildrenPage") },
+    ],
+  },
 ];
 
 /**
@@ -49,7 +58,9 @@ export interface SubRoute {
   page: () => Promise<{ default: ComponentType }>;
 }
 
-export const SUB_ROUTES: SubRoute[] = [];
+export const SUB_ROUTES: SubRoute[] = [
+  { path: "/tre/:id", label: "Chi tiết", parent: "/tre", phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildProfilePage") },
+];
 
 /** Xem trước các mục chưa làm (trang "Sắp có") — chỉ ở dev với VITE_PREVIEW_MODULES=true. */
 export const PREVIEW_MODULES = import.meta.env.DEV && import.meta.env.VITE_PREVIEW_MODULES === "true";
