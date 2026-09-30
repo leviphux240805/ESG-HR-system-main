@@ -123,6 +123,8 @@ export interface SubRoute {
 
 export const SUB_ROUTES: SubRoute[] = [
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 2, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
+  { path: "/nhan-su/giay-to-het-han", label: "Giấy tờ sắp hết hạn", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffExpiringPage") },
+  // Đặt sau các đường dẫn cố định: tìm breadcrumb duyệt theo thứ tự
   { path: "/nhan-su/:id", label: "Hồ sơ nhân viên", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffProfilePage") },
 ];
 

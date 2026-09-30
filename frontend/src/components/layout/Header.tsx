@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
+import { NotificationBell } from "./NotificationBell";
 import { SidebarContent } from "./Sidebar";
 
 const ALL_SCHOOLS = "ALL";
@@ -114,6 +115,7 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <SchoolSelector />
+          <NotificationBell />
           <UserMenu />
         </div>
       </div>

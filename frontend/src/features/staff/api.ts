@@ -174,3 +174,27 @@ export function useTrainings(staffId: string) {
     queryFn: async () => unwrap(await api.GET("/api/v1/staff/{staffId}/trainings", { params: { path: { staffId } } })),
   });
 }
+
+export type ExpiringItem = S["ExpiringItem"];
+export type ExpiryKind = "CONTRACT" | "CERTIFICATE" | "DOCUMENT";
+
+/** Bộ lọc trang giấy tờ sắp hết hạn (khóa trên URL). */
+export const EXPIRING_FILTER_KEYS = ["within", "kind", "schoolId"] as const;
+export const EXPIRING_WINDOWS = ["30", "60", "90"] as const;
+
+export function useExpiringDocuments(params: ListParams) {
+  const { queryKey } = useCurrentSchool();
+  const { page, size, within, kind, schoolId } = params.apiParams as Record<string, string | number | undefined>;
+  const query = {
+    page: page as number,
+    size: size as number,
+    within: EXPIRING_WINDOWS.includes(within as never) ? Number(within) : 30,
+    kind: kind as ExpiryKind | undefined,
+    schoolId: schoolId as string | undefined,
+  };
+  return useQuery({
+    queryKey: queryKey("staff", "expiring", query),
+    queryFn: async () => unwrap(await api.GET("/api/v1/staff/expiring-documents", { params: { query } })),
+    placeholderData: keepPreviousData,
+  });
+}

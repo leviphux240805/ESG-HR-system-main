@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { can, type RoleCode } from "./permissions";
-import { visibleNavGroups } from "./navigation";
+import { findNavItem, visibleNavGroups } from "./navigation";
 
 const paths = (roles: RoleCode[], phase: number, preview: boolean) =>
   visibleNavGroups((action, resource) => can(roles, action, resource), phase, preview).flatMap((g) =>
@@ -48,5 +48,14 @@ describe("visibleNavGroups", () => {
     // Đã tới giai đoạn nhưng chưa có trang: không hiện "Sắp có" cho người dùng thật
     expect(paths(["CHAIN_ADMIN"], 7, false)).not.toContain("/bao-cao");
     expect(paths(["TEACHER"], 2, false)).not.toContain("/nhan-su");
+  });
+});
+
+describe("findNavItem", () => {
+  it("trang con cố định không bị nhận nhầm là /nhan-su/:id", () => {
+    expect(findNavItem("/nhan-su/moi")?.subLabel).toBe("Thêm nhân viên");
+    expect(findNavItem("/nhan-su/giay-to-het-han")?.subLabel).toBe("Giấy tờ sắp hết hạn");
+    expect(findNavItem("/nhan-su/00000000-0000-0000-0000-000000000105")?.subLabel).toBe("Hồ sơ nhân viên");
+    expect(findNavItem("/nhan-su")?.item.path).toBe("/nhan-su");
   });
 });

@@ -69,15 +69,18 @@ function SummaryCards({ schoolId }: { schoolId?: string }) {
           )}
         </CardContent>
       </Card>
-      <Card>
-        <CardContent className="pt-6 flex items-center gap-4">
-          <AlertTriangle className={cn("w-8 h-8", data.expiringDocuments > 0 ? "text-amber-600" : "text-muted-foreground")} />
-          <div>
-            <p className="text-sm text-muted-foreground">Giấy tờ hết hạn trong {WARNING_DAYS} ngày</p>
-            <p className="text-2xl font-bold">{data.expiringDocuments}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <Link to="/nhan-su/giay-to-het-han" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Card className="h-full hover:bg-accent/40 transition-colors">
+          <CardContent className="pt-6 flex items-center gap-4">
+            <AlertTriangle className={cn("w-8 h-8", data.expiringDocuments > 0 ? "text-amber-600" : "text-muted-foreground")} />
+            <div>
+              <p className="text-sm text-muted-foreground">Giấy tờ hết hạn trong {WARNING_DAYS} ngày</p>
+              <p className="text-2xl font-bold">{data.expiringDocuments}</p>
+              <p className="text-xs text-primary">Xem giấy tờ sắp hết hạn →</p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }

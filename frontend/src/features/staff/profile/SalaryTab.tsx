@@ -234,7 +234,7 @@ export function SalaryTab({ staff }: { staff: StaffDetail }) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0 gap-2">
+        <CardHeader className="pb-3 flex-row flex-wrap items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-base">Lương đang áp dụng</CardTitle>
           {canManage && (
             <Button className="min-h-11" onClick={() => setAdjusting(true)}>
@@ -252,7 +252,9 @@ export function SalaryTab({ staff }: { staff: StaffDetail }) {
           ) : (
             <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Row label="Hình thức">{SALARY_MODE_LABELS[current.salaryMode]}</Row>
-              <Row label={current.salaryMode === "FIXED" ? "Lương cơ bản" : "Hệ số"}>{salaryText(current)}</Row>
+              <Row label={current.salaryMode === "FIXED" ? "Lương cơ bản" : "Hệ số lương"}>
+                {current.salaryMode === "FIXED" ? formatMoney(current.baseSalary) : current.coefficient}
+              </Row>
               <Row label="Vùng">{current.region && SALARY_REGION_LABELS[current.region]}</Row>
               <Row label="Lương đóng bảo hiểm">{formatMoney(current.insuranceSalary)}</Row>
               <Row label="Hiệu lực từ">{formatDate(current.effectiveFrom)}</Row>
