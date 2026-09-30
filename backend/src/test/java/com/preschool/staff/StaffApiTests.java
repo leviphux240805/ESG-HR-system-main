@@ -147,6 +147,25 @@ class StaffApiTests extends ApiTestSupport {
 	}
 
 	@Test
+	void machineCodeIsNormalizedAndUniqueWithinSchoolOnly() throws Exception {
+		User admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		String code = "m" + TestData.randomDigits(5);
+		jdbc.update("UPDATE staff SET machine_code = ? WHERE id = ?", code.toUpperCase(), staffA.getId());
+
+		// Cùng mã ở cơ sở khác được phép; mã được viết hoa
+		String json = """
+				{"schoolId":"%s","fields":{"fullName":"Mã Máy","position":"TEACHER","startDate":"2024-09-01","machineCode":"%s"}}""";
+		as(admin, post("/api/v1/staff").contentType(MediaType.APPLICATION_JSON)
+			.content(json.formatted(schoolB.getId(), code))).andExpect(status().isCreated())
+			.andExpect(jsonPath("$.machineCode").value(code.toUpperCase()));
+		as(admin, post("/api/v1/staff").contentType(MediaType.APPLICATION_JSON)
+			.content(json.formatted(schoolA.getId(), code))).andExpect(status().isConflict())
+			.andExpect(jsonPath("$.errors[0].field").value("machineCode"));
+		as(admin, post("/api/v1/staff").contentType(MediaType.APPLICATION_JSON)
+			.content(json.formatted(schoolA.getId(), "mã có dấu"))).andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void onlyChainRolesCreateLoginAccounts() throws Exception {
 		User principalA = data.user(RoleCode.PRINCIPAL, schoolA);
 		User admin = data.user(RoleCode.CHAIN_ADMIN, null);

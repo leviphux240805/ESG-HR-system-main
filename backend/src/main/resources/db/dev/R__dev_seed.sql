@@ -94,3 +94,31 @@ UPDATE users SET staff_id = '00000000-0000-0000-0000-000000000102' WHERE id = '0
 UPDATE users SET staff_id = '00000000-0000-0000-0000-000000000103' WHERE id = '00000000-0000-0000-0000-000000000006' AND staff_id IS NULL;
 UPDATE users SET staff_id = '00000000-0000-0000-0000-000000000111' WHERE id = '00000000-0000-0000-0000-000000000007' AND staff_id IS NULL;
 UPDATE users SET staff_id = '00000000-0000-0000-0000-000000000112' WHERE id = '00000000-0000-0000-0000-000000000008' AND staff_id IS NULL;
+
+-- ---------------------------------------------------------------- chấm công (giai đoạn 3)
+-- Cấu hình mặc định toàn chuỗi: ca 07:30–17:00, nghỉ trưa 11:30–13:00, T2–T7 (T7 nửa buổi), ân hạn 15 phút,
+-- được muộn nhẹ 3 lần/tháng, phép năm 12 ngày.
+INSERT INTO attendance_configs (id, school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
+    late_grace_minutes, max_late_count_allowed, working_weekdays, half_day_weekdays, annual_leave_days) VALUES
+    ('00000000-0000-0000-0000-000000000601', NULL, '2025-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3,
+     '{1,2,3,4,5,6}', '{6}', 12)
+ON CONFLICT DO NOTHING;
+
+-- Ngày lễ mẫu 2026 (toàn chuỗi) – kiểm tra lại theo lịch nghỉ chính thức trước khi dùng thật
+INSERT INTO holidays (school_id, holiday_date, name) VALUES
+    (NULL, '2026-01-01', 'Tết Dương lịch'),
+    (NULL, '2026-02-16', 'Tết Nguyên đán'),
+    (NULL, '2026-02-17', 'Tết Nguyên đán'),
+    (NULL, '2026-02-18', 'Tết Nguyên đán'),
+    (NULL, '2026-02-19', 'Tết Nguyên đán'),
+    (NULL, '2026-02-20', 'Tết Nguyên đán'),
+    (NULL, '2026-04-26', 'Giỗ Tổ Hùng Vương'),
+    (NULL, '2026-04-30', 'Ngày Giải phóng miền Nam'),
+    (NULL, '2026-05-01', 'Quốc tế Lao động'),
+    (NULL, '2026-09-01', 'Quốc khánh'),
+    (NULL, '2026-09-02', 'Quốc khánh')
+ON CONFLICT DO NOTHING;
+
+-- Mã chấm công của nhân viên seed = 3 số cuối của id (101, 102, …)
+UPDATE staff SET machine_code = right(id::text, 3)
+WHERE id::text LIKE '00000000-0000-0000-0000-0000000001%' AND machine_code IS NULL AND deleted_at IS NULL;

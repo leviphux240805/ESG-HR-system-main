@@ -40,6 +40,11 @@ export const staffFormSchema = z.object({
   }),
   qualification: z.enum(["HIGH_SCHOOL", "INTERMEDIATE", "COLLEGE", "BACHELOR", "MASTER", "OTHER"]).optional(),
   specialization: optionalText,
+  machineCode: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || /^[A-Za-z0-9._-]{1,30}$/.test(v), "Mã chấm công chỉ gồm chữ không dấu, số, dấu chấm, gạch")
+    .default(""),
   socialInsuranceNo: optionalText,
   healthInsuranceNo: optionalText,
   personalTaxCode: optionalText,
@@ -67,6 +72,7 @@ export const emptyStaffForm = (): StaffFormValues => ({
   position: undefined as unknown as StaffFormValues["position"],
   qualification: undefined,
   specialization: "",
+  machineCode: "",
   socialInsuranceNo: "",
   healthInsuranceNo: "",
   personalTaxCode: "",
@@ -98,6 +104,7 @@ export function toStaffFields(v: StaffFormValues, photoFileId?: string): StaffFi
     position: v.position,
     qualification: v.qualification,
     specialization: orUndefined(v.specialization),
+    machineCode: orUndefined(v.machineCode),
     socialInsuranceNo: orUndefined(v.socialInsuranceNo),
     healthInsuranceNo: orUndefined(v.healthInsuranceNo),
     personalTaxCode: orUndefined(v.personalTaxCode),
@@ -131,6 +138,7 @@ export function fromStaffDetail(d: StaffDetail): StaffFormValues {
     position: d.position,
     qualification: d.qualification ?? undefined,
     specialization: d.specialization ?? "",
+    machineCode: d.machineCode ?? "",
     socialInsuranceNo: d.socialInsuranceNo ?? "",
     healthInsuranceNo: d.healthInsuranceNo ?? "",
     personalTaxCode: d.personalTaxCode ?? "",

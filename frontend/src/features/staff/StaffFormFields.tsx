@@ -198,6 +198,7 @@ export function StaffFormFields({ form, staffId, disabled, schoolField }: Props)
         <TextInput form={form} name="startDate" label="Ngày vào làm" type="date" required disabled={disabled} />
         <EnumSelect form={form} name="qualification" label="Trình độ" labels={QUALIFICATION_LABELS} disabled={disabled} />
         <TextInput form={form} name="specialization" label="Chuyên ngành" disabled={disabled} />
+        <TextInput form={form} name="machineCode" label="Mã chấm công" disabled={disabled} />
       </Section>
     </div>
   );

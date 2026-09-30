@@ -1639,6 +1639,8 @@ export interface components {
             healthInsuranceNo?: string;
             /** Format: uuid */
             id: string;
+            /** @description Mã nhân viên trên máy chấm công của cơ sở */
+            machineCode?: string;
             permAddressDetail?: string;
             permProvinceCode?: string;
             permWardCode?: string;
@@ -1706,6 +1708,7 @@ export interface components {
             /** @enum {string} */
             gender?: "MALE" | "FEMALE";
             healthInsuranceNo?: string;
+            machineCode?: string;
             permAddressDetail?: string;
             permProvinceCode?: string;
             permWardCode?: string;

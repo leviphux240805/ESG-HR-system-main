@@ -25,6 +25,13 @@ public interface StaffRepository extends JpaRepository<Staff, UUID>, JpaSpecific
 			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)
 	boolean phoneTakenAnywhere(@Param("value") String value, @Param("exclude") UUID excludeStaffId);
 
+	/** Mã chấm công đã dùng trong cơ sở (kể cả hồ sơ người dùng không thấy). */
+	@Query(value = """
+			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND school_id = :schoolId AND machine_code = :value
+			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)
+	boolean machineCodeTaken(@Param("schoolId") UUID schoolId, @Param("value") String value,
+			@Param("exclude") UUID excludeStaffId);
+
 	@Query(value = """
 			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND email = :value
 			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)

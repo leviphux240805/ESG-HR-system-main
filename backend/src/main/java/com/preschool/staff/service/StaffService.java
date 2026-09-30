@@ -280,7 +280,12 @@ public class StaffService {
 	}
 
 	private void rejectDuplicates(Staff staff, UUID excludeId) {
-		List<FieldIssue> issues = duplicates(staff.getCitizenId(), staff.getPhone(), staff.getEmail(), excludeId);
+		List<FieldIssue> issues = new ArrayList<>(
+				duplicates(staff.getCitizenId(), staff.getPhone(), staff.getEmail(), excludeId));
+		if (staff.getMachineCode() != null
+				&& staffRepo.machineCodeTaken(staff.getSchoolId(), staff.getMachineCode(), excludeId)) {
+			issues.add(new FieldIssue("machineCode", "mã chấm công đã dùng cho nhân viên khác trong cơ sở"));
+		}
 		if (!issues.isEmpty()) {
 			throw ApiException.conflict("STAFF_DUPLICATE", "Thông tin trùng với một hồ sơ nhân viên khác.")
 				.withFieldErrors(issues.stream().map(i -> Map.of("field", i.field(), "message", i.message())).toList());
@@ -306,6 +311,8 @@ public class StaffService {
 		staff.setCitizenId(normalizeCitizenId(staff.getCitizenId()));
 		staff.setPhone(normalizePhone(staff.getPhone()));
 		staff.setEmail(normalizeEmail(staff.getEmail()));
+		staff.setMachineCode(staff.getMachineCode() == null || staff.getMachineCode().isBlank() ? null
+				: staff.getMachineCode().trim().toUpperCase(Locale.ROOT));
 		staff.setFullName(staff.getFullName().trim().replaceAll("\\s+", " "));
 	}
 

@@ -120,6 +120,7 @@ export function InfoTab({ staff }: { staff: StaffDetail }) {
         <Field label="Ngày vào làm">{formatDate(staff.startDate)}</Field>
         <Field label="Trình độ">{staff.qualification && QUALIFICATION_LABELS[staff.qualification]}</Field>
         <Field label="Chuyên ngành">{staff.specialization}</Field>
+        <Field label="Mã chấm công">{staff.machineCode}</Field>
         {staff.status === "TERMINATED" && (
           <>
             <Field label="Ngày nghỉ việc">{formatDate(staff.endDate)}</Field>

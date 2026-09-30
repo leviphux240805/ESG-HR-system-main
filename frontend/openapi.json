@@ -5483,6 +5483,10 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "machineCode" : {
+            "type" : "string",
+            "description" : "Mã nhân viên trên máy chấm công của cơ sở"
+          },
           "permAddressDetail" : {
             "type" : "string"
           },
@@ -5662,6 +5666,10 @@
             "type" : "string",
             "maxLength" : 20,
             "minLength" : 0
+          },
+          "machineCode" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9._-]{1,30}$"
           },
           "permAddressDetail" : {
             "type" : "string",

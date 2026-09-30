@@ -87,6 +87,10 @@ public class Staff extends BaseEntity {
 
 	private String specialization;
 
+	/** Mã nhân viên trên máy chấm công của cơ sở (khớp file Excel khi import). */
+	@Column(name = "machine_code")
+	private String machineCode;
+
 	@Column(name = "bank_name")
 	private String bankName;
 
@@ -150,7 +154,11 @@ public class Staff extends BaseEntity {
 		return schoolId;
 	}
 
+	/** Đổi cơ sở (điều chuyển): mã chấm công thuộc máy của cơ sở cũ nên bị bỏ, cơ sở mới gán mã khác. */
 	public void setSchoolId(UUID schoolId) {
+		if (this.schoolId != null && !this.schoolId.equals(schoolId)) {
+			this.machineCode = null;
+		}
 		this.schoolId = schoolId;
 	}
 
@@ -284,6 +292,14 @@ public class Staff extends BaseEntity {
 
 	public void setQualification(Qualification qualification) {
 		this.qualification = qualification;
+	}
+
+	public String getMachineCode() {
+		return machineCode;
+	}
+
+	public void setMachineCode(String machineCode) {
+		this.machineCode = machineCode;
 	}
 
 	public String getSpecialization() {
