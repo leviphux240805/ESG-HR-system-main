@@ -1,34 +1,10 @@
 import type { ComponentType } from "react";
 import { matchPath } from "react-router-dom";
-import {
-  ArrowLeftRight,
-  Baby,
-  BarChart3,
-  BookOpenCheck,
-  CalendarCheck,
-  CalendarOff,
-  ClipboardCheck,
-  Clock,
-  FileText,
-  FolderOpen,
-  HeartPulse,
-  LayoutDashboard,
-  ListChecks,
-  ListTodo,
-  type LucideIcon,
-  Receipt,
-  School,
-  Settings,
-  UserCog,
-  UserRound,
-  Users,
-  UtensilsCrossed,
-  Wallet,
-} from "lucide-react";
+import { Inbox, type LucideIcon, Sun } from "lucide-react";
 import type { Action, Resource, RoleCode } from "./permissions";
 
-/** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. */
-export const CURRENT_PHASE = 3;
+/** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. Bản demo: mở mọi mục đã có trang. */
+export const CURRENT_PHASE = 9;
 
 export interface NavItem {
   path: string;
@@ -48,62 +24,13 @@ export interface NavGroup {
 }
 
 const view = (resource: Resource) => ({ action: "view" as const, resource });
-const manage = (resource: Resource) => ({ action: "manage" as const, resource });
 
 /** Cấu hình menu duy nhất: Sidebar, router và breadcrumb đều sinh từ đây. */
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [
-      { path: "/", label: "Trang chủ", icon: LayoutDashboard, phase: 1, page: () => import("@/pages/Home") },
-      // Trang thử upload/tải file của giai đoạn 1; bỏ khi module Tài liệu (giai đoạn 2) hoàn thành
-    ],
-  },
-  {
-    label: "Nhân sự",
-    items: [
-      { path: "/nhan-su", label: "Nhân sự", icon: Users, phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffListPage") },
-      { path: "/tai-lieu", label: "Tài liệu", icon: FolderOpen, phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryPage") },
-      { path: "/cong-viec", label: "Công việc", icon: ListTodo, phase: 3, permission: view("tasks") },
-      { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 3, permission: view("attendance"), page: () => import("@/pages/attendance/AttendancePage") },
-      // Mọi người xin nghỉ được; tab "Chờ duyệt", "Lịch nghỉ" hiện theo quyền trong trang
-      { path: "/nghi-phep", label: "Nghỉ phép", icon: CalendarOff, phase: 3, page: () => import("@/pages/leave/LeavePage") },
-      { path: "/luong", label: "Lương", icon: Wallet, phase: 4, permission: view("payroll") },
-    ],
-  },
-  {
-    label: "Lớp & trẻ",
-    items: [
-      { path: "/lop-hoc", label: "Lớp học", icon: School, phase: 5, permission: view("classes") },
-      { path: "/tre", label: "Hồ sơ trẻ", icon: Baby, phase: 5, permission: view("classes") },
-      { path: "/diem-danh", label: "Điểm danh", icon: ClipboardCheck, phase: 5, permission: view("classes") },
-      { path: "/thuc-don", label: "Thực đơn", icon: UtensilsCrossed, phase: 7, permission: view("health") },
-      { path: "/suc-khoe", label: "Sức khỏe", icon: HeartPulse, phase: 7, permission: view("health") },
-    ],
-  },
-  {
-    label: "Tài chính",
-    items: [
-      { path: "/hoc-phi", label: "Học phí", icon: Receipt, phase: 6, permission: view("finance") },
-      { path: "/thu-chi", label: "Thu chi", icon: ArrowLeftRight, phase: 6, permission: view("finance") },
-    ],
-  },
-  {
-    label: "Quản trị",
-    items: [
-      { path: "/bao-cao", label: "Báo cáo", icon: BarChart3, phase: 7, permission: view("reports") },
-      // TODO(assumption): màn hình cấu hình chưa chốt giai đoạn (chưa có trang nên chưa hiện)
-      { path: "/cai-dat", label: "Cài đặt", icon: Settings, phase: 2, permission: view("settings") },
-      { path: "/tai-khoan", label: "Tài khoản", icon: UserCog, phase: 2, permission: manage("settings"), page: () => import("@/pages/accounts/AccountsPage") },
-    ],
-  },
-  {
-    label: "Của tôi",
-    items: [
-      { path: "/cua-toi/ho-so", label: "Hồ sơ của tôi", icon: UserRound, phase: 2, page: () => import("@/pages/me/MyProfilePage") },
-      { path: "/cua-toi/van-ban", label: "Văn bản cần đọc", icon: BookOpenCheck, phase: 2, page: () => import("@/pages/me/MyDocumentsPage") },
-      { path: "/cua-toi/viec", label: "Việc của tôi", icon: ListChecks, phase: 3 },
-      { path: "/cua-toi/cham-cong", label: "Chấm công của tôi", icon: Clock, phase: 3, page: () => import("@/pages/me/MyAttendancePage") },
-      { path: "/cua-toi/phieu-luong", label: "Phiếu lương của tôi", icon: FileText, phase: 4 },
+      { path: "/hom-nay", label: "Hôm nay", icon: Sun, phase: 1, permission: view("approvals"), page: () => import("@/pages/today/TodayPage") },
+      { path: "/hop-duyet", label: "Hộp duyệt", icon: Inbox, phase: 1, permission: view("approvals"), page: () => import("@/pages/approvals/ApprovalsPage") },
     ],
   },
 ];
@@ -122,15 +49,7 @@ export interface SubRoute {
   page: () => Promise<{ default: ComponentType }>;
 }
 
-export const SUB_ROUTES: SubRoute[] = [
-  { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 2, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
-  { path: "/cham-cong/cau-hinh", label: "Cấu hình chấm công", parent: "/cham-cong", phase: 3, permission: view("attendance"), page: () => import("@/pages/attendance/AttendanceConfigPage") },
-  { path: "/nhan-su/de-xuat", label: "Đề xuất cập nhật hồ sơ", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/ChangeRequestsPage") },
-  { path: "/nhan-su/giay-to-het-han", label: "Giấy tờ sắp hết hạn", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffExpiringPage") },
-  { path: "/tai-lieu/:id", label: "Văn bản", parent: "/tai-lieu", phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryDocumentPage") },
-  // Đặt sau các đường dẫn cố định: tìm breadcrumb duyệt theo thứ tự
-  { path: "/nhan-su/:id", label: "Hồ sơ nhân viên", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffProfilePage") },
-];
+export const SUB_ROUTES: SubRoute[] = [];
 
 /** Xem trước các mục chưa làm (trang "Sắp có") — chỉ ở dev với VITE_PREVIEW_MODULES=true. */
 export const PREVIEW_MODULES = import.meta.env.DEV && import.meta.env.VITE_PREVIEW_MODULES === "true";
@@ -188,6 +107,7 @@ export const ROLE_LABELS: Record<RoleCode, string> = {
   CHAIN_ADMIN: "Văn phòng điều hành",
   ACCOUNTANT: "Kế toán",
   PRINCIPAL: "Hiệu trưởng",
+  VICE_PRINCIPAL: "Phó hiệu trưởng",
   TEACHER: "Giáo viên",
   NURSE: "Nhân viên y tế",
   KITCHEN: "Cấp dưỡng",

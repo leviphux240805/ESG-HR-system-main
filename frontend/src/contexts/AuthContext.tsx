@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { toast } from "sonner";
 import {
   api,
+  DEMO,
   refreshAccessToken,
   setAccessToken,
   setSelectedSchoolId as setClientSchool,
@@ -11,6 +12,8 @@ import {
 import { queryClient } from "@/api/queryClient";
 import type { components } from "@/api/schema";
 import { type RoleCode, rolesInScope } from "@/lib/permissions";
+import { getSessionRole, setSessionRole } from "@/mock/router";
+import type { DemoRole } from "@/mock/db";
 
 export type { RoleCode };
 export type Me = components["schemas"]["MeResponse"];
@@ -27,6 +30,8 @@ interface AuthContextType {
   /** Có vai trò áp dụng cho phạm vi đang chọn. Chỉ dùng để ẩn/hiện giao diện; quyền thật kiểm tra ở backend. */
   hasRole: (...roles: RoleCode[]) => boolean;
   login: (identifier: string, password: string, rememberMe: boolean) => Promise<void>;
+  /** Bản demo: đăng nhập giả theo vai trò. */
+  loginAs: (role: DemoRole) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -88,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let cancelled = false;
     (async () => {
       try {
-        if (await refreshAccessToken()) {
+        if (DEMO ? getSessionRole() !== null : await refreshAccessToken()) {
           await loadMe();
           return;
         }
@@ -121,9 +126,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     [loadMe],
   );
 
+  const loginAs = useCallback(
+    async (role: DemoRole) => {
+      setSessionRole(role);
+      await loadMe();
+    },
+    [loadMe],
+  );
+
   const logout = useCallback(async () => {
     try {
-      await api.POST("/api/v1/auth/logout");
+      if (DEMO) setSessionRole(null);
+      else await api.POST("/api/v1/auth/logout");
     } finally {
       clearSession();
     }
@@ -148,8 +162,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const value = useMemo(
-    () => ({ status, me, selectedSchoolId, selectSchool, hasRole, login, logout }),
-    [status, me, selectedSchoolId, selectSchool, hasRole, login, logout],
+    () => ({ status, me, selectedSchoolId, selectSchool, hasRole, login, loginAs, logout }),
+    [status, me, selectedSchoolId, selectSchool, hasRole, login, loginAs, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

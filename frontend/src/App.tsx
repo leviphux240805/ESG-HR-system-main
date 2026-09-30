@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import Home from "./pages/Home";
 
 // Các trang ESG cũ còn gọi Supabase (Attendance, Payroll, Payslips, Settings) chưa được import; mỗi trang được nối
 // vào lib/navigation.ts ở giai đoạn chuyển đổi tương ứng (xem docs/tien-do.md).
@@ -54,6 +55,7 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
+        <Route path="/" element={<Home />} />
         {NAV_ROUTES.map(({ path, item, Page }) => (
           <Route
             key={path}

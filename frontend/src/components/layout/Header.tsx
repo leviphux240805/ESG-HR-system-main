@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ChevronRight, LogOut, Menu, UserCircle } from "lucide-react";
+import { ChevronRight, LogOut, Menu, RotateCcw, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { DEMO } from "@/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
@@ -46,8 +48,16 @@ function SchoolSelector() {
   );
 }
 
+/** Bản demo: xóa mọi thay đổi, sinh lại dữ liệu mẫu. */
+async function resetDemoData() {
+  const mock = await import("@/mock");
+  mock.resetDb();
+  window.location.reload();
+}
+
 function UserMenu() {
   const { me, logout } = useAuth();
+  const [confirmReset, setConfirmReset] = useState(false);
   if (!me) return null;
   const roleNames = [...new Set(me.roles.map((r) => ROLE_LABELS[r.role]))].join(", ");
 
@@ -66,11 +76,25 @@ function UserMenu() {
           <p className="text-xs font-normal text-muted-foreground">{roleNames}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {DEMO && (
+          <DropdownMenuItem onClick={() => setConfirmReset(true)}>
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Khôi phục dữ liệu demo
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
           <LogOut className="w-4 h-4 mr-2" />
-          Đăng xuất
+          {DEMO ? "Đổi vai trò" : "Đăng xuất"}
         </DropdownMenuItem>
       </DropdownMenuContent>
+      <ConfirmDialog
+        open={confirmReset}
+        onOpenChange={setConfirmReset}
+        onConfirm={resetDemoData}
+        title="Khôi phục dữ liệu demo?"
+        description="Mọi thay đổi bạn đã làm (duyệt đơn, điểm danh, thu tiền…) sẽ bị xóa và dữ liệu mẫu được sinh lại."
+        confirmText="Khôi phục"
+      />
     </DropdownMenu>
   );
 }

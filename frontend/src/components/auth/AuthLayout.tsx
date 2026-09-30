@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { School } from "lucide-react";
-import { APP_NAME } from "@/lib/brand";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 
 interface AuthLayoutProps {
   title: string;
@@ -20,7 +20,7 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">{APP_NAME}</h1>
-              <p className="text-sm text-white/80">Hệ thống quản lý chuỗi trường mầm non</p>
+              <p className="text-sm text-white/80">{APP_TAGLINE}</p>
             </div>
           </div>
         </div>

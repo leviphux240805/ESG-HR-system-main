@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { School } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { APP_NAME } from "@/lib/brand";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { visibleNavGroups } from "@/lib/navigation";
 import { usePermissions } from "@/hooks/useCan";
 
@@ -20,7 +20,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <div>
             <h1 className="text-lg font-semibold leading-tight text-sidebar-foreground">{APP_NAME}</h1>
-            <p className="text-xs text-sidebar-foreground/70">Chuỗi trường mầm non</p>
+            <p className="text-xs text-sidebar-foreground/70">{APP_TAGLINE}</p>
           </div>
         </div>
       </div>

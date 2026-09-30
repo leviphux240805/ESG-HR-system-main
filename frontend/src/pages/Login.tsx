@@ -1,14 +1,66 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, GraduationCap, Loader2, Lock, type LucideIcon, User, UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthLayout, authInputClass } from "@/components/auth/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { errorMessage } from "@/api/errors";
+import { DEMO } from "@/api/client";
+import type { DemoRole } from "@/mock/db";
+
+const DEMO_ROLES: { role: DemoRole; label: string; description: string; icon: LucideIcon }[] = [
+  { role: "principal", label: "Hiệu trưởng", description: "Điều hành 2 cơ sở: hôm nay, duyệt, nhân sự, học phí, báo cáo", icon: UserCheck },
+  { role: "vice", label: "Phó hiệu trưởng", description: "Chuyên môn, nuôi dưỡng: lớp, trẻ, điểm danh, thực đơn, cân đo", icon: Users },
+  { role: "teacher", label: "Giáo viên", description: "Điểm danh lớp trên điện thoại, xin nghỉ, việc được giao", icon: GraduationCap },
+];
+
+/** Bản demo: chọn vai trò thay cho đăng nhập. */
+function DemoLogin() {
+  const { loginAs } = useAuth();
+  const [busy, setBusy] = useState<DemoRole | null>(null);
+  const choose = async (role: DemoRole) => {
+    setBusy(role);
+    try {
+      await loginAs(role);
+    } catch (error) {
+      toast.error(errorMessage(error));
+      setBusy(null);
+    }
+  };
+  return (
+    <AuthLayout title="Chào mừng đến Mầm Non Việt" subtitle="Bản demo: chọn vai trò để trải nghiệm, dữ liệu là dữ liệu mẫu">
+      <div className="space-y-3">
+        {DEMO_ROLES.map(({ role, label, description, icon: Icon }) => (
+          <button
+            key={role}
+            type="button"
+            onClick={() => choose(role)}
+            disabled={busy !== null}
+            className="w-full flex items-center gap-4 rounded-xl border bg-card p-4 text-left min-h-16 transition-colors hover:border-primary hover:bg-secondary disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+              {busy === role ? <Loader2 className="w-5 h-5 animate-spin" /> : <Icon className="w-5 h-5" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">{label}</span>
+              <span className="block text-sm text-muted-foreground">{description}</span>
+            </span>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
+        ))}
+      </div>
+      <p className="text-center text-xs text-muted-foreground">Thay đổi được lưu trên trình duyệt này; khôi phục dữ liệu mẫu ở menu tài khoản.</p>
+    </AuthLayout>
+  );
+}
 
 export default function Login() {
+  return DEMO ? <DemoLogin /> : <PasswordLogin />;
+}
+
+function PasswordLogin() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState("");

@@ -154,75 +154,76 @@ body::-webkit-scrollbar {
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 150 30% 10%;
+    /* Mầm Non Việt: xanh trời tươi + vàng nắng */
+    --background: 200 45% 98%;
+    --foreground: 215 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 150 30% 10%;
+    --card-foreground: 215 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 150 30% 10%;
+    --popover-foreground: 215 30% 15%;
 
-    --primary: 152 85% 16%;
+    --primary: 199 85% 40%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 60% 96%;
-    --secondary-foreground: 152 85% 16%;
+    --secondary: 199 90% 95%;
+    --secondary-foreground: 199 85% 28%;
 
-    --muted: 150 20% 94%;
-    --muted-foreground: 150 10% 45%;
+    --muted: 200 30% 95%;
+    --muted-foreground: 215 15% 42%;
 
-    --accent: 152 70% 25%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 45 100% 90%;
+    --accent-foreground: 30 70% 22%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 75% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 15% 88%;
-    --input: 150 15% 88%;
-    --ring: 152 85% 16%;
+    --border: 200 25% 88%;
+    --input: 200 25% 85%;
+    --ring: 199 85% 40%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Brand Colors */
-    --brand-900: 152 85% 16%;
-    --brand-800: 152 80% 20%;
-    --brand-700: 152 75% 27%;
-    --brand-600: 152 70% 35%;
-    --brand-500: 152 65% 45%;
-    --brand-400: 152 55% 55%;
-    --brand-300: 152 50% 65%;
-    --brand-200: 150 45% 80%;
-    --brand-100: 150 60% 92%;
-    --brand-50: 138 76% 97%;
+    --brand-900: 199 85% 22%;
+    --brand-800: 199 85% 28%;
+    --brand-700: 199 85% 34%;
+    --brand-600: 199 85% 40%;
+    --brand-500: 199 80% 48%;
+    --brand-400: 199 80% 58%;
+    --brand-300: 199 80% 70%;
+    --brand-200: 199 85% 82%;
+    --brand-100: 199 90% 92%;
+    --brand-50: 199 100% 97%;
 
     /* Gradients */
     --gradient-sidebar: linear-gradient(
       180deg,
-      hsl(var(--brand-900)) 0%,
-      hsl(var(--brand-700)) 100%
+      hsl(199 85% 38%) 0%,
+      hsl(178 65% 36%) 100%
     );
     --gradient-brand: linear-gradient(
       135deg,
-      hsl(var(--brand-800)) 0%,
-      hsl(var(--brand-600)) 100%
+      hsl(199 85% 42%) 0%,
+      hsl(170 65% 42%) 100%
     );
 
     /* Shadows */
-    --shadow-card: 0 1px 3px 0 hsl(150 20% 10% / 0.1),
-      0 1px 2px -1px hsl(150 20% 10% / 0.1);
-    --shadow-elevated: 0 10px 15px -3px hsl(150 20% 10% / 0.1),
-      0 4px 6px -4px hsl(150 20% 10% / 0.1);
-    --shadow-dropdown: 0 4px 6px -1px hsl(150 20% 10% / 0.1),
-      0 2px 4px -2px hsl(150 20% 10% / 0.1);
+    --shadow-card: 0 1px 3px 0 hsl(210 30% 20% / 0.08),
+      0 1px 2px -1px hsl(210 30% 20% / 0.08);
+    --shadow-elevated: 0 10px 15px -3px hsl(210 30% 20% / 0.1),
+      0 4px 6px -4px hsl(210 30% 20% / 0.1);
+    --shadow-dropdown: 0 4px 6px -1px hsl(210 30% 20% / 0.1),
+      0 2px 4px -2px hsl(210 30% 20% / 0.1);
 
-    --sidebar-background: 152 85% 16%;
+    --sidebar-background: 199 85% 38%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 152 85% 16%;
-    --sidebar-accent: 152 70% 25%;
+    --sidebar-primary-foreground: 199 85% 30%;
+    --sidebar-accent: 199 70% 50%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 152 60% 30%;
+    --sidebar-border: 199 60% 50%;
     --sidebar-ring: 0 0% 100%;
   }
 

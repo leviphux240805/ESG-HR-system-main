@@ -19,10 +19,10 @@ describe("useCan", () => {
   it("xét quyền theo vai trò của cơ sở đang chọn", () => {
     auth.selectedSchoolId = "a";
     expect(renderHook(() => useCan("approve", "attendance")).result.current).toBe(true);
-    expect(renderHook(() => useCan("manage", "finance")).result.current).toBe(false);
+    expect(renderHook(() => useCan("manage", "payroll")).result.current).toBe(false);
 
     auth.selectedSchoolId = "b";
-    expect(renderHook(() => useCan("manage", "finance")).result.current).toBe(true);
+    expect(renderHook(() => useCan("manage", "payroll")).result.current).toBe(true);
     expect(renderHook(() => useCan("approve", "attendance")).result.current).toBe(false);
   });
 });

@@ -97,3 +97,13 @@ export function formatMonth(value: DateInput): string {
   const year = parts.find((p) => p.type === "year")?.value;
   return `Tháng ${month}/${year}`;
 }
+
+const WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+
+/** Ngày thuần "2026-09-30" → "Thứ Tư, 30/09/2026". */
+export function formatLongDate(value: string | null | undefined): string {
+  const m = value ? LOCAL_DATE.exec(value) : null;
+  if (!m) return "";
+  const weekday = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getDay();
+  return `${WEEKDAYS[weekday]}, ${m[3]}/${m[2]}/${m[1]}`;
+}

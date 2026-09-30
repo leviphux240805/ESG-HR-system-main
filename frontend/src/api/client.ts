@@ -4,6 +4,11 @@ import { ApiError, type Problem } from "./errors";
 
 export type TokenResponse = components["schemas"]["TokenResponse"];
 
+/** Bản demo: mọi request đi qua API giả trong trình duyệt (src/mock), không cần backend. Tắt bằng VITE_DEMO=false. */
+export const DEMO = import.meta.env.VITE_DEMO !== "false";
+
+const demoFetch: typeof fetch = async (input, init) => (await import("@/mock")).mockFetch(input, init);
+
 /** Tên header chứa cơ sở đang chọn (khớp backend SchoolScope.HEADER). */
 export const SCHOOL_HEADER = "X-School-Id";
 
@@ -38,6 +43,7 @@ export function setSessionExpiredHandler(handler: (() => void) | null) {
  * backend xoay vòng refresh token nên gọi song song sẽ bị coi là dùng lại token.
  */
 export function refreshAccessToken(): Promise<boolean> {
+  if (DEMO) return Promise.resolve(false);
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
@@ -97,8 +103,38 @@ const authMiddleware: Middleware = {
 };
 
 /** Client có type sinh từ OpenAPI (src/api/schema.d.ts, chạy `npm run gen:api` khi backend đổi API). */
-export const api = createClient<paths>({ baseUrl: "", credentials: "same-origin" });
+export const api = createClient<paths>({ baseUrl: "", credentials: "same-origin", fetch: DEMO ? demoFetch : undefined });
 api.use(authMiddleware);
+
+type QueryValue = string | number | boolean | null | undefined;
+
+/**
+ * Gọi endpoint chưa có trong OpenAPI (module mới của bản demo), cùng header và xử lý lỗi như `api`.
+ * Khi backend có endpoint thật: chạy `npm run gen:api` rồi chuyển sang `api.GET/POST…`.
+ */
+export async function apiRequest<T>(
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+  path: string,
+  options: { query?: Record<string, QueryValue>; body?: unknown } = {},
+): Promise<T> {
+  const url = new URL(`/api/v1${path}`, window.location.origin);
+  for (const [key, value] of Object.entries(options.query ?? {})) {
+    if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+  const request = withHeaders(
+    new Request(url, {
+      method,
+      credentials: "same-origin",
+      headers: options.body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    }),
+  );
+  const response = await (DEMO ? demoFetch : fetch)(request);
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : undefined;
+  if (!response.ok) throw new ApiError(response.status, data as Problem | undefined);
+  return data as T;
+}
 
 /**
  * Lấy `data` từ kết quả openapi-fetch, ném ApiError (thông điệp tiếng Việt) nếu lỗi.
