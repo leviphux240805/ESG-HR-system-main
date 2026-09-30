@@ -18,6 +18,8 @@ Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định ch�
 | S10 | `/nhan-su/giay-to-het-han`, chuông thông báo trên header | `95bc028` |
 | S11 | Backend thư viện văn bản (V4: thư mục, văn bản, phiên bản, xác nhận đã đọc; nhắc 1 lần/ngày) | `a7315ca` |
 | S12 | `/tai-lieu` (cây thư mục, ban hành, tỷ lệ đã đọc) và `/tai-lieu/:id` (xem trước, phiên bản, "Tôi đã đọc", nhắc) | `c1f9053` |
+| S13 | `/cua-toi/ho-so`, `/cua-toi/van-ban`, đề xuất cập nhật hồ sơ + `/nhan-su/de-xuat` (duyệt theo loại) | `a50f707`, `d090151` |
+| S14 | `/tai-khoan`: tạo, vai trò theo cơ sở, khóa/mở khóa, gửi đặt lại mật khẩu | `08ca6ae`, `4a1a1eb` |
 
 Kiểm tra sau S10: frontend 57 test Vitest, 25 test Playwright (gồm luồng "xong" phần nhân sự: quét CCCD → hợp
 đồng → điều chuyển → lịch sử), lint 0 lỗi, build xanh; backend không đổi từ S5 (78 test xanh).
@@ -40,7 +42,9 @@ Thử tay phần tài liệu: `0900000004` (hiệu trưởng A) → Tài liệu 
 tải lại: 1/N, tab "Đã đọc" có giáo viên; "Nhắc người chưa đọc" (email xem ở Mailpit http://localhost:8025).
 Lưu ý: backend đang chạy bằng mã cũ cần khởi động lại để chạy migration V4.
 
-Việc tiếp theo: S13 (/cua-toi/ho-so, /cua-toi/van-ban, duyệt đề xuất) → S14 (/tai-khoan) → S15 (dọn legacy, nghiệm thu).
+Kiểm tra sau S14: backend 94 test, frontend 64 test Vitest, 33 test Playwright, lint 0 lỗi, build xanh.
+
+Việc tiếp theo: S15 (dọn legacy nhân viên, bỏ quy tắc tải file tạm, nghiệm thu, README).
 
 ## Giai đoạn 1 – Nền tảng (xong, chờ nghiệm thu)
 
