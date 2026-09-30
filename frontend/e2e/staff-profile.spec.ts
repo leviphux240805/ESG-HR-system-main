@@ -96,3 +96,33 @@ test("từ danh sách bấm tên mở hồ sơ", async ({ page }) => {
   await expect(page).toHaveURL(/\/nhan-su\/00000000-0000-0000-0000-000000000105$/);
   await expect(page.getByRole("heading", { name: "Nguyễn Thị Lan" })).toBeVisible();
 });
+
+test("bảo hiểm & thuế, trình độ: người phụ thuộc, mã số thuế, chứng chỉ có hạn", async ({ page, request }) => {
+  const staff = await createStaffA(request, `Hà Thị Chứng Chỉ ${randomDigits(4)}`);
+  await login(page, "0900000004");
+
+  await page.goto(`/nhan-su/${staff.id}?tab=insurance`);
+  await page.getByRole("button", { name: "Sửa" }).click();
+  let sheet = page.getByRole("dialog");
+  await sheet.getByLabel("Mã số thuế cá nhân").fill("8012345678");
+  await sheet.getByRole("button", { name: "Lưu" }).click();
+  await expect(page.getByRole("definition").filter({ hasText: "8012345678" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Thêm người phụ thuộc" }).click();
+  sheet = page.getByRole("dialog");
+  await sheet.getByLabel("Họ và tên").fill("Nguyễn Minh An");
+  await sheet.getByLabel("Quan hệ").fill("Con");
+  await sheet.getByLabel("Giảm trừ từ tháng").fill("2026-01");
+  await sheet.getByRole("button", { name: "Lưu" }).click();
+  await expect(page.getByRole("row").filter({ hasText: "Nguyễn Minh An" })).toContainText("Tháng 1/2026 – nay");
+
+  await page.getByRole("tab", { name: "Trình độ" }).click();
+  await expect(page).toHaveURL(/tab=qualifications/);
+  await page.getByRole("button", { name: "Thêm chứng chỉ" }).click();
+  sheet = page.getByRole("dialog");
+  await sheet.getByLabel("Tên chứng chỉ").fill("Sơ cấp cứu trẻ em");
+  await sheet.getByLabel("Ngày cấp").fill("2024-10-01");
+  await sheet.getByLabel("Ngày hết hạn").fill("2025-10-01");
+  await sheet.getByRole("button", { name: "Lưu" }).click();
+  await expect(page.getByRole("row").filter({ hasText: "Sơ cấp cứu trẻ em" })).toContainText("Đã hết hạn");
+});

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, Loader2, SearchX } from "lucide-react";
+import { ArrowLeftRight, Camera, Loader2, SearchX, UserX, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,17 +20,35 @@ import { InfoTab } from "@/features/staff/profile/InfoTab";
 import { ContractsTab } from "@/features/staff/profile/ContractsTab";
 import { DocumentsTab } from "@/features/staff/profile/DocumentsTab";
 import { HistoryTab } from "@/features/staff/profile/HistoryTab";
+import { SalaryTab } from "@/features/staff/profile/SalaryTab";
+import { InsuranceTab } from "@/features/staff/profile/InsuranceTab";
+import { QualificationsTab } from "@/features/staff/profile/QualificationsTab";
+import { TerminateSheet, TransferSheet } from "@/features/staff/profile/LifecycleSheets";
 
-/** Tab của hồ sơ; khóa là giá trị `?tab=` (liên kết từ trang giấy tờ hết hạn dùng contracts, documents…). */
-const TABS = [
+function ClassesTab() {
+  return (
+    <EmptyState
+      icon={Users}
+      title="Chưa có phân công lớp"
+      description="Phân công giáo viên, bảo mẫu phụ trách lớp có từ giai đoạn Lớp học & trẻ."
+    />
+  );
+}
+
+/**
+ * Tab của hồ sơ; khóa là giá trị `?tab=` (trang giấy tờ hết hạn liên kết tới contracts, qualifications,
+ * documents). Tab lương chỉ có với người được xem lương (hiệu trưởng không thấy).
+ */
+const TABS: { value: string; label: string; Component: (props: { staff: StaffDetail }) => JSX.Element; visible?: (s: StaffDetail) => boolean }[] = [
   { value: "info", label: "Thông tin cá nhân", Component: InfoTab },
   { value: "contracts", label: "Hợp đồng & quyết định", Component: ContractsTab },
+  { value: "salary", label: "Lương & phụ cấp", Component: SalaryTab, visible: (s) => s.permissions.canViewSalary },
+  { value: "insurance", label: "Bảo hiểm & thuế", Component: InsuranceTab },
+  { value: "qualifications", label: "Trình độ", Component: QualificationsTab },
   { value: "documents", label: "Giấy tờ", Component: DocumentsTab },
+  { value: "classes", label: "Phân công lớp", Component: ClassesTab },
   { value: "history", label: "Lịch sử", Component: HistoryTab },
-] as const;
-
-type TabValue = (typeof TABS)[number]["value"];
-const isTab = (value: string | null): value is TabValue => TABS.some((t) => t.value === value);
+];
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
 
@@ -107,8 +125,10 @@ export default function StaffProfilePage() {
   const { id = "" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const detail = useStaffDetail(id);
+  const [sheet, setSheet] = useState<"transfer" | "terminate" | null>(null);
+  const tabs = detail.data ? TABS.filter((t) => !t.visible || t.visible(detail.data)) : TABS;
   const tabParam = searchParams.get("tab");
-  const tab: TabValue = isTab(tabParam) ? tabParam : "info";
+  const tab = tabs.some((t) => t.value === tabParam) ? tabParam! : "info";
 
   const setTab = (value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -144,26 +164,46 @@ export default function StaffProfilePage() {
   }
 
   const staff = detail.data!;
+  const active = staff.status === "ACTIVE";
   return (
     <div>
-      <PageHeader title="Hồ sơ nhân viên" breadcrumbs={breadcrumbs} />
+      <PageHeader
+        title="Hồ sơ nhân viên"
+        breadcrumbs={breadcrumbs}
+        actions={
+          <>
+            {active && staff.permissions.canTransfer && (
+              <Button variant="outline" className="min-h-11" onClick={() => setSheet("transfer")}>
+                <ArrowLeftRight className="w-4 h-4 mr-2" /> Điều chuyển
+              </Button>
+            )}
+            {active && staff.permissions.canTerminate && (
+              <Button variant="outline" className="min-h-11 text-destructive hover:text-destructive" onClick={() => setSheet("terminate")}>
+                <UserX className="w-4 h-4 mr-2" /> Cho nghỉ việc
+              </Button>
+            )}
+          </>
+        }
+      />
       <ProfileHeader staff={staff} />
       <Tabs value={tab} onValueChange={setTab}>
         <div className="overflow-x-auto -mx-1 px-1 pb-1">
           <TabsList className="w-max">
-            {TABS.map((t) => (
+            {tabs.map((t) => (
               <TabsTrigger key={t.value} value={t.value} className="min-h-9">
                 {t.label}
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
-        {TABS.map(({ value, Component }) => (
+        {tabs.map(({ value, Component }) => (
           <TabsContent key={value} value={value} className="mt-4">
             {tab === value && <Component staff={staff} />}
           </TabsContent>
         ))}
       </Tabs>
+      <TransferSheet staff={staff} open={sheet === "transfer"} onOpenChange={(o) => !o && setSheet(null)} />
+      <TerminateSheet staff={staff} open={sheet === "terminate"} onOpenChange={(o) => !o && setSheet(null)} />
     </div>
   );
 }

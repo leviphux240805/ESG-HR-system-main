@@ -134,3 +134,43 @@ export function exportStaff(params: ListParams, ids?: string[]) {
     parseAs: "blob",
   });
 }
+
+export type SalaryConfigDto = S["SalaryConfigDto"];
+export type DependentDto = S["DependentDto"];
+export type CertificateDto = S["CertificateDto"];
+export type TrainingDto = S["TrainingDto"];
+
+export function useSalaryConfigs(staffId: string, enabled: boolean) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("salary-configs"),
+    queryFn: async () =>
+      unwrap(await api.GET("/api/v1/staff/{staffId}/salary-configs", { params: { path: { staffId } } })),
+    enabled,
+  });
+}
+
+export function useDependents(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("dependents"),
+    queryFn: async () => unwrap(await api.GET("/api/v1/staff/{staffId}/dependents", { params: { path: { staffId } } })),
+  });
+}
+
+export function useCertificates(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("certificates"),
+    queryFn: async () =>
+      unwrap(await api.GET("/api/v1/staff/{staffId}/certificates", { params: { path: { staffId } } })),
+  });
+}
+
+export function useTrainings(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("trainings"),
+    queryFn: async () => unwrap(await api.GET("/api/v1/staff/{staffId}/trainings", { params: { path: { staffId } } })),
+  });
+}
