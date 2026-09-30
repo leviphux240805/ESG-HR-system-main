@@ -1,6 +1,33 @@
 # Tiến độ
 
-## Giai đoạn hiện tại: 2 – Nhân sự + Tài liệu (xong, chờ nghiệm thu)
+## Giai đoạn hiện tại: 3 – Chấm công, nghỉ phép, công việc (đang làm)
+
+Kế hoạch 17 bước (C1–C11 chấm công/nghỉ phép, W1–W4 công việc, Z1 dọn legacy) duyệt ngày 2026-09-30; quyết định chốt
+ghi trong `thiet-ke.md` (commit `ae38a2a`).
+
+| # | Bước | Commit |
+|---|---|---|
+| C1 | Schema V5 (cấu hình theo cơ sở, import, bảng công ngày/tháng, khóa công, phép năm, đơn nghỉ), `staff.machine_code` | `fd86f49` |
+| C2 | Bộ đối soát Java + test đối chiếu với bản TS cũ (golden JSON từ file Excel mẫu) | `9349137` |
+| C3 | API cấu hình chấm công + ngày lễ | `1550e0f` |
+| C4 | Import máy chấm công, đối soát, bảng công tháng, sửa ô, xử lý sai lệch | `7b23822` |
+| C5 | Khóa/mở khóa công tháng, xuất Excel | `4a1d0ab` |
+| C6+C7 | Đơn nghỉ (xin, duyệt, lịch nghỉ, phép năm), bảng công của tôi | `d8ffcc0` |
+
+Kiểm tra sau C7: backend 119 test (gồm đối chiếu bản TS cũ trên file mẫu, duyệt đơn ghi đúng mã, tháng khóa không
+sửa được, giáo viên không xem bảng công người khác); frontend 66 test Vitest, lint 0 lỗi, build xanh.
+
+Đang chờ chủ dự án: file máy chấm công thật (đã ẩn tên) và mẫu bảng công muốn xuất, đặt vào `docs/mau/`. Hiện dùng
+file giả lập `docs/mau/may-cham-cong-gia-lap-2026-09.xlsx` (sinh bằng `frontend/scripts/make-attendance-sample.cjs`).
+Khi có file thật: sửa đường dẫn trong `frontend/src/lib/legacy/attendanceGolden.test.ts`, chạy
+`GEN_GOLDEN=1 npx vitest run src/lib/legacy` rồi `./mvnw test`.
+
+Ghi nhận khi đối chiếu (giữ đúng bản cũ theo quyết định): ngày HR chấm P/NL/NB/NN mà máy không có dữ liệu bị báo sai
+lệch "Máy: Vắng mặt"; đi làm ngày lễ về trưa bị gợi ý 1/2K (bản cũ không biết ngày lễ). Có thể sửa ở giai đoạn sau.
+
+Việc tiếp theo: C8 (/cham-cong lưới) → C9 → C10 → C11 → W1–W4 → Z1.
+
+## Giai đoạn 2 – Nhân sự + Tài liệu (xong, chờ nghiệm thu)
 
 Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định chốt ghi trong `thiet-ke.md` (commit `95df613`).
 
