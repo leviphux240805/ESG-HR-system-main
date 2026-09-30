@@ -92,6 +92,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendance/configs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cấu hình chấm công của cơ sở (bản đang áp dụng + lịch sử)
+         * @description Bỏ trống schoolId = mặc định toàn chuỗi.
+         */
+        get: operations["configs"];
+        put?: never;
+        /** Thêm bản cấu hình mới có ngày hiệu lực (không sửa bản cũ) */
+        post: operations["createConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -255,6 +276,40 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/holidays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ngày lễ trong năm (toàn chuỗi + cơ sở trong phạm vi) */
+        get: operations["holidays"];
+        put?: never;
+        /** Thêm ngày lễ (một ngày hoặc khoảng ngày) */
+        post: operations["addHolidays"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/holidays/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteHoliday"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1101,6 +1156,40 @@ export interface components {
             /** @enum {string} */
             status: "PENDING" | "APPROVED" | "REJECTED";
         };
+        ConfigDto: {
+            annualLeaveDays: number;
+            /** Format: date */
+            effectiveFrom: string;
+            /** Format: int32 */
+            graceMinutes: number;
+            halfDayWeekdays: number[];
+            /** Format: uuid */
+            id: string;
+            /** @example 13:00 */
+            lunchEnd: string;
+            /** @example 11:30 */
+            lunchStart: string;
+            /** Format: int32 */
+            maxLateAllowed: number;
+            /**
+             * Format: uuid
+             * @description Rỗng = mặc định toàn chuỗi
+             */
+            schoolId?: string;
+            /** @example 17:00 */
+            shiftEnd: string;
+            /** @example 07:30 */
+            shiftStart: string;
+            /** @description 1 = thứ Hai … 7 = Chủ nhật */
+            workingWeekdays: number[];
+        };
+        ConfigOverview: {
+            canManage: boolean;
+            /** @description Bản đang áp dụng hôm nay (của cơ sở, không có thì mặc định toàn chuỗi) */
+            effective?: components["schemas"]["ConfigDto"];
+            /** @description Các bản của cơ sở và toàn chuỗi, mới nhất trước */
+            versions: components["schemas"]["ConfigDto"][];
+        };
         ContractDto: {
             contractNo?: string;
             /** @enum {string} */
@@ -1143,6 +1232,30 @@ export interface components {
              */
             staffId?: string;
         };
+        CreateConfigRequest: {
+            annualLeaveDays: number;
+            /** Format: date */
+            effectiveFrom: string;
+            /** Format: int32 */
+            graceMinutes: number;
+            halfDayWeekdays: number[];
+            /** @example 13:00 */
+            lunchEnd: string;
+            /** @example 11:30 */
+            lunchStart: string;
+            /** Format: int32 */
+            maxLateAllowed: number;
+            /**
+             * Format: uuid
+             * @description Bỏ trống = mặc định toàn chuỗi (văn phòng điều hành)
+             */
+            schoolId?: string;
+            /** @example 17:00 */
+            shiftEnd: string;
+            /** @example 07:30 */
+            shiftStart: string;
+            workingWeekdays: number[];
+        };
         CreateDocumentRequest: {
             docNumber?: string;
             /** Format: date */
@@ -1176,6 +1289,21 @@ export interface components {
              * @description Bỏ trống = toàn chuỗi (chỉ cấp chuỗi); bỏ qua khi có parentId
              */
             schoolId?: string;
+        };
+        CreateHolidayRequest: {
+            /** Format: date */
+            fromDate: string;
+            name: string;
+            /**
+             * Format: uuid
+             * @description Bỏ trống = toàn chuỗi (văn phòng điều hành)
+             */
+            schoolId?: string;
+            /**
+             * Format: date
+             * @description Bỏ trống = một ngày
+             */
+            toDate?: string;
         };
         CreateStaffRequest: {
             /** @description Bỏ trống nếu không tạo tài khoản đăng nhập */
@@ -1369,6 +1497,20 @@ export interface components {
             /** Format: uuid */
             id: string;
             userName?: string;
+        };
+        HolidayDto: {
+            canManage: boolean;
+            /** Format: date */
+            date: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /**
+             * Format: uuid
+             * @description Rỗng = toàn chuỗi
+             */
+            schoolId?: string;
+            schoolName?: string;
         };
         LinkedAccount: {
             active: boolean;
@@ -2119,6 +2261,76 @@ export interface operations {
             };
         };
     };
+    configs: {
+        parameters: {
+            query?: {
+                schoolId?: string;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConfigOverview"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createConfig: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateConfigRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConfigDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     forgotPassword: {
         parameters: {
             query?: never;
@@ -2396,6 +2608,109 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["DownloadUrlResponse"];
                 };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    holidays: {
+        parameters: {
+            query: {
+                /** @example 2026 */
+                year: number;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HolidayDto"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addHolidays: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHolidayRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HolidayDto"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteHoliday: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {

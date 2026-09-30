@@ -351,6 +351,101 @@
         "tags" : [ "Tài khoản" ]
       }
     },
+    "/api/v1/attendance/configs" : {
+      "get" : {
+        "description" : "Bỏ trống schoolId = mặc định toàn chuỗi.",
+        "operationId" : "configs",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "schoolId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ConfigOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Cấu hình chấm công của cơ sở (bản đang áp dụng + lịch sử)",
+        "tags" : [ "Chấm công" ]
+      },
+      "post" : {
+        "operationId" : "createConfig",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateConfigRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ConfigDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Thêm bản cấu hình mới có ngày hiệu lực (không sửa bản cũ)",
+        "tags" : [ "Chấm công" ]
+      }
+    },
     "/api/v1/auth/forgot-password" : {
       "post" : {
         "description" : "Luôn trả 204 dù tài khoản có tồn tại hay không, để không lộ thông tin tài khoản.",
@@ -707,6 +802,146 @@
         },
         "summary" : "Xin link tải file (có hạn)",
         "tags" : [ "File" ]
+      }
+    },
+    "/api/v1/holidays" : {
+      "get" : {
+        "operationId" : "holidays",
+        "parameters" : [ {
+          "example" : 2026,
+          "in" : "query",
+          "name" : "year",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HolidayDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Ngày lễ trong năm (toàn chuỗi + cơ sở trong phạm vi)",
+        "tags" : [ "Chấm công" ]
+      },
+      "post" : {
+        "operationId" : "addHolidays",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateHolidayRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HolidayDto"
+                  }
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Thêm ngày lễ (một ngày hoặc khoảng ngày)",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/holidays/{id}" : {
+      "delete" : {
+        "operationId" : "deleteHoliday",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "tags" : [ "Chấm công" ]
       }
     },
     "/api/v1/library/documents" : {
@@ -4206,6 +4441,87 @@
         },
         "required" : [ "canReview", "changes", "createdAt", "id", "kind", "schoolId", "schoolName", "staffCode", "staffId", "staffName", "status" ]
       },
+      "ConfigDto" : {
+        "type" : "object",
+        "properties" : {
+          "annualLeaveDays" : {
+            "type" : "number"
+          },
+          "effectiveFrom" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "graceMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "halfDayWeekdays" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "lunchEnd" : {
+            "type" : "string",
+            "example" : "13:00"
+          },
+          "lunchStart" : {
+            "type" : "string",
+            "example" : "11:30"
+          },
+          "maxLateAllowed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Rỗng = mặc định toàn chuỗi"
+          },
+          "shiftEnd" : {
+            "type" : "string",
+            "example" : "17:00"
+          },
+          "shiftStart" : {
+            "type" : "string",
+            "example" : "07:30"
+          },
+          "workingWeekdays" : {
+            "type" : "array",
+            "description" : "1 = thứ Hai … 7 = Chủ nhật",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          }
+        },
+        "required" : [ "annualLeaveDays", "effectiveFrom", "graceMinutes", "halfDayWeekdays", "id", "lunchEnd", "lunchStart", "maxLateAllowed", "shiftEnd", "shiftStart", "workingWeekdays" ]
+      },
+      "ConfigOverview" : {
+        "type" : "object",
+        "properties" : {
+          "canManage" : {
+            "type" : "boolean"
+          },
+          "effective" : {
+            "$ref" : "#/components/schemas/ConfigDto",
+            "description" : "Bản đang áp dụng hôm nay (của cơ sở, không có thì mặc định toàn chuỗi)"
+          },
+          "versions" : {
+            "type" : "array",
+            "description" : "Các bản của cơ sở và toàn chuỗi, mới nhất trước",
+            "items" : {
+              "$ref" : "#/components/schemas/ConfigDto"
+            }
+          }
+        },
+        "required" : [ "canManage", "versions" ]
+      },
       "ContractDto" : {
         "type" : "object",
         "properties" : {
@@ -4312,6 +4628,73 @@
         },
         "required" : [ "email", "roles" ]
       },
+      "CreateConfigRequest" : {
+        "type" : "object",
+        "properties" : {
+          "annualLeaveDays" : {
+            "type" : "number",
+            "maximum" : 60,
+            "minimum" : 0
+          },
+          "effectiveFrom" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "graceMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 240,
+            "minimum" : 0
+          },
+          "halfDayWeekdays" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32",
+              "maximum" : 7,
+              "minimum" : 1
+            }
+          },
+          "lunchEnd" : {
+            "type" : "string",
+            "example" : "13:00"
+          },
+          "lunchStart" : {
+            "type" : "string",
+            "example" : "11:30"
+          },
+          "maxLateAllowed" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 31,
+            "minimum" : 0
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Bỏ trống = mặc định toàn chuỗi (văn phòng điều hành)"
+          },
+          "shiftEnd" : {
+            "type" : "string",
+            "example" : "17:00"
+          },
+          "shiftStart" : {
+            "type" : "string",
+            "example" : "07:30"
+          },
+          "workingWeekdays" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32",
+              "maximum" : 7,
+              "minimum" : 1
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "annualLeaveDays", "effectiveFrom", "graceMinutes", "halfDayWeekdays", "lunchEnd", "lunchStart", "maxLateAllowed", "shiftEnd", "shiftStart", "workingWeekdays" ]
+      },
       "CreateDocumentRequest" : {
         "type" : "object",
         "properties" : {
@@ -4385,6 +4768,31 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "CreateHolidayRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Bỏ trống = toàn chuỗi (văn phòng điều hành)"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bỏ trống = một ngày"
+          }
+        },
+        "required" : [ "fromDate", "name" ]
       },
       "CreateStaffRequest" : {
         "type" : "object",
@@ -4821,6 +5229,34 @@
           }
         },
         "required" : [ "action", "at", "entity", "id" ]
+      },
+      "HolidayDto" : {
+        "type" : "object",
+        "properties" : {
+          "canManage" : {
+            "type" : "boolean"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Rỗng = toàn chuỗi"
+          },
+          "schoolName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "canManage", "date", "id", "name" ]
       },
       "LinkedAccount" : {
         "type" : "object",
