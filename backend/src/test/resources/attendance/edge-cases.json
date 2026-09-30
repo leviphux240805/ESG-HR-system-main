@@ -1,0 +1,401 @@
+{
+  "description": "Sinh tự động từ bản đối soát TS cũ (ca biên viết tay); không sửa tay.",
+  "config": {
+    "officialStart": "08:00",
+    "graceMinutes": 10,
+    "maxLateAllowed": 2
+  },
+  "punches": [
+    {
+      "code": "E1",
+      "date": "2026-10-01",
+      "checkIn": "08:10",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-02",
+      "checkIn": "08:01",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-05",
+      "checkIn": "08:05",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-06",
+      "checkIn": "08:11",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-07",
+      "checkIn": "07:59",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-01",
+      "checkIn": "00:00",
+      "checkOut": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-02",
+      "checkIn": "12:00",
+      "checkOut": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-05",
+      "checkIn": "13:30",
+      "checkOut": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-06",
+      "checkIn": "08:00",
+      "checkOut": "K"
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-07",
+      "checkIn": "08:00",
+      "checkOut": "12:00"
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-08",
+      "checkIn": "08:00",
+      "checkOut": "15:30"
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-09",
+      "checkIn": "08:00",
+      "checkOut": "15:31"
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-10",
+      "checkIn": "08:00",
+      "checkOut": "12:30"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-01",
+      "checkIn": "7:05",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-02",
+      "checkIn": "08:20:45",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-05",
+      "checkIn": "K",
+      "checkOut": "K"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-06",
+      "checkIn": "K",
+      "checkOut": "K"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-07",
+      "checkIn": "08:00",
+      "checkOut": "12:15"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-08",
+      "checkIn": "08:00",
+      "checkOut": "12:15"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-09",
+      "checkIn": "08:00",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-12",
+      "checkIn": null,
+      "checkOut": "17:00"
+    }
+  ],
+  "manual": [
+    {
+      "code": "E3",
+      "date": "2026-10-05",
+      "status": "O"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-06",
+      "status": "NB"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-07",
+      "status": "NN"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-08",
+      "status": "1/2K"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-09",
+      "status": "CO"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-12",
+      "status": "X"
+    },
+    {
+      "code": "E4",
+      "date": "2026-10-01",
+      "status": "P"
+    },
+    {
+      "code": "E4",
+      "date": "2026-10-02",
+      "status": "NL"
+    },
+    {
+      "code": "E4",
+      "date": "2026-10-05",
+      "status": "T"
+    }
+  ],
+  "expected": [
+    {
+      "code": "E1",
+      "date": "2026-10-01",
+      "lateMinutes": 10,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-01",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Có giờ vào, thiếu giờ về - Cần xác nhận",
+      "suggested": "X"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-01",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E4",
+      "date": "2026-10-01",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng mặt, HR: P",
+      "suggested": null
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-02",
+      "lateMinutes": 1,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-02",
+      "lateMinutes": 240,
+      "countedLate": true,
+      "discrepancy": true,
+      "reason": "Có giờ vào, thiếu giờ về - Cần xác nhận",
+      "suggested": "X"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-02",
+      "lateMinutes": 20,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E4",
+      "date": "2026-10-02",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng mặt, HR: NL",
+      "suggested": null
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-05",
+      "lateMinutes": 5,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-05",
+      "lateMinutes": 330,
+      "countedLate": true,
+      "discrepancy": true,
+      "reason": "Có giờ vào (ca chiều), thiếu giờ về - Cần xác nhận",
+      "suggested": "X"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E4",
+      "date": "2026-10-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-06",
+      "lateMinutes": 11,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-06",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-06",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng (K), HR: NB",
+      "suggested": null
+    },
+    {
+      "code": "E1",
+      "date": "2026-10-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: Chưa chấm",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: NN",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: Chưa chấm",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Có mặt (08:00), HR: CO",
+      "suggested": null
+    },
+    {
+      "code": "E2",
+      "date": "2026-10-10",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "E3",
+      "date": "2026-10-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng mặt, HR: X",
+      "suggested": null
+    }
+  ]
+}

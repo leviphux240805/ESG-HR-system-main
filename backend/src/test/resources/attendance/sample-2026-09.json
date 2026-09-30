@@ -1,0 +1,2270 @@
+{
+  "description": "Sinh tự động từ bản đối soát TS cũ (docs/mau/may-cham-cong-gia-lap-2026-09.xlsx); không sửa tay.",
+  "config": {
+    "officialStart": "07:30",
+    "graceMinutes": 15,
+    "maxLateAllowed": 3
+  },
+  "punches": [
+    {
+      "code": "101",
+      "date": "2026-09-03",
+      "checkIn": "07:23",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-04",
+      "checkIn": "07:21",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-05",
+      "checkIn": "07:28",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-07",
+      "checkIn": "07:24",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-08",
+      "checkIn": "07:22",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-09",
+      "checkIn": "07:20",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-10",
+      "checkIn": "07:27",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-11",
+      "checkIn": "07:25",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-12",
+      "checkIn": "07:23",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-14",
+      "checkIn": "07:28",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-15",
+      "checkIn": "07:26",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-16",
+      "checkIn": "07:24",
+      "checkOut": "17:06"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-17",
+      "checkIn": "07:22",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-18",
+      "checkIn": "07:20",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-19",
+      "checkIn": "07:27",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-21",
+      "checkIn": "07:23",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-22",
+      "checkIn": "07:21",
+      "checkOut": "17:02"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-23",
+      "checkIn": "07:28",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-24",
+      "checkIn": "07:26",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-25",
+      "checkIn": "07:24",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-26",
+      "checkIn": "07:22",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-28",
+      "checkIn": "07:27",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-29",
+      "checkIn": "07:25",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-30",
+      "checkIn": "07:23",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-03",
+      "checkIn": "07:40",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-04",
+      "checkIn": "07:45",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-05",
+      "checkIn": "07:20",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-07",
+      "checkIn": "07:31",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-08",
+      "checkIn": "07:44",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-09",
+      "checkIn": "07:46",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-10",
+      "checkIn": "07:31",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-11",
+      "checkIn": "07:26",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-12",
+      "checkIn": "07:24",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-14",
+      "checkIn": "07:20",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-15",
+      "checkIn": "07:27",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-16",
+      "checkIn": "07:25",
+      "checkOut": "17:06"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-17",
+      "checkIn": "07:23",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-18",
+      "checkIn": "07:21",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-19",
+      "checkIn": "07:28",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-21",
+      "checkIn": "07:24",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-22",
+      "checkIn": "07:22",
+      "checkOut": "17:02"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-23",
+      "checkIn": "07:20",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-24",
+      "checkIn": "07:27",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-25",
+      "checkIn": "07:25",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-26",
+      "checkIn": "07:23",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-28",
+      "checkIn": "07:28",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-29",
+      "checkIn": "07:26",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "102",
+      "date": "2026-09-30",
+      "checkIn": "07:24",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-03",
+      "checkIn": "07:25",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-04",
+      "checkIn": "07:23",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-05",
+      "checkIn": "07:21",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-07",
+      "checkIn": "07:26",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-08",
+      "checkIn": "07:24",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-09",
+      "checkIn": "07:22",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-10",
+      "checkIn": "07:20",
+      "checkOut": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-11",
+      "checkIn": "13:30",
+      "checkOut": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-12",
+      "checkIn": "07:25",
+      "checkOut": "14:00"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-14",
+      "checkIn": "11:45",
+      "checkOut": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-15",
+      "checkIn": "K",
+      "checkOut": "K"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-16",
+      "checkIn": "07:25",
+      "checkOut": "12:30"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-17",
+      "checkIn": "07:25",
+      "checkOut": "15:00"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-18",
+      "checkIn": "07:25",
+      "checkOut": "15:01"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-19",
+      "checkIn": "07:20",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-21",
+      "checkIn": "07:25",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-22",
+      "checkIn": "07:23",
+      "checkOut": "17:02"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-23",
+      "checkIn": "07:21",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-24",
+      "checkIn": "07:28",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-25",
+      "checkIn": "07:26",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-26",
+      "checkIn": "07:24",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-28",
+      "checkIn": "07:20",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-29",
+      "checkIn": "07:27",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "103",
+      "date": "2026-09-30",
+      "checkIn": "07:25",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-03",
+      "checkIn": "07:26",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-04",
+      "checkIn": "07:24",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-05",
+      "checkIn": "07:22",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-07",
+      "checkIn": "07:27",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-08",
+      "checkIn": "07:25",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-09",
+      "checkIn": "07:23",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-10",
+      "checkIn": "07:21",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-11",
+      "checkIn": "07:28",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-12",
+      "checkIn": "07:26",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-14",
+      "checkIn": "07:22",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-15",
+      "checkIn": "07:20",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-16",
+      "checkIn": "07:27",
+      "checkOut": "17:06"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-17",
+      "checkIn": "07:25",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-18",
+      "checkIn": "07:23",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-19",
+      "checkIn": "07:21",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-23",
+      "checkIn": "07:26",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-24",
+      "checkIn": "07:20",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-25",
+      "checkIn": "07:27",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-26",
+      "checkIn": "07:25",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-28",
+      "checkIn": "07:21",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-29",
+      "checkIn": "07:28",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-30",
+      "checkIn": "07:26",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-03",
+      "checkIn": "07:27",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-04",
+      "checkIn": "07:25",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-05",
+      "checkIn": "07:23",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-07",
+      "checkIn": "07:28",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-08",
+      "checkIn": "07:26",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-09",
+      "checkIn": "07:24",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-10",
+      "checkIn": "07:22",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-11",
+      "checkIn": "07:20",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-12",
+      "checkIn": "07:27",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-14",
+      "checkIn": "07:23",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-15",
+      "checkIn": "07:21",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-16",
+      "checkIn": "07:28",
+      "checkOut": "17:06"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-17",
+      "checkIn": "07:26",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-18",
+      "checkIn": "07:24",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-19",
+      "checkIn": "07:22",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-21",
+      "checkIn": "K",
+      "checkOut": "K"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-22",
+      "checkIn": "K",
+      "checkOut": "K"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-23",
+      "checkIn": "07:25",
+      "checkOut": "12:00"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-24",
+      "checkIn": "07:25",
+      "checkOut": "12:00"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-25",
+      "checkIn": "07:30",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-26",
+      "checkIn": "07:26",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-28",
+      "checkIn": "07:22",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-29",
+      "checkIn": "07:20",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-30",
+      "checkIn": "07:27",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-01",
+      "checkIn": "07:28",
+      "checkOut": "11:40"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-03",
+      "checkIn": "07:28",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-04",
+      "checkIn": "07:26",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-05",
+      "checkIn": "07:24",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-07",
+      "checkIn": "07:20",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-08",
+      "checkIn": "07:27",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-09",
+      "checkIn": "07:25",
+      "checkOut": "17:09"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-10",
+      "checkIn": "07:23",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-11",
+      "checkIn": "07:21",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-12",
+      "checkIn": "07:28",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-14",
+      "checkIn": "07:24",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-15",
+      "checkIn": "07:22",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-16",
+      "checkIn": "07:20",
+      "checkOut": "17:06"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-17",
+      "checkIn": "07:27",
+      "checkOut": "17:07"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-18",
+      "checkIn": "07:25",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-19",
+      "checkIn": "07:23",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-21",
+      "checkIn": "07:28",
+      "checkOut": "17:01"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-22",
+      "checkIn": "07:26",
+      "checkOut": "17:02"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-23",
+      "checkIn": "07:24",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-24",
+      "checkIn": "07:22",
+      "checkOut": "17:04"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-25",
+      "checkIn": "07:20",
+      "checkOut": "17:05"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-26",
+      "checkIn": "07:27",
+      "checkOut": "11:35"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-28",
+      "checkIn": "07:23",
+      "checkOut": "17:08"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-29",
+      "checkIn": "08:10",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-30",
+      "checkIn": "07:28",
+      "checkOut": "17:00"
+    },
+    {
+      "code": "999",
+      "date": "2026-09-03",
+      "checkIn": "07:20",
+      "checkOut": "17:03"
+    },
+    {
+      "code": "999",
+      "date": "2026-09-04",
+      "checkIn": "07:27",
+      "checkOut": "17:04"
+    }
+  ],
+  "manual": [
+    {
+      "code": "101",
+      "date": "2026-09-03",
+      "status": "X"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-21",
+      "status": "P"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-22",
+      "status": "K"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-23",
+      "status": "O"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-21",
+      "status": "P"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-22",
+      "status": "K"
+    },
+    {
+      "code": "105",
+      "date": "2026-09-23",
+      "status": "1/2P"
+    },
+    {
+      "code": "107",
+      "date": "2026-09-03",
+      "status": "X"
+    },
+    {
+      "code": "107",
+      "date": "2026-09-04",
+      "status": "TS"
+    }
+  ],
+  "expected": [
+    {
+      "code": "106",
+      "date": "2026-09-01",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: Chưa chấm",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "101",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-03",
+      "lateMinutes": 10,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "107",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng mặt, HR: X",
+      "suggested": null
+    },
+    {
+      "code": "999",
+      "date": "2026-09-03",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-04",
+      "lateMinutes": 15,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "107",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "999",
+      "date": "2026-09-04",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-05",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-07",
+      "lateMinutes": 1,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-07",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-08",
+      "lateMinutes": 14,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-08",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-09",
+      "lateMinutes": 16,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-09",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-10",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-10",
+      "lateMinutes": 1,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-10",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Có giờ vào, thiếu giờ về - Có thể quên chấm công về",
+      "suggested": "X"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-10",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-10",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-10",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-11",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-11",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-11",
+      "lateMinutes": 360,
+      "countedLate": true,
+      "discrepancy": true,
+      "reason": "Có giờ vào (ca chiều), thiếu giờ về - Cần xác nhận",
+      "suggested": "X"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-11",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-11",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-11",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-12",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-14",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-14",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-14",
+      "lateMinutes": 255,
+      "countedLate": true,
+      "discrepancy": true,
+      "reason": "Có giờ vào, thiếu giờ về - Cần xác nhận",
+      "suggested": "X"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-14",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-14",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-14",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-15",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-15",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-15",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-15",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-15",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-15",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-16",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-16",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-16",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: Chưa chấm",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-16",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-16",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-16",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-17",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-17",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-17",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: Chưa chấm",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "104",
+      "date": "2026-09-17",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-17",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-17",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-18",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-18",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-18",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-18",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-18",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-18",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-19",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-19",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-19",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-19",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-19",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-19",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-21",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-21",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-21",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-21",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng mặt, HR: P",
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-21",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Vắng (K), HR: P",
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-21",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-22",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-22",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-22",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-22",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-22",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-22",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-23",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-23",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-23",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-23",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Máy: Có mặt (07:26), HR: O",
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-23",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-23",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-24",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-24",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-24",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-24",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-24",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": true,
+      "reason": "Về sớm (nửa ngày), HR: Chưa chấm",
+      "suggested": "1/2K"
+    },
+    {
+      "code": "106",
+      "date": "2026-09-24",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-25",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-25",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-25",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-25",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-25",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-25",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-26",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-26",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-26",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-26",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-26",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-26",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-28",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-28",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-28",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-28",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-28",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-28",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-29",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-29",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-29",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-29",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-29",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-29",
+      "lateMinutes": 40,
+      "countedLate": true,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "101",
+      "date": "2026-09-30",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "102",
+      "date": "2026-09-30",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "103",
+      "date": "2026-09-30",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "104",
+      "date": "2026-09-30",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "105",
+      "date": "2026-09-30",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    },
+    {
+      "code": "106",
+      "date": "2026-09-30",
+      "lateMinutes": 0,
+      "countedLate": false,
+      "discrepancy": false,
+      "reason": null,
+      "suggested": null
+    }
+  ]
+}
