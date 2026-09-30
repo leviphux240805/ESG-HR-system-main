@@ -4,7 +4,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -154,10 +157,20 @@ public class FileService {
 		if (!allowed) {
 			throw ApiException.forbidden("FILE_FORBIDDEN", "Bạn không có quyền tải file này.");
 		}
+		return presignDownload(file, false);
+	}
+
+	// ------------------------------------------------------------ dùng cho các module (hồ sơ NV, thư viện văn bản)
+
+	/**
+	 * Link tải/xem một file mà module đã tự kiểm tra quyền (theo hồ sơ hoặc văn bản chứa file). `inline` để xem
+	 * trước PDF/ảnh trong trình duyệt thay vì tải về.
+	 */
+	public DownloadUrlResponse presignDownload(StoredFile file, boolean inline) {
 		if (file.getStatus() != StoredFile.Status.READY) {
 			throw ApiException.conflict("FILE_NOT_READY", "File chưa tải lên xong.");
 		}
-		String disposition = ContentDisposition.attachment()
+		String disposition = (inline ? ContentDisposition.inline() : ContentDisposition.attachment())
 			.filename(file.getOriginalName(), StandardCharsets.UTF_8)
 			.build()
 			.toString();
@@ -168,6 +181,38 @@ public class FileService {
 					.responseContentDisposition(disposition)
 					.responseContentType(file.getMimeType())));
 		return new DownloadUrlResponse(presigned.url().toString(), presigned.expiration());
+	}
+
+	/**
+	 * Metadata file theo id, KHÔNG qua filter cơ sở: file gắn với hồ sơ vẫn xem được sau khi nhân viên điều chuyển
+	 * sang cơ sở khác. Chỉ gọi sau khi module đã kiểm tra quyền trên bản ghi chứa file.
+	 */
+	@Transactional(readOnly = true)
+	public Map<UUID, StoredFile> findForModule(Collection<UUID> ids) {
+		Map<UUID, StoredFile> result = new HashMap<>();
+		if (!ids.isEmpty()) {
+			files.findAllByIdUnscoped(ids).forEach(f -> result.put(f.getId(), f));
+		}
+		return result;
+	}
+
+	/**
+	 * File được gắn vào một bản ghi: phải tồn tại, đã upload xong và do chính người đang thao tác upload (không gắn
+	 * được file của người khác bằng cách đoán id).
+	 */
+	@Transactional(readOnly = true)
+	public StoredFile requireAttachable(UUID fileId) {
+		StoredFile file = files.findAllByIdUnscoped(List.of(fileId))
+			.stream()
+			.findFirst()
+			.orElseThrow(() -> ApiException.notFound("Không tìm thấy file."));
+		if (file.getStatus() != StoredFile.Status.READY) {
+			throw ApiException.badRequest("FILE_NOT_READY", "File chưa tải lên xong.");
+		}
+		if (!file.getUploadedBy().equals(SchoolScope.require().userId())) {
+			throw ApiException.forbidden("FILE_FORBIDDEN", "Không gắn được file do người khác tải lên.");
+		}
+		return file;
 	}
 
 	/** File của cơ sở khác đã bị Hibernate filter loại khỏi truy vấn nên trả 404 như không tồn tại. */

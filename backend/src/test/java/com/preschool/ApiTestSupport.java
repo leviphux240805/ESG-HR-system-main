@@ -58,6 +58,24 @@ public abstract class ApiTestSupport {
 		return mvc.perform(request);
 	}
 
+	/** Upload một file PDF thật qua presigned URL (MinIO trong Testcontainers), trả id file READY. */
+	protected String uploadPdf(User user, String name) throws Exception {
+		byte[] content = "%PDF-1.4\nnoi dung thu\n%%EOF".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+		String body = as(user, post("/api/v1/files/upload-url").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"fileName\":\"%s\",\"contentType\":\"application/pdf\",\"sizeBytes\":%d}".formatted(name,
+					content.length)))
+			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		java.net.http.HttpRequest.Builder put = java.net.http.HttpRequest
+			.newBuilder(java.net.URI.create(JsonPath.read(body, "$.uploadUrl")))
+			.PUT(java.net.http.HttpRequest.BodyPublishers.ofByteArray(content));
+		java.util.Map<String, String> headers = JsonPath.read(body, "$.headers");
+		headers.forEach(put::header);
+		java.net.http.HttpClient.newHttpClient().send(put.build(), java.net.http.HttpResponse.BodyHandlers.discarding());
+		String fileId = JsonPath.read(body, "$.file.id");
+		as(user, post("/api/v1/files/" + fileId + "/complete")).andExpect(status().isOk());
+		return fileId;
+	}
+
 	/** Header Authorization cho người dùng (đăng nhập thật qua API). */
 	protected String bearer(User user) throws Exception {
 		String body = login(user.getEmail(), false).getResponse().getContentAsString();

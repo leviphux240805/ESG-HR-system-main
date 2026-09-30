@@ -31,6 +31,18 @@ public interface StaffRepository extends JpaRepository<Staff, UUID>, JpaSpecific
 			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)
 	boolean emailTakenAnywhere(@Param("value") String value, @Param("exclude") UUID excludeStaffId);
 
+	/** File có thuộc hồ sơ nhân viên này không (ảnh, hợp đồng, chứng chỉ, đào tạo, giấy tờ, quyết định điều chuyển). */
+	@Query(value = """
+			SELECT EXISTS (
+			  SELECT 1 FROM staff WHERE id = :staffId AND photo_file_id = :fileId
+			  UNION ALL SELECT 1 FROM staff_contracts WHERE staff_id = :staffId AND file_id = :fileId
+			  UNION ALL SELECT 1 FROM staff_certificates WHERE staff_id = :staffId AND file_id = :fileId
+			  UNION ALL SELECT 1 FROM staff_trainings WHERE staff_id = :staffId AND file_id = :fileId
+			  UNION ALL SELECT 1 FROM staff_documents WHERE staff_id = :staffId AND file_id = :fileId
+			  UNION ALL SELECT 1 FROM staff_school_assignments WHERE staff_id = :staffId AND decision_file_id = :fileId
+			)""", nativeQuery = true)
+	boolean fileBelongsToStaff(@Param("staffId") UUID staffId, @Param("fileId") UUID fileId);
+
 	// ---- Tóm tắt (theo phạm vi đang chọn)
 
 	interface PositionCount {
