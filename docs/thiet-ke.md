@@ -117,6 +117,13 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 
 - Cảnh báo trước 30 ngày khi hợp đồng, chứng chỉ hoặc giấy khám sức khỏe sắp hết hạn.
 
+- Quyết định chi tiết (chốt 2026-09-30):
+  - Thêm nhân viên: quét **mã QR trên CCCD gắn chip** ngay trong trình duyệt để điền số CCCD, họ tên, ngày sinh, giới tính, ngày cấp; địa chỉ trong QR là dạng cũ nên chỉ điền ô chi tiết. Ảnh 2 mặt lưu làm giấy tờ loại `CCCD`. Trùng CCCD/SĐT/email bị chặn toàn chuỗi.
+  - Hiệu trưởng: thêm/sửa hồ sơ, hợp đồng, giấy tờ, chứng chỉ và **cho nghỉ việc** nhân viên cơ sở mình (khóa tài khoản); không xem/sửa lương, không điều chuyển, không tạo tài khoản đăng nhập (việc của văn phòng điều hành/chủ chuỗi). Kế toán xem hồ sơ, lương, ngân hàng nhưng không sửa. Nhân viên khác chỉ xem hồ sơ của mình.
+  - Điều chuyển cơ sở được đặt ngày hiệu lực tương lai; job hằng ngày áp dụng khi tới ngày. Không đặt trước lần điều chuyển gần nhất.
+  - Cấu hình lương chỉ thêm bản mới có ngày hiệu lực, không sửa đè bản cũ; mọi thay đổi hồ sơ và lương ghi `audit_logs`.
+  - Nhân viên tự đề xuất cập nhật SĐT/địa chỉ (hiệu trưởng cơ sở hoặc văn phòng điều hành duyệt) và tài khoản ngân hàng (chỉ văn phòng điều hành hoặc kế toán duyệt).
+
 ### 3. Tài liệu
 
 - **Hồ sơ gắn với người** (nhân viên, trẻ): theo danh mục `document_types` như ESG (`HOP_DONG_LAO_DONG`, `GIAY_KHAM_SUC_KHOE`…), thêm loại cho trẻ: giấy khai sinh, sổ tiêm chủng, thẻ BHYT, đơn nhập học.
@@ -124,6 +131,8 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 - **Thư viện văn bản** của chuỗi/cơ sở: thư mục, số hiệu, ngày ban hành, ngày hết hiệu lực, phiên bản, phạm vi xem (toàn chuỗi / cơ sở / vai trò).
 
 - Văn bản có thể bật "yêu cầu xác nhận đã đọc"; người ban hành xem ai chưa đọc và nhắc lại.
+
+- Phạm vi xem văn bản = cơ sở (rỗng = toàn chuỗi) + danh sách vai trò (rỗng = mọi vai trò). Chủ chuỗi/văn phòng điều hành ban hành toàn chuỗi; hiệu trưởng, kế toán ban hành trong cơ sở mình. "Người cần đọc" là tài khoản gắn nhân viên đang làm thuộc phạm vi. Phiên bản mới có thể yêu cầu xác nhận lại. "Nhắc người chưa đọc" gửi thông báo trong app + email, tối đa 1 lần/ngày.
 
 - File lưu trên object storage, tải về qua link ký có hạn (giống signed URL của Supabase đang dùng).
 
@@ -218,23 +227,24 @@ Quy ước chung: khóa chính `id` kiểu UUID; mọi bảng có `created_at`, 
 | Nền tảng  | `password_reset_tokens`     | user_id, token_hash, expires_at (30 phút), used_at — link quên mật khẩu dùng một lần                                                                                                                        | —                                                |
 | Nền tảng  | `school_years`              | name (2026–2027), start_date, end_date, is_current                                                                                                                                                           | —                                                |
 | Nền tảng  | `holidays`                  | school_id?, holiday_date, name, is_custom                                                                                                                                                                    | `holidays`                                       |
-| Nền tảng  | `notifications`             | user_id, type, title, body, link, read_at                                                                                                                                                                    | —                                                |
+| Nền tảng  | `notifications`             | user_id, type, title, body, link, read_at, dedupe_key (không tạo trùng thông báo của job)                                                                                                                                                                    | —                                                |
 | Nền tảng  | `audit_logs`                | user_id, entity, entity_id, action (CREATE / UPDATE / DELETE), before_data/after_data (jsonb); thời điểm = created_at                                                                                         | —                                                |
 | Tài liệu  | `files`                     | school_id? (rỗng = dùng chung toàn chuỗi), storage_key, original_name, mime_type, size_bytes, status (PENDING / READY), uploaded_by — chỉ file READY mới tải được                                             | Supabase Storage                                 |
 | Tài liệu  | `document_types`            | code, name, scope (STAFF / CHILD / LIBRARY), has_expiry                                                                                                                                                      | `document_types`                                 |
 | Tài liệu  | `staff_documents`           | staff_id, document_type_id, file_id, issued_date, expiry_date                                                                                                                                                | `employee_documents`                             |
 | Tài liệu  | `child_documents`           | child_id, document_type_id, file_id, expiry_date                                                                                                                                                             | —                                                |
 | Tài liệu  | `doc_folders`               | school_id?, parent_id, name                                                                                                                                                                                  | —                                                |
-| Tài liệu  | `library_documents`         | folder_id, school_id?, title, doc_number, issued_date, effective_to, visibility, require_ack                                                                                                                 | —                                                |
+| Tài liệu  | `library_documents`         | folder_id, school_id?, title, doc_number, issued_date, effective_to, visible_roles (rỗng = mọi vai trò), require_ack, ack_version_no (phiên bản cần xác nhận lại)                                                                                                                 | —                                                |
 | Tài liệu  | `library_document_versions` | document_id, version_no, file_id, note                                                                                                                                                                       | —                                                |
-| Tài liệu  | `document_acks`             | document_id, staff_id, acknowledged_at                                                                                                                                                                       | —                                                |
-| Nhân sự   | `staff`                     | school_id, staff_code, full_name, dob, gender, citizen_id, phone, email, địa chỉ thường trú/hiện tại (không cấp huyện), position, qualification, bank\_\*, social_insurance_no, start_date, end_date, status | `employees`                                      |
+| Tài liệu  | `document_acks`             | document_id, staff_id, version_no, acknowledged_at                                                                                                                                                                       | —                                                |
+| Nhân sự   | `staff`                     | school_id, staff_code, full_name, dob, gender, citizen_id, phone, email, địa chỉ thường trú/hiện tại (không cấp huyện), position, qualification, bank\_\*, social_insurance_no, start_date, end_date, status (ACTIVE / TERMINATED), photo_file_id, citizen_id_issued_on, personal_tax_code, health_insurance_no, termination_reason, deleted_at | `employees`                                      |
 | Nhân sự   | `staff_school_assignments`  | staff_id, school_id, from_date, to_date, decision_file_id                                                                                                                                                    | —                                                |
 | Nhân sự   | `staff_contracts`           | staff_id, contract_type, contract_no, start_date, end_date, file_id                                                                                                                                          | cột trong `employees`                            |
 | Nhân sự   | `staff_salary_configs`      | staff_id, effective_from, salary_mode, base_salary, coefficient, region, allowances (jsonb), insurance_salary                                                                                                | cột trong `employees` + `salary_adjustments`     |
 | Nhân sự   | `staff_dependents`          | staff_id, full_name, relationship, dob, id_number, from_month, to_month                                                                                                                                      | `dependents`                                     |
 | Nhân sự   | `staff_certificates`        | staff_id, name, issued_by, issue_date, expiry_date, file_id                                                                                                                                                  | jsonb trong `employees`                          |
 | Nhân sự   | `staff_trainings`           | staff_id, course_name, provider, start_date, end_date, result, file_id                                                                                                                                       | jsonb trong `employees`                          |
+| Nhân sự   | `staff_change_requests`      | staff_id, school_id, changes (jsonb: SĐT, địa chỉ, ngân hàng), status (PENDING / APPROVED / REJECTED), reviewed_by, reviewed_at, note — nhân viên tự đề xuất cập nhật | — |
 | Công việc | `tasks`                     | school_id?, title, description, priority, status, due_at, created_by, parent_id, recurrence_rule                                                                                                             | —                                                |
 | Công việc | `task_assignees`            | task_id, staff_id, status, done_at                                                                                                                                                                           | —                                                |
 | Công việc | `task_checklist_items`      | task_id, content, is_done, order_no                                                                                                                                                                          | —                                                |
@@ -341,7 +351,7 @@ Một ứng dụng Spring Boot duy nhất (modular monolith), chia package theo 
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------------|
 | Xác thực      | `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /me`, `POST /auth/forgot-password`, `POST /auth/reset-password`          |
 | File          | `POST /files/upload-url` (kiểm tra kích thước + loại file, tạo bản ghi PENDING, trả presigned URL), `POST /files/{id}/complete` (kiểm tra object trên storage đúng kích thước/loại đã khai báo → READY, sai thì xóa), `GET /files/{id}/download-url` |
-| Nhân sự       | `GET/POST /staff`, `GET/PUT /staff/{id}`, `POST /staff/{id}/transfer`, `GET/POST /staff/{id}/documents`                                      |
+| Nhân sự       | `GET/POST /staff`, `GET/PUT /staff/{id}`, `POST /staff/{id}/transfer`, `POST /staff/{id}/terminate`, `GET/POST /staff/{id}/salary-configs`, `GET/POST /staff/{id}/documents`, `GET /staff/expiring-documents`, `GET /staff/export`, `POST /me/change-requests`                                      |
 | Tài liệu      | `GET/POST /library/documents`, `POST /library/documents/{id}/versions`, `POST /library/documents/{id}/ack`                                   |
 | Công việc     | `GET/POST /tasks`, `PATCH /tasks/{id}/status`, `POST /tasks/{id}/comments`                                                                   |
 | Chấm công     | `POST /attendance/imports`, `GET /attendance/staff?month=`, `PUT /attendance/staff/{staffId}/{date}`, `POST /attendance/months/{month}/lock` |
@@ -439,6 +449,8 @@ Giai đoạn 1 gồm:
 | 2026-09-29 | Dùng Spring Boot 4.0.8 (4.1.x đã có) | Giữ đúng quyết định 4.0; springdoc 3.0.x chỉ build cho 4.0. Nâng 4.1 là bước nhỏ, làm khi cần |
 | 2026-09-29 | MinIO dev dùng image `chainguard/minio` | MinIO ngừng phát hành image community trên Docker Hub/Quay |
 | 2026-09-29 | Thêm bảng `password_reset_tokens` (V2) và API forgot/reset password; dev dùng Mailpit bắt email | Quên mật khẩu qua email (module Nền tảng); token dùng một lần, chỉ lưu hash |
+| 2026-09-30 | Giai đoạn 2: `staff` thêm photo_file_id, citizen_id_issued_on, personal_tax_code, health_insurance_no, termination_reason; bảng mới `staff_change_requests`; `notifications.dedupe_key`; `library_documents.visible_roles`, `ack_version_no`; `document_acks.version_no`; `users.staff_id` thành FK | Quét CCCD, cho nghỉ việc, tự phục vụ, job cảnh báo hết hạn không trùng, phạm vi xem theo vai trò, xác nhận lại khi có phiên bản mới |
+| 2026-09-30 | Quyền nhân sự chi tiết (hiệu trưởng được cho nghỉ việc; điều chuyển/lương/tài khoản chỉ cấp chuỗi), duyệt đề xuất, điều chuyển ngày tương lai | Chủ dự án chốt khi lập kế hoạch giai đoạn 2 |
 
 ## Nguồn
 
