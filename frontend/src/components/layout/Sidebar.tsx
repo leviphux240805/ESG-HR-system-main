@@ -35,7 +35,11 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             )}
             <ul className="space-y-1">
               {group.items.map((item) => {
-                const isActive = location.pathname === item.path;
+                // Trang con (/nhan-su/123) vẫn đánh dấu mục cha
+                const isActive =
+                  item.path === "/"
+                    ? location.pathname === "/"
+                    : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
                 return (
                   <li key={item.path}>
                     <NavLink

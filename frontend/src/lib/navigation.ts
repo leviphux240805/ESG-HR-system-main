@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { matchPath } from "react-router-dom";
 import {
   ArrowLeftRight,
   Baby,
@@ -27,7 +28,7 @@ import {
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. */
-export const CURRENT_PHASE = 1;
+export const CURRENT_PHASE = 2;
 
 export interface NavItem {
   path: string;
@@ -61,7 +62,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Nhân sự",
     items: [
-      { path: "/nhan-su", label: "Nhân sự", icon: Users, phase: 2, permission: view("staff") },
+      { path: "/nhan-su", label: "Nhân sự", icon: Users, phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffListPage") },
       { path: "/tai-lieu", label: "Tài liệu", icon: FolderOpen, phase: 2, permission: view("documents") },
       { path: "/cong-viec", label: "Công việc", icon: ListTodo, phase: 3, permission: view("tasks") },
       { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 3, permission: view("attendance") },
@@ -106,12 +107,28 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+/**
+ * Trang con không nằm trên menu (thêm mới, chi tiết). Quyền ở đây chỉ để ẩn/hiện; trang chi tiết tự xử lý 403 từ API
+ * (chính chủ xem được hồ sơ của mình dù không có quyền module).
+ */
+export interface SubRoute {
+  path: string;
+  label: string;
+  /** Mục menu cha (breadcrumb, đánh dấu menu đang chọn). */
+  parent: string;
+  phase: number;
+  permission?: { action: Action; resource: Resource };
+  page: () => Promise<{ default: ComponentType }>;
+}
+
+export const SUB_ROUTES: SubRoute[] = [];
+
 /** Xem trước các mục chưa làm (trang "Sắp có") — chỉ ở dev với VITE_PREVIEW_MODULES=true. */
 export const PREVIEW_MODULES = import.meta.env.DEV && import.meta.env.VITE_PREVIEW_MODULES === "true";
 
-/** Mục đã tới giai đoạn (hoặc đang xem trước) — có route. */
+/** Mục có route: đã tới giai đoạn VÀ đã có trang; hoặc đang xem trước ở dev (trang "Sắp có"). */
 export function isAvailable(item: NavItem, phase = CURRENT_PHASE, preview = PREVIEW_MODULES): boolean {
-  return item.phase <= phase || preview;
+  return (item.phase <= phase && item.page !== undefined) || preview;
 }
 
 export type PermissionCheck = (action: Action, resource: Resource) => boolean;
@@ -133,11 +150,26 @@ export function routableNavItems(phase = CURRENT_PHASE, preview = PREVIEW_MODULE
   return NAV_GROUPS.flatMap((group) => group.items).filter((item) => isAvailable(item, phase, preview));
 }
 
-/** Tìm mục và nhóm theo đường dẫn (breadcrumb). */
-export function findNavItem(pathname: string): { group: NavGroup; item: NavItem } | null {
+/** Trang con có route (đã tới giai đoạn, hoặc xem trước). */
+export function routableSubRoutes(phase = CURRENT_PHASE, preview = PREVIEW_MODULES): SubRoute[] {
+  return SUB_ROUTES.filter((r) => r.phase <= phase || preview);
+}
+
+/**
+ * Tìm mục menu theo đường dẫn (breadcrumb). Trang con trả về mục cha kèm nhãn trang con,
+ * ví dụ "/nhan-su/123" → Nhân sự › Hồ sơ nhân viên.
+ */
+export function findNavItem(pathname: string): { group: NavGroup; item: NavItem; subLabel?: string } | null {
   for (const group of NAV_GROUPS) {
     const item = group.items.find((i) => i.path === pathname);
     if (item) return { group, item };
+  }
+  const sub = SUB_ROUTES.find((r) => matchPath(r.path, pathname));
+  if (sub) {
+    for (const group of NAV_GROUPS) {
+      const item = group.items.find((i) => i.path === sub.parent);
+      if (item) return { group, item, subLabel: sub.label };
+    }
   }
   return null;
 }

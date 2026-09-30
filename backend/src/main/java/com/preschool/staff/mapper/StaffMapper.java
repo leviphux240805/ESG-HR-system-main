@@ -21,7 +21,8 @@ public interface StaffMapper {
 	@Mapping(target = "account", source = "account")
 	@Mapping(target = "permissions", source = "permissions")
 	@Mapping(target = "schoolName", source = "schoolName")
-	StaffDetail toDetail(Staff staff, String schoolName, BankInfo bank, LinkedAccount account,
+	@Mapping(target = "photoUrl", source = "photoUrl")
+	StaffDetail toDetail(Staff staff, String schoolName, String photoUrl, BankInfo bank, LinkedAccount account,
 			StaffPermissions permissions);
 
 	/** Các trường hồ sơ (dùng làm snapshot audit và dữ liệu form). */

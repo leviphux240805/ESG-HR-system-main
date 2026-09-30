@@ -24,8 +24,8 @@ test("giáo viên bị khóa ở cơ sở của mình, menu chỉ gồm mục đ
 
 test("chủ chuỗi vào được trang quản lý (trang 'Sắp có' khi xem trước)", async ({ page }) => {
   await login(page, ACCOUNTS.owner);
-  await page.goto("/nhan-su");
-  await expect(page.getByRole("heading", { name: /Nhân sự – sắp có/ })).toBeVisible();
+  await page.goto("/luong");
+  await expect(page.getByRole("heading", { name: /Lương – sắp có/ })).toBeVisible();
 });
 
 test("đường dẫn không tồn tại → 404", async ({ page }) => {

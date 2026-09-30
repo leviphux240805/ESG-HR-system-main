@@ -18,6 +18,8 @@ import com.preschool.account.service.AccountService;
 import com.preschool.common.audit.AuditLog.Action;
 import com.preschool.common.audit.AuditService;
 import com.preschool.common.error.ApiException;
+import com.preschool.common.file.FileService;
+import com.preschool.common.file.StoredFile;
 import com.preschool.common.web.PageResponse;
 import com.preschool.school.entity.School;
 import com.preschool.school.repository.SchoolRepository;
@@ -83,12 +85,14 @@ public class StaffService {
 
 	private final StaffExpiryQuery expiryQuery;
 
+	private final FileService fileService;
+
 	private final Clock clock;
 
 	public StaffService(StaffRepository staffRepo, StaffContractRepository contracts,
 			StaffSchoolAssignmentRepository assignments, SchoolRepository schools, UserRepository users,
 			AccountService accountService, AuditService audit, StaffMapper mapper, StaffAccess access,
-			StaffExpiryQuery expiryQuery, Clock clock) {
+			StaffExpiryQuery expiryQuery, FileService fileService, Clock clock) {
 		this.staffRepo = staffRepo;
 		this.contracts = contracts;
 		this.assignments = assignments;
@@ -99,6 +103,7 @@ public class StaffService {
 		this.mapper = mapper;
 		this.access = access;
 		this.expiryQuery = expiryQuery;
+		this.fileService = fileService;
 		this.clock = clock;
 	}
 
@@ -119,8 +124,9 @@ public class StaffService {
 			contracts.findCurrentContractEnds(page.map(Staff::getId).getContent())
 				.forEach(c -> contractEnds.put(c.getStaffId(), c.getEndDate()));
 		}
+		Map<UUID, String> photos = photoUrls(page.getContent());
 		return PageResponse.of(page, s -> new StaffListItem(s.getId(), s.getStaffCode(), s.getFullName(),
-				s.getPhotoFileId(), s.getPosition(), s.getSchoolId(), schoolNames.get(s.getSchoolId()), s.getPhone(),
+				s.getPhotoFileId(), photos.get(s.getId()), s.getPosition(), s.getSchoolId(), schoolNames.get(s.getSchoolId()), s.getPhone(),
 				s.getStartDate(), s.getStatus(), contractEnds.get(s.getId())));
 	}
 
@@ -255,8 +261,22 @@ public class StaffService {
 			.map(u -> new LinkedAccount(u.getId(), u.getEmail(), u.isActive(),
 					u.getRoles().stream().map(UserRole::getRoleCode).distinct().toList()))
 			.orElse(null);
-		return mapper.toDetail(staff, schoolNames().get(staff.getSchoolId()),
+		return mapper.toDetail(staff, schoolNames().get(staff.getSchoolId()), photoUrls(List.of(staff)).get(staff.getId()),
 				access.canViewSalary(staff) ? mapper.toBank(staff) : null, account, access.permissionsOn(staff));
+	}
+
+	/** Link ảnh có hạn cho các hồ sơ có ảnh (thẻ img không gửi được header xác thực). */
+	private Map<UUID, String> photoUrls(List<Staff> staffList) {
+		Map<UUID, StoredFile> files = fileService.findForModule(
+				staffList.stream().map(Staff::getPhotoFileId).filter(java.util.Objects::nonNull).distinct().toList());
+		Map<UUID, String> urls = new HashMap<>();
+		for (Staff s : staffList) {
+			StoredFile file = s.getPhotoFileId() == null ? null : files.get(s.getPhotoFileId());
+			if (file != null && file.getStatus() == StoredFile.Status.READY) {
+				urls.put(s.getId(), fileService.presignDownload(file, true).url());
+			}
+		}
+		return urls;
 	}
 
 	private void rejectDuplicates(Staff staff, UUID excludeId) {

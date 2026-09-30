@@ -8,7 +8,7 @@ import { queryClient } from "@/api/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
 import { FullPageSpinner, RequireAuth, RequirePermission } from "@/components/layout/RouteGuards";
-import { routableNavItems } from "@/lib/navigation";
+import { routableNavItems, routableSubRoutes } from "@/lib/navigation";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -25,6 +25,8 @@ const DevUi = import.meta.env.DEV ? lazy(() => import("./pages/DevUi")) : null;
 /** Route sinh từ cấu hình menu (lib/navigation.ts): mỗi trang lazy-load, có kiểm tra quyền. */
 const NAV_ROUTES: { path: string; item: ReturnType<typeof routableNavItems>[number]; Page: LazyExoticComponent<ComponentType> }[] =
   routableNavItems().map((item) => ({ path: item.path, item, Page: item.page ? lazy(item.page) : ComingSoon }));
+
+const SUB_ROUTE_PAGES = routableSubRoutes().map((route) => ({ route, Page: lazy(route.page) }));
 
 /** Đã đăng nhập thì rời trang đăng nhập, về trang đang định mở trước đó (nếu có). */
 function LoginRoute() {
@@ -58,6 +60,17 @@ function AppRoutes() {
             path={path}
             element={
               <RequirePermission permission={item.permission}>
+                <Page />
+              </RequirePermission>
+            }
+          />
+        ))}
+        {SUB_ROUTE_PAGES.map(({ route, Page }) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <RequirePermission permission={route.permission}>
                 <Page />
               </RequirePermission>
             }

@@ -99,7 +99,15 @@ export function Header() {
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </>
             )}
-            <span className="font-medium text-foreground truncate">{current?.item.label ?? ""}</span>
+            {current?.subLabel ? (
+              <>
+                <span className="text-muted-foreground">{current.item.label}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="font-medium text-foreground truncate">{current.subLabel}</span>
+              </>
+            ) : (
+              <span className="font-medium text-foreground truncate">{current?.item.label ?? ""}</span>
+            )}
           </nav>
         </div>
 

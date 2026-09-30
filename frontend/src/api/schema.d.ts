@@ -1040,6 +1040,8 @@ export interface components {
             phone?: string;
             /** Format: uuid */
             photoFileId?: string;
+            /** @description Link ảnh có hạn (vài phút) để hiển thị */
+            photoUrl?: string;
             /** @enum {string} */
             position: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
             /** @enum {string} */
@@ -1131,6 +1133,8 @@ export interface components {
             phone?: string;
             /** Format: uuid */
             photoFileId?: string;
+            /** @description Link ảnh có hạn (vài phút) để hiển thị */
+            photoUrl?: string;
             /** @enum {string} */
             position: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
             /** Format: uuid */

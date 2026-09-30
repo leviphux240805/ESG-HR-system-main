@@ -3524,6 +3524,10 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "photoUrl" : {
+            "type" : "string",
+            "description" : "Link ảnh có hạn (vài phút) để hiển thị"
+          },
           "position" : {
             "type" : "string",
             "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
@@ -3777,6 +3781,10 @@
           "photoFileId" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "photoUrl" : {
+            "type" : "string",
+            "description" : "Link ảnh có hạn (vài phút) để hiển thị"
           },
           "position" : {
             "type" : "string",

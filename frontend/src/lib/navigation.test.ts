@@ -9,6 +9,7 @@ const paths = (roles: RoleCode[], phase: number, preview: boolean) =>
 
 describe("visibleNavGroups", () => {
   it("giai đoạn 1: chỉ có trang chung, mục của giai đoạn sau bị ẩn với mọi vai trò", () => {
+    // Trang chung luôn hiện
     expect(paths(["OWNER"], 1, false)).toEqual(["/", "/files-demo"]);
     expect(paths(["TEACHER"], 1, false)).toEqual(["/", "/files-demo"]);
   });
@@ -32,17 +33,20 @@ describe("visibleNavGroups", () => {
     expect(admin).toContain("/tai-khoan");
   });
 
-  it("nhóm 'Của tôi' hiện cho mọi người khi tới giai đoạn", () => {
+  it("nhóm 'Của tôi' hiện cho mọi người (xem trước vì trang chưa làm)", () => {
     for (const role of ["OWNER", "STAFF", "KITCHEN"] as RoleCode[]) {
-      expect(paths([role], 4, false)).toEqual(
+      expect(paths([role], 4, true)).toEqual(
         expect.arrayContaining(["/cua-toi/ho-so", "/cua-toi/viec", "/cua-toi/cham-cong", "/cua-toi/phieu-luong"]),
       );
     }
   });
 
-  it("đến giai đoạn 2 thì mục giai đoạn 2 hiện theo quyền, giai đoạn 3 vẫn ẩn", () => {
+  it("mục chỉ hiện khi đã tới giai đoạn VÀ đã có trang; giai đoạn sau vẫn ẩn", () => {
     const principal = paths(["PRINCIPAL"], 2, false);
     expect(principal).toContain("/nhan-su");
     expect(principal).not.toContain("/cham-cong");
+    // Đã tới giai đoạn nhưng chưa có trang: không hiện "Sắp có" cho người dùng thật
+    expect(paths(["CHAIN_ADMIN"], 7, false)).not.toContain("/bao-cao");
+    expect(paths(["TEACHER"], 2, false)).not.toContain("/nhan-su");
   });
 });
