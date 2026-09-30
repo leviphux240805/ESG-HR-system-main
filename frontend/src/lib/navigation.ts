@@ -28,7 +28,7 @@ import {
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. */
-export const CURRENT_PHASE = 2;
+export const CURRENT_PHASE = 3;
 
 export interface NavItem {
   path: string;
@@ -64,7 +64,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/nhan-su", label: "Nhân sự", icon: Users, phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffListPage") },
       { path: "/tai-lieu", label: "Tài liệu", icon: FolderOpen, phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryPage") },
       { path: "/cong-viec", label: "Công việc", icon: ListTodo, phase: 3, permission: view("tasks") },
-      { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 3, permission: view("attendance") },
+      { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 3, permission: view("attendance"), page: () => import("@/pages/attendance/AttendancePage") },
       { path: "/nghi-phep", label: "Nghỉ phép", icon: CalendarOff, phase: 3, permission: view("attendance") },
       { path: "/luong", label: "Lương", icon: Wallet, phase: 4, permission: view("payroll") },
     ],
