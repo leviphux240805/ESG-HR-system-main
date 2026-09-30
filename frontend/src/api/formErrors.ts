@@ -25,9 +25,19 @@ function hasField(values: unknown, path: string): boolean {
 export function applyApiErrors<T extends FieldValues>(
   error: unknown,
   form: FormLike<T>,
-  notify: (message: string) => void = (message) => toast.error(message),
+  options: {
+    notify?: (message: string) => void;
+    /** Bỏ tiền tố tên trường của DTO lồng, ví dụ "fields." khi body là { fields: {...} }. */
+    stripPrefix?: string;
+  } = {},
 ): boolean {
-  const fieldErrors = error instanceof ApiError ? (error.problem?.errors ?? []) : [];
+  const notify = options.notify ?? ((message: string) => toast.error(message));
+  const strip = (field: string) =>
+    options.stripPrefix && field.startsWith(options.stripPrefix) ? field.slice(options.stripPrefix.length) : field;
+  const fieldErrors = (error instanceof ApiError ? (error.problem?.errors ?? []) : []).map((e) => ({
+    ...e,
+    field: strip(e.field),
+  }));
   const values = form.getValues();
   let mapped = 0;
   const unmapped: string[] = [];

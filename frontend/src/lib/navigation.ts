@@ -121,7 +121,9 @@ export interface SubRoute {
   page: () => Promise<{ default: ComponentType }>;
 }
 
-export const SUB_ROUTES: SubRoute[] = [];
+export const SUB_ROUTES: SubRoute[] = [
+  { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 2, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
+];
 
 /** Xem trước các mục chưa làm (trang "Sắp có") — chỉ ở dev với VITE_PREVIEW_MODULES=true. */
 export const PREVIEW_MODULES = import.meta.env.DEV && import.meta.env.VITE_PREVIEW_MODULES === "true";

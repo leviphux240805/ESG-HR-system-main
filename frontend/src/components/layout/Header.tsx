@@ -92,7 +92,7 @@ export function Header() {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <nav aria-label="Vị trí" className="hidden sm:flex items-center gap-2 text-sm min-w-0">
+          <nav aria-label="Đường dẫn trang" className="hidden sm:flex items-center gap-2 text-sm min-w-0">
             {current?.group.label && (
               <>
                 <span className="text-muted-foreground">{current.group.label}</span>

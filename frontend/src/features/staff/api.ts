@@ -48,6 +48,25 @@ export function useStaffSummary(schoolId?: string) {
   });
 }
 
+export type DocumentTypeDto = S["DocumentTypeDto"];
+
+/** Danh mục loại giấy tờ nhân viên (dùng chung toàn chuỗi, ít thay đổi). */
+export function useDocumentTypes() {
+  return useQuery({
+    queryKey: ["document-types", "STAFF"],
+    queryFn: async () => unwrap(await api.GET("/api/v1/document-types", { params: { query: { scope: "STAFF" } } })),
+    staleTime: 30 * 60_000,
+  });
+}
+
+export async function checkStaffDuplicates(body: S["DuplicateCheckRequest"]) {
+  return unwrap(await api.POST("/api/v1/staff/check-duplicates", { body })).duplicates;
+}
+
+export async function addStaffDocument(staffId: string, body: S["StaffDocumentRequest"]) {
+  return unwrap(await api.POST("/api/v1/staff/{staffId}/documents", { params: { path: { staffId } }, body }));
+}
+
 /** Xuất Excel theo bộ lọc hiện tại, hoặc theo danh sách id đã chọn. */
 export function exportStaff(params: ListParams, ids?: string[]) {
   const { page: _page, size: _size, sort: _sort, ...filters } = staffQuery(params);

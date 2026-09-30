@@ -28,7 +28,7 @@ describe("applyApiErrors", () => {
           { field: "address.wardCode", message: "không được để trống" },
         ]),
         form.current,
-        notify,
+        { notify },
       );
     });
 
@@ -49,7 +49,7 @@ describe("applyApiErrors", () => {
           { field: "schoolId", message: "phải chọn cơ sở" },
         ]),
         form.current,
-        notify,
+        { notify },
       );
     });
 
@@ -64,7 +64,7 @@ describe("applyApiErrors", () => {
 
     let mapped = true;
     act(() => {
-      mapped = applyApiErrors(error, form.current, notify);
+      mapped = applyApiErrors(error, form.current, { notify });
     });
 
     expect(mapped).toBe(false);
@@ -72,11 +72,24 @@ describe("applyApiErrors", () => {
     expect(notify.mock.calls[0][0]).not.toContain("DATA_CONFLICT");
   });
 
+  it("bỏ tiền tố tên trường của DTO lồng", () => {
+    const form = setup();
+    const notify = vi.fn();
+    act(() => {
+      applyApiErrors(validation([{ field: "fields.email", message: "email không hợp lệ" }]), form.current, {
+        notify,
+        stripPrefix: "fields.",
+      });
+    });
+    expect(form.current.getFieldState("email").error?.message).toBe("email không hợp lệ");
+    expect(notify).not.toHaveBeenCalled();
+  });
+
   it("lỗi mạng", () => {
     const form = setup();
     const notify = vi.fn();
     act(() => {
-      applyApiErrors(new TypeError("Failed to fetch"), form.current, notify);
+      applyApiErrors(new TypeError("Failed to fetch"), form.current, { notify });
     });
     expect(notify).toHaveBeenCalledWith("Không kết nối được máy chủ. Vui lòng kiểm tra mạng.");
   });

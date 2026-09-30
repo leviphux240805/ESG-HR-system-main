@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertTriangle, Plus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/useCan";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -93,6 +96,7 @@ export default function StaffListPage() {
   const { schools, isAllSchools, canChooseAll } = useCurrentSchool();
   const query = useStaffList(params);
   const [selected, setSelected] = useState<StaffListItem[]>([]);
+  const canCreate = useCan("manage", "staff");
 
   const filters = useMemo<FilterDef[]>(() => {
     const list: FilterDef[] = [];
@@ -167,6 +171,13 @@ export default function StaffListPage() {
         description="Hồ sơ nhân viên theo cơ sở đang chọn."
         actions={
           <>
+            {canCreate && (
+              <Button asChild className="min-h-11">
+                <Link to="/nhan-su/moi">
+                  <Plus className="w-4 h-4 mr-2" /> Thêm nhân viên
+                </Link>
+              </Button>
+            )}
             {selected.length > 0 && (
               <ExportButton
                 label={`Xuất ${selected.length} đã chọn`}
