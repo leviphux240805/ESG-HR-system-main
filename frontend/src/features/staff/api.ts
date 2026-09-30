@@ -67,6 +67,65 @@ export async function addStaffDocument(staffId: string, body: S["StaffDocumentRe
   return unwrap(await api.POST("/api/v1/staff/{staffId}/documents", { params: { path: { staffId } }, body }));
 }
 
+export type ContractDto = S["ContractDto"];
+export type StaffDocumentDto = S["StaffDocumentDto"];
+export type StaffHistory = S["StaffHistory"];
+export type HistoryEvent = S["HistoryEvent"];
+export type FileRef = S["FileRef"];
+
+/** Khóa query của một hồ sơ; invalidate ["staff"] làm mới cả danh sách lẫn hồ sơ. */
+export function useStaffKey(staffId: string) {
+  const { queryKey } = useCurrentSchool();
+  return (part: string) => queryKey("staff", staffId, part);
+}
+
+export function useStaffDetail(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("detail"),
+    queryFn: async () => unwrap(await api.GET("/api/v1/staff/{id}", { params: { path: { id: staffId } } })),
+  });
+}
+
+export function useStaffContracts(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("contracts"),
+    queryFn: async () =>
+      unwrap(await api.GET("/api/v1/staff/{staffId}/contracts", { params: { path: { staffId } } })),
+  });
+}
+
+export function useStaffDocuments(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("documents"),
+    queryFn: async () =>
+      unwrap(await api.GET("/api/v1/staff/{staffId}/documents", { params: { path: { staffId } } })),
+  });
+}
+
+export function useStaffHistory(staffId: string) {
+  const key = useStaffKey(staffId);
+  return useQuery({
+    queryKey: key("history"),
+    queryFn: async () => unwrap(await api.GET("/api/v1/staff/{staffId}/history", { params: { path: { staffId } } })),
+  });
+}
+
+export async function updateStaff(staffId: string, body: S["StaffFields"]) {
+  return unwrap(await api.PUT("/api/v1/staff/{id}", { params: { path: { id: staffId } }, body }));
+}
+
+/** Link có hạn để xem (inline) hoặc tải file thuộc hồ sơ. */
+export async function staffFileUrl(staffId: string, fileId: string, inline = false) {
+  return unwrap(
+    await api.GET("/api/v1/staff/{staffId}/files/{fileId}/download-url", {
+      params: { path: { staffId, fileId }, query: { inline } },
+    }),
+  ).url;
+}
+
 /** Xuất Excel theo bộ lọc hiện tại, hoặc theo danh sách id đã chọn. */
 export function exportStaff(params: ListParams, ids?: string[]) {
   const { page: _page, size: _size, sort: _sort, ...filters } = staffQuery(params);

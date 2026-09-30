@@ -115,7 +115,7 @@ export function fromStaffDetail(d: StaffDetail): StaffFormValues {
   return {
     fullName: d.fullName,
     dob: d.dob ?? "",
-    gender: d.gender,
+    gender: d.gender ?? undefined,
     ethnicity: d.ethnicity ?? "",
     citizenId: d.citizenId ?? "",
     citizenIdIssuedOn: d.citizenIdIssuedOn ?? "",
@@ -129,7 +129,7 @@ export function fromStaffDetail(d: StaffDetail): StaffFormValues {
     currWardCode: d.currWardCode ?? "",
     currAddressDetail: d.currAddressDetail ?? "",
     position: d.position,
-    qualification: d.qualification,
+    qualification: d.qualification ?? undefined,
     specialization: d.specialization ?? "",
     socialInsuranceNo: d.socialInsuranceNo ?? "",
     healthInsuranceNo: d.healthInsuranceNo ?? "",

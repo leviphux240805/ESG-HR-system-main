@@ -1,8 +1,6 @@
 import { expect, test } from "@playwright/test";
 import QRCode from "qrcode";
-import { login } from "./helpers";
-
-const randomDigits = (n: number) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join("");
+import { login, randomDigits } from "./helpers";
 
 test("thêm nhân viên bằng quét mã QR CCCD", async ({ page }) => {
   const citizenId = randomDigits(12);
@@ -34,12 +32,12 @@ test("thêm nhân viên bằng quét mã QR CCCD", async ({ page }) => {
   await page.getByRole("button", { name: "Thêm nhân viên" }).click();
 
   await expect(page.getByText(/Đã thêm nhân viên Trần Thị Kiểm Thử \(NV\d+\)/)).toBeVisible();
-  // SĐT duy nhất mỗi lần chạy: chờ tìm kiếm áp dụng rồi mới kiểm tra
-  await page.getByLabel("Tìm theo tên, mã NV, số điện thoại").fill(phone);
-  await expect(page).toHaveURL(new RegExp(`q=${phone}`));
-  const row = page.getByRole("row").filter({ hasText: phone });
-  await expect(row).toHaveCount(1);
-  await expect(row).toContainText("Trần Thị Kiểm Thử");
+  // Chuyển tới hồ sơ vừa tạo; ảnh CCCD mặt trước đã lưu làm giấy tờ
+  await expect(page).toHaveURL(/\/nhan-su\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { name: "Trần Thị Kiểm Thử" })).toBeVisible();
+  await expect(page.getByText(phone)).toBeVisible();
+  await page.getByRole("tab", { name: "Giấy tờ" }).click();
+  await expect(page.getByTestId("doc-type-CCCD_MAT_TRUOC")).toContainText("mat-truoc.png");
 });
 
 test("trùng CCCD với hồ sơ cơ sở khác được báo dưới ô nhập", async ({ page }) => {

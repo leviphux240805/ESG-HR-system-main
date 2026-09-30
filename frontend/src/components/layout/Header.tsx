@@ -93,7 +93,8 @@ export function Header() {
             <Menu className="w-5 h-5" />
           </Button>
           <nav aria-label="Đường dẫn trang" className="hidden sm:flex items-center gap-2 text-sm min-w-0">
-            {current?.group.label && (
+            {/* Nhóm trùng tên mục (Nhân sự › Nhân sự) thì bỏ bớt một lần */}
+            {current?.group.label && current.group.label !== current.item.label && (
               <>
                 <span className="text-muted-foreground">{current.group.label}</span>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />

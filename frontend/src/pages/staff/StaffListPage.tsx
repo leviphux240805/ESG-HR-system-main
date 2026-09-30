@@ -24,16 +24,7 @@ import {
 } from "@/features/staff/api";
 import { options, POSITION_LABELS, type Position, STAFF_STATUS } from "@/features/staff/labels";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
-
-const WARNING_DAYS = 30;
-
-function daysUntil(date: string): number {
-  const [y, m, d] = date.split("-").map(Number);
-  const target = Date.UTC(y, m - 1, d);
-  const now = new Date();
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.round((target - today) / 86_400_000);
-}
+import { daysUntil, WARNING_DAYS } from "@/features/staff/dates";
 
 function SummaryCards({ schoolId }: { schoolId?: string }) {
   const { data, isLoading } = useStaffSummary(schoolId);
@@ -128,7 +119,9 @@ export default function StaffListPage() {
           <div className="flex items-center gap-3 min-w-[12rem]">
             <StaffAvatar fullName={row.original.fullName} photoUrl={row.original.photoUrl} />
             <div className="min-w-0">
-              <p className="font-medium truncate">{row.original.fullName}</p>
+              <Link to={`/nhan-su/${row.original.id}`} className="font-medium truncate block hover:underline">
+                {row.original.fullName}
+              </Link>
               {row.original.phone && <p className="text-xs text-muted-foreground">{row.original.phone}</p>}
             </div>
           </div>

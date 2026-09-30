@@ -123,6 +123,7 @@ export interface SubRoute {
 
 export const SUB_ROUTES: SubRoute[] = [
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 2, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
+  { path: "/nhan-su/:id", label: "Hồ sơ nhân viên", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffProfilePage") },
 ];
 
 /** Xem trước các mục chưa làm (trang "Sắp có") — chỉ ở dev với VITE_PREVIEW_MODULES=true. */

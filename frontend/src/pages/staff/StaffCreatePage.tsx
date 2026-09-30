@@ -102,7 +102,7 @@ export default function StaffCreatePage() {
     onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       toast.success(`Đã thêm nhân viên ${created.fullName} (${created.staffCode}).`);
-      navigate("/nhan-su");
+      navigate(`/nhan-su/${created.id}`);
     },
     onError: (error) => applyApiErrors(error, form, { stripPrefix: "fields." }),
   });
