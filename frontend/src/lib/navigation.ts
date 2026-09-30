@@ -65,7 +65,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/tai-lieu", label: "Tài liệu", icon: FolderOpen, phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryPage") },
       { path: "/cong-viec", label: "Công việc", icon: ListTodo, phase: 3, permission: view("tasks") },
       { path: "/cham-cong", label: "Chấm công", icon: CalendarCheck, phase: 3, permission: view("attendance"), page: () => import("@/pages/attendance/AttendancePage") },
-      { path: "/nghi-phep", label: "Nghỉ phép", icon: CalendarOff, phase: 3, permission: view("attendance") },
+      // Mọi người xin nghỉ được; tab "Chờ duyệt", "Lịch nghỉ" hiện theo quyền trong trang
+      { path: "/nghi-phep", label: "Nghỉ phép", icon: CalendarOff, phase: 3, page: () => import("@/pages/leave/LeavePage") },
       { path: "/luong", label: "Lương", icon: Wallet, phase: 4, permission: view("payroll") },
     ],
   },
@@ -101,7 +102,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/cua-toi/ho-so", label: "Hồ sơ của tôi", icon: UserRound, phase: 2, page: () => import("@/pages/me/MyProfilePage") },
       { path: "/cua-toi/van-ban", label: "Văn bản cần đọc", icon: BookOpenCheck, phase: 2, page: () => import("@/pages/me/MyDocumentsPage") },
       { path: "/cua-toi/viec", label: "Việc của tôi", icon: ListChecks, phase: 3 },
-      { path: "/cua-toi/cham-cong", label: "Chấm công của tôi", icon: Clock, phase: 3 },
+      { path: "/cua-toi/cham-cong", label: "Chấm công của tôi", icon: Clock, phase: 3, page: () => import("@/pages/me/MyAttendancePage") },
       { path: "/cua-toi/phieu-luong", label: "Phiếu lương của tôi", icon: FileText, phase: 4 },
     ],
   },
