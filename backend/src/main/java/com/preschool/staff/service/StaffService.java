@@ -24,6 +24,7 @@ import com.preschool.school.repository.SchoolRepository;
 import com.preschool.security.SchoolScope;
 import com.preschool.staff.dto.StaffDtos.CreateStaffRequest;
 import com.preschool.staff.dto.StaffDtos.DuplicateCheckRequest;
+import com.preschool.staff.dto.StaffDtos.ExpiringItem;
 import com.preschool.staff.dto.StaffDtos.FieldIssue;
 import com.preschool.staff.dto.StaffDtos.LinkedAccount;
 import com.preschool.staff.dto.StaffDtos.StaffDetail;
@@ -80,11 +81,14 @@ public class StaffService {
 
 	private final StaffAccess access;
 
+	private final StaffExpiryQuery expiryQuery;
+
 	private final Clock clock;
 
 	public StaffService(StaffRepository staffRepo, StaffContractRepository contracts,
 			StaffSchoolAssignmentRepository assignments, SchoolRepository schools, UserRepository users,
-			AccountService accountService, AuditService audit, StaffMapper mapper, StaffAccess access, Clock clock) {
+			AccountService accountService, AuditService audit, StaffMapper mapper, StaffAccess access,
+			StaffExpiryQuery expiryQuery, Clock clock) {
 		this.staffRepo = staffRepo;
 		this.contracts = contracts;
 		this.assignments = assignments;
@@ -94,6 +98,7 @@ public class StaffService {
 		this.audit = audit;
 		this.mapper = mapper;
 		this.access = access;
+		this.expiryQuery = expiryQuery;
 		this.clock = clock;
 	}
 
@@ -138,12 +143,41 @@ public class StaffService {
 		Map<Position, Long> byPosition = new EnumMap<>(Position.class);
 		staffRepo.countActiveByPosition(schoolId).forEach(p -> byPosition.put(p.getPosition(), p.getTotal()));
 		LocalDate today = LocalDate.now(clock);
-		LocalDate limit = today.plusDays(EXPIRY_WARNING_DAYS);
-		long expiring = staffRepo.countExpiringContracts(schoolId, today, limit)
-				+ staffRepo.countExpiringCertificates(schoolId, today, limit)
-				+ staffRepo.countExpiringDocuments(schoolId, today, limit);
+		long expiring = expiryQuery.count(scopedSchools(schoolId), today, today.plusDays(EXPIRY_WARNING_DAYS), null);
 		long total = byPosition.values().stream().mapToLong(Long::longValue).sum();
 		return new StaffSummary(total, byPosition, expiring);
+	}
+
+	/** Giấy tờ hết hạn trong `within` ngày tới của nhân viên đang làm (theo phạm vi đang chọn). */
+	@Transactional(readOnly = true)
+	public PageResponse<ExpiringItem> expiring(int within, StaffExpiryQuery.Kind kind, UUID schoolId,
+			Pageable pageable) {
+		requireList();
+		requireSchoolInScope(schoolId);
+		if (within < 1 || within > 365) {
+			throw ApiException.badRequest("WITHIN_INVALID", "Khoảng thời gian phải từ 1 đến 365 ngày.");
+		}
+		LocalDate today = LocalDate.now(clock);
+		Set<UUID> schoolIds = scopedSchools(schoolId);
+		long total = expiryQuery.count(schoolIds, today, today.plusDays(within), kind);
+		Map<UUID, String> names = schoolNames();
+		List<ExpiringItem> items = expiryQuery
+			.find(schoolIds, today, today.plusDays(within), kind, pageable.getPageSize(), pageable.getOffset())
+			.stream()
+			.map(i -> new ExpiringItem(i.kind().name(), i.recordId(), i.staffId(), i.staffCode(), i.staffName(),
+					i.schoolId(), names.get(i.schoolId()), i.title(), i.expiryDate(),
+					java.time.temporal.ChronoUnit.DAYS.between(today, i.expiryDate()), i.kind().tab()))
+			.toList();
+		return new PageResponse<>(items, pageable.getPageNumber(), pageable.getPageSize(), total,
+				(int) Math.ceil(total / (double) pageable.getPageSize()));
+	}
+
+	/** Cơ sở trong phạm vi truy vấn native (null = mọi cơ sở: cấp chuỗi xem "Tất cả cơ sở"). */
+	private static Set<UUID> scopedSchools(UUID schoolId) {
+		if (schoolId != null) {
+			return Set.of(schoolId);
+		}
+		return SchoolScope.require().filterSchoolIds().orElse(null);
 	}
 
 	@Transactional(readOnly = true)

@@ -1,6 +1,5 @@
 package com.preschool.staff.repository;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,28 +58,5 @@ public interface StaffRepository extends JpaRepository<Staff, UUID>, JpaSpecific
 			  and (:schoolId is null or s.schoolId = :schoolId)
 			group by s.position""")
 	List<PositionCount> countActiveByPosition(@Param("schoolId") UUID schoolId);
-
-	// ---- Đếm giấy tờ hết hạn trong [from, to] của nhân viên đang làm (Staff đi qua filter cơ sở)
-
-	@Query("""
-			select count(c) from StaffContract c join Staff s on s.id = c.staffId
-			where s.status = com.preschool.staff.entity.StaffEnums.StaffStatus.ACTIVE
-			  and (:schoolId is null or s.schoolId = :schoolId) and c.endDate between :from and :to""")
-	long countExpiringContracts(@Param("schoolId") UUID schoolId, @Param("from") LocalDate from,
-			@Param("to") LocalDate to);
-
-	@Query("""
-			select count(c) from StaffCertificate c join Staff s on s.id = c.staffId
-			where s.status = com.preschool.staff.entity.StaffEnums.StaffStatus.ACTIVE
-			  and (:schoolId is null or s.schoolId = :schoolId) and c.expiryDate between :from and :to""")
-	long countExpiringCertificates(@Param("schoolId") UUID schoolId, @Param("from") LocalDate from,
-			@Param("to") LocalDate to);
-
-	@Query("""
-			select count(d) from StaffDocument d join Staff s on s.id = d.staffId
-			where s.status = com.preschool.staff.entity.StaffEnums.StaffStatus.ACTIVE
-			  and (:schoolId is null or s.schoolId = :schoolId) and d.expiryDate between :from and :to""")
-	long countExpiringDocuments(@Param("schoolId") UUID schoolId, @Param("from") LocalDate from,
-			@Param("to") LocalDate to);
 
 }

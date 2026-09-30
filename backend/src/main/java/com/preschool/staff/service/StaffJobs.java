@@ -21,9 +21,19 @@ public class StaffJobs {
 
 	private final Clock clock;
 
-	public StaffJobs(StaffLifecycleService lifecycle, Clock clock) {
+	private final StaffExpiryNotifier expiryNotifier;
+
+	public StaffJobs(StaffLifecycleService lifecycle, StaffExpiryNotifier expiryNotifier, Clock clock) {
 		this.lifecycle = lifecycle;
+		this.expiryNotifier = expiryNotifier;
 		this.clock = clock;
+	}
+
+	/** 07:00 hằng ngày: thông báo giấy tờ hết hạn trong 30 ngày cho văn phòng điều hành và hiệu trưởng. */
+	@Scheduled(cron = "0 0 7 * * *", zone = SchedulingConfig.ZONE)
+	public void notifyExpiringDocuments() {
+		int created = expiryNotifier.run(LocalDate.now(clock.withZone(ZoneId.of(SchedulingConfig.ZONE))));
+		log.info("Đã tạo {} thông báo giấy tờ sắp hết hạn", created);
 	}
 
 	/** 00:05 hằng ngày: chuyển nhân viên sang cơ sở mới khi điều chuyển tới ngày hiệu lực. */

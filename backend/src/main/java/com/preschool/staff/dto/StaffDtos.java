@@ -154,6 +154,21 @@ public final class StaffDtos {
 					description = "Trường bị trùng kèm thông điệp (rỗng = không trùng)") List<FieldIssue> duplicates) {
 	}
 
+	/** Một giấy tờ sắp hết hạn; `tab` là tab hồ sơ cần mở (contracts, qualifications, documents). */
+	public record ExpiringItem(
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String kind,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID recordId,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID staffId,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String staffCode,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String staffName,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID schoolId,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String schoolName,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String title,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) LocalDate expiryDate,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) long daysLeft,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String tab) {
+	}
+
 	public record FieldIssue(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String field,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String message) {

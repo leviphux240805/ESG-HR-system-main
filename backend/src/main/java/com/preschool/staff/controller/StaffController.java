@@ -6,12 +6,14 @@ import com.preschool.common.web.PageResponse;
 import com.preschool.staff.dto.StaffDtos.CreateStaffRequest;
 import com.preschool.staff.dto.StaffDtos.DuplicateCheckRequest;
 import com.preschool.staff.dto.StaffDtos.DuplicateCheckResponse;
+import com.preschool.staff.dto.StaffDtos.ExpiringItem;
 import com.preschool.staff.dto.StaffDtos.StaffDetail;
 import com.preschool.staff.dto.StaffDtos.StaffFields;
 import com.preschool.staff.dto.StaffDtos.StaffListItem;
 import com.preschool.staff.dto.StaffDtos.StaffSummary;
 import com.preschool.staff.entity.StaffEnums.Position;
 import com.preschool.staff.entity.StaffEnums.StaffStatus;
+import com.preschool.staff.service.StaffExpiryQuery;
 import com.preschool.staff.service.StaffService;
 import com.preschool.staff.service.StaffService.ListFilter;
 
@@ -60,6 +62,15 @@ public class StaffController {
 	@Operation(summary = "Tóm tắt nhân sự: tổng, theo vị trí, giấy tờ sắp hết hạn")
 	public StaffSummary summary(@RequestParam(required = false) UUID schoolId) {
 		return staffService.summary(schoolId);
+	}
+
+	@GetMapping("/expiring-documents")
+	@Operation(summary = "Giấy tờ sắp hết hạn: hợp đồng, chứng chỉ, giấy tờ có hạn (bản hiện hành)")
+	public PageResponse<ExpiringItem> expiring(
+			@Parameter(description = "Số ngày tới (30, 60, 90)") @RequestParam(defaultValue = "30") int within,
+			@RequestParam(required = false) StaffExpiryQuery.Kind kind, @RequestParam(required = false) UUID schoolId,
+			@ParameterObject Pageable pageable) {
+		return staffService.expiring(within, kind, schoolId, pageable);
 	}
 
 	@GetMapping("/{id}")
