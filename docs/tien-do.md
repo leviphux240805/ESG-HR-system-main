@@ -1,6 +1,26 @@
 # Tiến độ
 
-## Giai đoạn hiện tại: 1 – Nền tảng (xong, chờ nghiệm thu)
+## Giai đoạn hiện tại: 2 – Nhân sự + Tài liệu (đang làm)
+
+Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định chốt ghi trong `thiet-ke.md` (commit `95df613`).
+
+| # | Bước | Commit |
+|---|---|---|
+| S1 | Schema nhân sự (V3), danh mục giấy tờ, audit log, seed 12 nhân viên | `6ad552f` |
+| S2 | API hồ sơ nhân viên, kiểm trùng CCCD/SĐT/email, tạo tài khoản kèm | `fea37a0` |
+| S3 | Hợp đồng, người phụ thuộc, chứng chỉ, đào tạo, giấy tờ (phiên bản), link file theo hồ sơ | `d9749d0` |
+| S4 | Lương (insert-only), ngân hàng, điều chuyển (cả ngày tương lai + job), nghỉ việc, lịch sử, xuất Excel | `0a88b84` |
+| S5 | Giấy tờ sắp hết hạn, thông báo trong app, job 07:00 | `110bc88` |
+| S6 | `/nhan-su` danh sách | `1312ccf` |
+| S7 | `/nhan-su/moi` + quét QR CCCD | `5ff88d5` |
+| S8 | `/nhan-su/:id` phần 1: thông tin (sửa trong tab), hợp đồng & quyết định, giấy tờ (phiên bản, xem trước), lịch sử | `0458c1f` |
+
+Kiểm tra sau S8: frontend 56 test Vitest, 18 test Playwright, lint 0 lỗi, build xanh; backend không đổi từ S5
+(78 test xanh).
+
+Việc tiếp theo: S9 (tab lương, bảo hiểm & thuế, trình độ; điều chuyển, nghỉ việc) → S10 → S11–S15.
+
+## Giai đoạn 1 – Nền tảng (xong, chờ nghiệm thu)
 
 Kế hoạch duyệt ngày 2026-09-29. Quyết định đi kèm ghi ở mục "Nhật ký thay đổi thiết kế" trong `thiet-ke.md`.
 
@@ -86,4 +106,4 @@ thật) đều xanh. Các đường dẫn module (/nhan-su, /luong, /cua-toi/…
 ### Việc tiếp theo
 
 1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1 + khung giao diện.
-2. Giai đoạn 2 – Nhân sự + Tài liệu: đọc thiết kế, lập kế hoạch, chờ duyệt.
+2. Giai đoạn 2: xem bảng ở đầu tệp.
