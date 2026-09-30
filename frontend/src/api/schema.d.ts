@@ -172,6 +172,165 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/library/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Văn bản được xem (theo cơ sở đang chọn và vai trò)
+         * @description Sắp xếp: issuedDate, title, createdAt, docNumber (mặc định ngày ban hành mới nhất).
+         */
+        get: operations["documents_1"];
+        put?: never;
+        /** Ban hành văn bản (phiên bản 1) */
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_1"];
+        put: operations["update_1"];
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/documents/{id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tôi đã đọc: xác nhận phiên bản hiện tại */
+        post: operations["acknowledge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/documents/{id}/readers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Người cần đọc và trạng thái xác nhận (người quản lý văn bản) */
+        get: operations["readers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/documents/{id}/remind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nhắc người chưa đọc (thông báo + email, tối đa 1 lần/ngày) */
+        post: operations["remind"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/documents/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tải phiên bản mới (tùy chọn yêu cầu xác nhận lại) */
+        post: operations["addVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/documents/{id}/versions/{versionNo}/download-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Link tải/xem phiên bản
+         * @description inline=true để xem trước PDF/ảnh trong trình duyệt.
+         */
+        get: operations["fileUrl_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thư mục: dùng chung toàn chuỗi + của các cơ sở đang chọn (danh sách phẳng, dựng cây theo parentId) */
+        get: operations["folders"];
+        put?: never;
+        post: operations["createFolder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/folders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["renameFolder"];
+        post?: never;
+        /** Xóa thư mục rỗng */
+        delete: operations["deleteFolder"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -633,6 +792,18 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AckStats: {
+            /**
+             * Format: int64
+             * @description Số người đã xác nhận
+             */
+            acknowledged: number;
+            /**
+             * Format: int64
+             * @description Số người cần đọc
+             */
+            required: number;
+        };
         AssignmentDto: {
             decisionFile?: components["schemas"]["FileRef"];
             /** Format: date */
@@ -708,6 +879,40 @@ export interface components {
             /** Format: date */
             startDate: string;
         };
+        CreateDocumentRequest: {
+            docNumber?: string;
+            /** Format: date */
+            effectiveTo?: string;
+            /** Format: uuid */
+            fileId: string;
+            /** Format: uuid */
+            folderId?: string;
+            /** Format: date */
+            issuedDate?: string;
+            note?: string;
+            requireAck?: boolean;
+            /**
+             * Format: uuid
+             * @description Bỏ trống = toàn chuỗi (chỉ cấp chuỗi)
+             */
+            schoolId?: string;
+            title: string;
+            /** @description Bỏ trống = mọi vai trò */
+            visibleRoles?: ("OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF")[];
+        };
+        CreateFolderRequest: {
+            name: string;
+            /**
+             * Format: uuid
+             * @description Thư mục cha; thư mục con cùng cơ sở với cha
+             */
+            parentId?: string;
+            /**
+             * Format: uuid
+             * @description Bỏ trống = toàn chuỗi (chỉ cấp chuỗi); bỏ qua khi có parentId
+             */
+            schoolId?: string;
+        };
         CreateStaffRequest: {
             /** @description Bỏ trống nếu không tạo tài khoản đăng nhập */
             account?: components["schemas"]["NewAccount"];
@@ -744,6 +949,46 @@ export interface components {
             relationship: string;
             /** Format: date */
             toMonth?: string;
+        };
+        DocumentDetail: {
+            document: components["schemas"]["DocumentItem"];
+            folderName?: string;
+            /** Format: date-time */
+            lastRemindedAt?: string;
+            /** @description Mới nhất trước */
+            versions: components["schemas"]["VersionDto"][];
+        };
+        DocumentItem: {
+            /** Format: int32 */
+            ackVersionNo?: number;
+            canManage: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            currentVersionNo: number;
+            docNumber?: string;
+            /** Format: date */
+            effectiveTo?: string;
+            /** Format: uuid */
+            folderId?: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            issuedDate?: string;
+            myAck: components["schemas"]["MyAck"];
+            requireAck: boolean;
+            /**
+             * Format: uuid
+             * @description Rỗng = toàn chuỗi
+             */
+            schoolId?: string;
+            /** @description Rỗng = toàn chuỗi */
+            schoolName?: string;
+            /** @description Chỉ có với người quản lý văn bản khi yêu cầu xác nhận */
+            stats?: components["schemas"]["AckStats"];
+            title: string;
+            /** @description Rỗng = mọi vai trò */
+            visibleRoles: ("OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF")[];
         };
         DocumentTypeDto: {
             /** @enum {string} */
@@ -818,6 +1063,20 @@ export interface components {
             /** @enum {string} */
             status: "PENDING" | "READY";
         };
+        FolderDto: {
+            /** @description Người xem được tạo thư mục con, đổi tên, xóa, thêm văn bản */
+            canManage: boolean;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            parentId?: string;
+            /**
+             * Format: uuid
+             * @description Rỗng = thư mục dùng chung toàn chuỗi
+             */
+            schoolId?: string;
+        };
         ForgotPasswordRequest: {
             /**
              * @description Email hoặc số điện thoại
@@ -876,9 +1135,25 @@ export interface components {
              */
             staffId?: string;
         };
+        MyAck: {
+            /**
+             * Format: date-time
+             * @description Đã xác nhận phiên bản cần đọc lúc; rỗng = chưa
+             */
+            acknowledgedAt?: string;
+            /** @description Người xem thuộc diện phải xác nhận văn bản này */
+            required: boolean;
+        };
         NewAccount: {
             /** @description Vai trò kèm cơ sở; bỏ trống schoolId = toàn chuỗi */
             roles: components["schemas"]["RoleAssignment"][];
+        };
+        NewVersionRequest: {
+            /** Format: uuid */
+            fileId: string;
+            note?: string;
+            /** @description Người đọc phải xác nhận lại phiên bản này (khi văn bản yêu cầu xác nhận) */
+            requireReack?: boolean;
         };
         NotificationDto: {
             body?: string;
@@ -892,6 +1167,17 @@ export interface components {
             readAt?: string;
             title: string;
             type: string;
+        };
+        PageResponseDocumentItem: {
+            items: components["schemas"]["DocumentItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
         };
         PageResponseExpiringItem: {
             items: components["schemas"]["ExpiringItem"][];
@@ -943,6 +1229,30 @@ export interface components {
             /** @description Tiêu đề tiếng Việt theo mã HTTP */
             title: string;
             type?: string;
+        };
+        ReaderDto: {
+            /**
+             * Format: date-time
+             * @description Rỗng = chưa xác nhận
+             */
+            acknowledgedAt?: string;
+            fullName: string;
+            /** Format: uuid */
+            schoolId: string;
+            schoolName: string;
+            staffCode: string;
+            /** Format: uuid */
+            staffId: string;
+        };
+        RemindResponse: {
+            /**
+             * Format: int32
+             * @description Số người chưa đọc được nhắc
+             */
+            reminded: number;
+        };
+        RenameFolderRequest: {
+            name: string;
         };
         ResetPasswordRequest: {
             /** @description Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số */
@@ -1221,6 +1531,18 @@ export interface components {
             /** Format: uuid */
             schoolId: string;
         };
+        UpdateDocumentRequest: {
+            docNumber?: string;
+            /** Format: date */
+            effectiveTo?: string;
+            /** Format: uuid */
+            folderId?: string;
+            /** Format: date */
+            issuedDate?: string;
+            requireAck?: boolean;
+            title: string;
+            visibleRoles?: ("OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF")[];
+        };
         UploadUrlRequest: {
             /** @example application/pdf */
             contentType: string;
@@ -1249,6 +1571,17 @@ export interface components {
             method: string;
             /** @description Link PUT nội dung file lên storage */
             uploadUrl: string;
+        };
+        VersionDto: {
+            /** Format: date-time */
+            createdAt: string;
+            createdByName?: string;
+            file: components["schemas"]["FileRef"];
+            /** Format: uuid */
+            id: string;
+            note?: string;
+            /** Format: int32 */
+            versionNo: number;
         };
     };
     responses: never;
@@ -1536,6 +1869,508 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["DownloadUrlResponse"];
                 };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    documents_1: {
+        parameters: {
+            query?: {
+                folderId?: string;
+                /** @description Chỉ văn bản chưa xếp thư mục */
+                unfiled?: boolean;
+                /** @description Tìm theo tiêu đề, số hiệu */
+                q?: string;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseDocumentItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDocumentRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDocumentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    acknowledge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readers: {
+        parameters: {
+            query?: {
+                /** @description true = đã đọc, false = chưa đọc, bỏ trống = tất cả */
+                acknowledged?: boolean;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReaderDto"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remind: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RemindResponse"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addVersion: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    fileUrl_1: {
+        parameters: {
+            query?: {
+                inline?: boolean;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+                versionNo: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DownloadUrlResponse"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    folders: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FolderDto"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createFolder: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFolderRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FolderDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    renameFolder: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameFolderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FolderDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteFolder: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {

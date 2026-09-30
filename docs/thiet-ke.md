@@ -450,6 +450,7 @@ Giai đoạn 1 gồm:
 | 2026-09-29 | MinIO dev dùng image `chainguard/minio` | MinIO ngừng phát hành image community trên Docker Hub/Quay |
 | 2026-09-29 | Thêm bảng `password_reset_tokens` (V2) và API forgot/reset password; dev dùng Mailpit bắt email | Quên mật khẩu qua email (module Nền tảng); token dùng một lần, chỉ lưu hash |
 | 2026-09-30 | Giai đoạn 2: `staff` thêm photo_file_id, citizen_id_issued_on, personal_tax_code, health_insurance_no, termination_reason; bảng mới `staff_change_requests`; `notifications.dedupe_key`; `library_documents.visible_roles`, `ack_version_no`; `document_acks.version_no`; `users.staff_id` thành FK | Quét CCCD, cho nghỉ việc, tự phục vụ, job cảnh báo hết hạn không trùng, phạm vi xem theo vai trò, xác nhận lại khi có phiên bản mới |
+| 2026-09-30 | `library_documents` thêm `current_version_no` (số phiên bản mới nhất) và `last_reminded_at` (giới hạn nhắc 1 lần/ngày); `doc_folders` không trùng tên trong cùng thư mục cha; API thư viện: `/library/folders`, `/library/documents` (+ `/versions`, `/ack`, `/readers`, `/remind`, `/versions/{no}/download-url`) | Chi tiết hóa khi viết V4 cho các hành vi đã chốt (phiên bản, xác nhận lại, nhắc người chưa đọc) |
 | 2026-09-30 | Quyền nhân sự chi tiết (hiệu trưởng được cho nghỉ việc; điều chuyển/lương/tài khoản chỉ cấp chuỗi), duyệt đề xuất, điều chuyển ngày tương lai | Chủ dự án chốt khi lập kế hoạch giai đoạn 2 |
 
 ## Nguồn

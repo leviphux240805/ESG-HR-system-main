@@ -370,6 +370,741 @@
         "tags" : [ "File" ]
       }
     },
+    "/api/v1/library/documents" : {
+      "get" : {
+        "description" : "Sắp xếp: issuedDate, title, createdAt, docNumber (mặc định ngày ban hành mới nhất).",
+        "operationId" : "documents_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "folderId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Chỉ văn bản chưa xếp thư mục",
+          "in" : "query",
+          "name" : "unfiled",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "description" : "Tìm theo tiêu đề, số hiệu",
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Zero-based page index (0..N)",
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "description" : "The size of the page to be returned",
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseDocumentItem"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Văn bản được xem (theo cơ sở đang chọn và vai trò)",
+        "tags" : [ "Tài liệu" ]
+      },
+      "post" : {
+        "operationId" : "create_1",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateDocumentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Ban hành văn bản (phiên bản 1)",
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/documents/{id}" : {
+      "delete" : {
+        "operationId" : "delete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "tags" : [ "Tài liệu" ]
+      },
+      "get" : {
+        "operationId" : "get_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "tags" : [ "Tài liệu" ]
+      },
+      "put" : {
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateDocumentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/documents/{id}/ack" : {
+      "post" : {
+        "operationId" : "acknowledge",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Tôi đã đọc: xác nhận phiên bản hiện tại",
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/documents/{id}/readers" : {
+      "get" : {
+        "operationId" : "readers",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "true = đã đọc, false = chưa đọc, bỏ trống = tất cả",
+          "in" : "query",
+          "name" : "acknowledged",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReaderDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Người cần đọc và trạng thái xác nhận (người quản lý văn bản)",
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/documents/{id}/remind" : {
+      "post" : {
+        "operationId" : "remind",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RemindResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Nhắc người chưa đọc (thông báo + email, tối đa 1 lần/ngày)",
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/documents/{id}/versions" : {
+      "post" : {
+        "operationId" : "addVersion",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewVersionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Tải phiên bản mới (tùy chọn yêu cầu xác nhận lại)",
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/documents/{id}/versions/{versionNo}/download-url" : {
+      "get" : {
+        "description" : "inline=true để xem trước PDF/ảnh trong trình duyệt.",
+        "operationId" : "fileUrl_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "versionNo",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "inline",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DownloadUrlResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Link tải/xem phiên bản",
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/folders" : {
+      "get" : {
+        "operationId" : "folders",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/FolderDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Thư mục: dùng chung toàn chuỗi + của các cơ sở đang chọn (danh sách phẳng, dựng cây theo parentId)",
+        "tags" : [ "Tài liệu" ]
+      },
+      "post" : {
+        "operationId" : "createFolder",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateFolderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FolderDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "tags" : [ "Tài liệu" ]
+      }
+    },
+    "/api/v1/library/folders/{id}" : {
+      "delete" : {
+        "operationId" : "deleteFolder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xóa thư mục rỗng",
+        "tags" : [ "Tài liệu" ]
+      },
+      "put" : {
+        "operationId" : "renameFolder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RenameFolderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FolderDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "tags" : [ "Tài liệu" ]
+      }
+    },
     "/api/v1/me" : {
       "get" : {
         "operationId" : "me",
@@ -2533,6 +3268,22 @@
   },
   "components" : {
     "schemas" : {
+      "AckStats" : {
+        "type" : "object",
+        "properties" : {
+          "acknowledged" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Số người đã xác nhận"
+          },
+          "required" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Số người cần đọc"
+          }
+        },
+        "required" : [ "acknowledged", "required" ]
+      },
       "AssignmentDto" : {
         "type" : "object",
         "properties" : {
@@ -2728,6 +3479,80 @@
         },
         "required" : [ "contractType", "startDate" ]
       },
+      "CreateDocumentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "docNumber" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "effectiveTo" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "fileId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "folderId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "issuedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "requireAck" : {
+            "type" : "boolean"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Bỏ trống = toàn chuỗi (chỉ cấp chuỗi)"
+          },
+          "title" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "visibleRoles" : {
+            "type" : "array",
+            "description" : "Bỏ trống = mọi vai trò",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "OWNER", "CHAIN_ADMIN", "ACCOUNTANT", "PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "STAFF" ]
+            }
+          }
+        },
+        "required" : [ "fileId", "title" ]
+      },
+      "CreateFolderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "parentId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Thư mục cha; thư mục con cùng cơ sở với cha"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Bỏ trống = toàn chuỗi (chỉ cấp chuỗi); bỏ qua khi có parentId"
+          }
+        },
+        "required" : [ "name" ]
+      },
       "CreateStaffRequest" : {
         "type" : "object",
         "properties" : {
@@ -2810,6 +3635,99 @@
           }
         },
         "required" : [ "fromMonth", "fullName", "relationship" ]
+      },
+      "DocumentDetail" : {
+        "type" : "object",
+        "properties" : {
+          "document" : {
+            "$ref" : "#/components/schemas/DocumentItem"
+          },
+          "folderName" : {
+            "type" : "string"
+          },
+          "lastRemindedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "versions" : {
+            "type" : "array",
+            "description" : "Mới nhất trước",
+            "items" : {
+              "$ref" : "#/components/schemas/VersionDto"
+            }
+          }
+        },
+        "required" : [ "document", "versions" ]
+      },
+      "DocumentItem" : {
+        "type" : "object",
+        "properties" : {
+          "ackVersionNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "canManage" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "currentVersionNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "effectiveTo" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "folderId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "issuedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "myAck" : {
+            "$ref" : "#/components/schemas/MyAck"
+          },
+          "requireAck" : {
+            "type" : "boolean"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Rỗng = toàn chuỗi"
+          },
+          "schoolName" : {
+            "type" : "string",
+            "description" : "Rỗng = toàn chuỗi"
+          },
+          "stats" : {
+            "$ref" : "#/components/schemas/AckStats",
+            "description" : "Chỉ có với người quản lý văn bản khi yêu cầu xác nhận"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "visibleRoles" : {
+            "type" : "array",
+            "description" : "Rỗng = mọi vai trò",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "OWNER", "CHAIN_ADMIN", "ACCOUNTANT", "PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "STAFF" ]
+            }
+          }
+        },
+        "required" : [ "canManage", "createdAt", "currentVersionNo", "id", "myAck", "requireAck", "title", "visibleRoles" ]
       },
       "DocumentTypeDto" : {
         "type" : "object",
@@ -2984,6 +3902,32 @@
         },
         "required" : [ "id", "mimeType", "originalName", "sizeBytes", "status" ]
       },
+      "FolderDto" : {
+        "type" : "object",
+        "properties" : {
+          "canManage" : {
+            "type" : "boolean",
+            "description" : "Người xem được tạo thư mục con, đổi tên, xóa, thêm văn bản"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "parentId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Rỗng = thư mục dùng chung toàn chuỗi"
+          }
+        },
+        "required" : [ "canManage", "id", "name" ]
+      },
       "ForgotPasswordRequest" : {
         "type" : "object",
         "properties" : {
@@ -3116,6 +4060,21 @@
         },
         "required" : [ "chainWide", "email", "fullName", "id", "roles", "schools" ]
       },
+      "MyAck" : {
+        "type" : "object",
+        "properties" : {
+          "acknowledgedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Đã xác nhận phiên bản cần đọc lúc; rỗng = chưa"
+          },
+          "required" : {
+            "type" : "boolean",
+            "description" : "Người xem thuộc diện phải xác nhận văn bản này"
+          }
+        },
+        "required" : [ "required" ]
+      },
       "NewAccount" : {
         "type" : "object",
         "properties" : {
@@ -3130,6 +4089,25 @@
           }
         },
         "required" : [ "roles" ]
+      },
+      "NewVersionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fileId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "requireReack" : {
+            "type" : "boolean",
+            "description" : "Người đọc phải xác nhận lại phiên bản này (khi văn bản yêu cầu xác nhận)"
+          }
+        },
+        "required" : [ "fileId" ]
       },
       "NotificationDto" : {
         "type" : "object",
@@ -3161,6 +4139,34 @@
           }
         },
         "required" : [ "createdAt", "id", "title", "type" ]
+      },
+      "PageResponseDocumentItem" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DocumentItem"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ]
       },
       "PageResponseExpiringItem" : {
         "type" : "object",
@@ -3290,6 +4296,56 @@
           }
         },
         "required" : [ "title", "status" ]
+      },
+      "ReaderDto" : {
+        "type" : "object",
+        "properties" : {
+          "acknowledgedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Rỗng = chưa xác nhận"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "fullName", "schoolId", "schoolName", "staffCode", "staffId" ]
+      },
+      "RemindResponse" : {
+        "type" : "object",
+        "properties" : {
+          "reminded" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Số người chưa đọc được nhắc"
+          }
+        },
+        "required" : [ "reminded" ]
+      },
+      "RenameFolderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
       },
       "ResetPasswordRequest" : {
         "type" : "object",
@@ -3982,6 +5038,44 @@
         },
         "required" : [ "effectiveDate", "schoolId" ]
       },
+      "UpdateDocumentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "docNumber" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "effectiveTo" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "folderId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "issuedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "requireAck" : {
+            "type" : "boolean"
+          },
+          "title" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "visibleRoles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "OWNER", "CHAIN_ADMIN", "ACCOUNTANT", "PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "STAFF" ]
+            }
+          }
+        },
+        "required" : [ "title" ]
+      },
       "UploadUrlRequest" : {
         "type" : "object",
         "properties" : {
@@ -4037,6 +5131,33 @@
           }
         },
         "required" : [ "expiresAt", "file", "headers", "method", "uploadUrl" ]
+      },
+      "VersionDto" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdByName" : {
+            "type" : "string"
+          },
+          "file" : {
+            "$ref" : "#/components/schemas/FileRef"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "versionNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "createdAt", "file", "id", "versionNo" ]
       }
     },
     "securitySchemes" : {
