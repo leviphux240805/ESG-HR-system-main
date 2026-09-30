@@ -4,6 +4,94 @@
  */
 
 export interface paths {
+    "/api/v1/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách tài khoản
+         * @description Sắp xếp: fullName, email, lastLoginAt.
+         */
+        get: operations["list_1"];
+        put?: never;
+        /** Tạo tài khoản và gửi email mời đặt mật khẩu */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Khóa tài khoản (thu hồi mọi phiên đăng nhập) */
+        post: operations["lock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Gán lại vai trò theo cơ sở */
+        put: operations["updateRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/send-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gửi email đặt lại mật khẩu */
+        post: operations["sendReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{id}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["unlock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -106,7 +194,7 @@ export interface paths {
             cookie?: never;
         };
         /** Danh mục loại giấy tờ (dùng chung toàn chuỗi) */
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -491,7 +579,7 @@ export interface paths {
             cookie?: never;
         };
         /** Đề xuất người xem được duyệt (theo cơ sở đang chọn); status rỗng = mọi trạng thái */
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -895,6 +983,42 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountItem: {
+            active: boolean;
+            email: string;
+            fullName: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            lastLoginAt?: string;
+            phone?: string;
+            roles: components["schemas"]["AccountRoleView"][];
+            /** @description Tài khoản của chính người đang xem */
+            self: boolean;
+            staffCode?: string;
+            /** Format: uuid */
+            staffId?: string;
+            staffName?: string;
+        };
+        AccountRole: {
+            /** @enum {string} */
+            role: "OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF";
+            /**
+             * Format: uuid
+             * @description Rỗng = toàn chuỗi
+             */
+            schoolId?: string;
+        };
+        AccountRoleView: {
+            /** @enum {string} */
+            role: "OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF";
+            /**
+             * Format: uuid
+             * @description Rỗng = toàn chuỗi
+             */
+            schoolId?: string;
+            schoolName?: string;
+        };
         AckStats: {
             /**
              * Format: int64
@@ -1005,6 +1129,19 @@ export interface components {
             signedOn?: string;
             /** Format: date */
             startDate: string;
+        };
+        CreateAccountRequest: {
+            /** Format: email */
+            email: string;
+            /** @description Bỏ trống khi gắn hồ sơ nhân viên (lấy họ tên từ hồ sơ) */
+            fullName?: string;
+            phone?: string;
+            roles: components["schemas"]["AccountRole"][];
+            /**
+             * Format: uuid
+             * @description Hồ sơ nhân viên gắn với tài khoản
+             */
+            staffId?: string;
         };
         CreateDocumentRequest: {
             docNumber?: string;
@@ -1299,6 +1436,17 @@ export interface components {
             readAt?: string;
             title: string;
             type: string;
+        };
+        PageResponseAccountItem: {
+            items: components["schemas"]["AccountItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
         };
         PageResponseChangeRequestDto: {
             items: components["schemas"]["ChangeRequestDto"][];
@@ -1698,6 +1846,9 @@ export interface components {
             title: string;
             visibleRoles?: ("OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF")[];
         };
+        UpdateRolesRequest: {
+            roles: components["schemas"]["AccountRole"][];
+        };
         UploadUrlRequest: {
             /** @example application/pdf */
             contentType: string;
@@ -1747,6 +1898,224 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_1: {
+        parameters: {
+            query?: {
+                /** @description Tìm theo tên, email, SĐT */
+                q?: string;
+                role?: "OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF";
+                schoolId?: string;
+                active?: boolean;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseAccountItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    lock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateRoles: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRolesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sendReset: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unlock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AccountItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     forgotPassword: {
         parameters: {
             query?: never;
@@ -1898,7 +2267,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: {
                 scope?: "STAFF" | "CHILD" | "LIBRARY";
@@ -2911,7 +3280,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: {
                 status?: "PENDING" | "APPROVED" | "REJECTED";

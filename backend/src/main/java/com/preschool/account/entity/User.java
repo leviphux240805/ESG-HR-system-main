@@ -107,6 +107,26 @@ public class User extends BaseEntity {
 		this.lastLoginAt = lastLoginAt;
 	}
 
+	/** Thay bộ vai trò: chỉ xóa vai trò bị bỏ và thêm vai trò mới (giữ nguyên dòng không đổi, tránh trùng khóa khi flush). */
+	public void replaceRoles(java.util.Collection<java.util.Map.Entry<RoleCode, UUID>> wanted) {
+		java.util.Set<java.util.Map.Entry<RoleCode, UUID>> target = new java.util.HashSet<>(wanted);
+		roles.removeIf(r -> !target.contains(java.util.Map.entry(r.getRoleCode(), nullKey(r.getSchoolId()))));
+		for (java.util.Map.Entry<RoleCode, UUID> entry : target) {
+			boolean exists = roles.stream()
+				.anyMatch(r -> r.getRoleCode() == entry.getKey() && nullKey(r.getSchoolId()).equals(entry.getValue()));
+			if (!exists) {
+				addRole(entry.getKey(), entry.getValue().equals(NO_SCHOOL) ? null : entry.getValue());
+			}
+		}
+	}
+
+	/** Khóa thay cho school_id rỗng (Map.entry không nhận null). */
+	public static final UUID NO_SCHOOL = new UUID(0, 0);
+
+	private static UUID nullKey(UUID schoolId) {
+		return schoolId == null ? NO_SCHOOL : schoolId;
+	}
+
 	public List<UserRole> getRoles() {
 		return roles;
 	}
