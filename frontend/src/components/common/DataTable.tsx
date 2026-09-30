@@ -54,6 +54,8 @@ interface DataTableProps<T> {
   emptyTitle?: string;
   emptyDescription?: ReactNode;
   emptyAction?: ReactNode;
+  /** Điện thoại (< 768px): hiện mỗi dòng thành một thẻ thay cho bảng nhiều cột. */
+  mobileCard?: (row: T) => ReactNode;
 }
 
 function loadVisibility(tableId: string): VisibilityState {
@@ -78,6 +80,7 @@ export function DataTable<T>({
   emptyTitle = "Chưa có dữ liệu",
   emptyDescription,
   emptyAction,
+  mobileCard,
 }: DataTableProps<T>) {
   const check = usePermissions();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => loadVisibility(tableId));
@@ -181,7 +184,7 @@ export function DataTable<T>({
   return (
     <div className="rounded-lg border bg-card">
       {hideableColumns.length > 1 && (
-        <div className="flex justify-end p-2 border-b">
+        <div className={cn("flex justify-end p-2 border-b", mobileCard && "hidden md:flex")}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="min-h-11">
@@ -208,10 +211,20 @@ export function DataTable<T>({
         </div>
       )}
 
+      {!body && mobileCard && (
+        <ul className={cn("divide-y md:hidden", query.isFetching && "opacity-60 transition-opacity")}>
+          {rows.map((row) => (
+            <li key={getRowId(row)} className="p-3">
+              {mobileCard(row)}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {body ? (
         <div className="p-4">{body}</div>
       ) : (
-        <div className={cn("max-h-[70vh] overflow-auto", query.isFetching && "opacity-60 transition-opacity")}>
+        <div className={cn("max-h-[70vh] overflow-auto", mobileCard && "hidden md:block", query.isFetching && "opacity-60 transition-opacity")}>
           <table className="w-full caption-bottom text-sm">
             <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_hsl(var(--border))]">
               {table.getHeaderGroups().map((group) => (
@@ -277,7 +290,7 @@ export function DataTable<T>({
           </span>
           <div className="flex items-center gap-2">
             <Select value={String(params.size)} onValueChange={(value) => params.setSize(Number(value))}>
-              <SelectTrigger className="w-28 min-h-11" aria-label="Số dòng mỗi trang">
+              <SelectTrigger className="hidden w-28 min-h-11 sm:flex" aria-label="Số dòng mỗi trang">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

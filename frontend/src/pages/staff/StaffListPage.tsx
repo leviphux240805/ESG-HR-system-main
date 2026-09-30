@@ -31,7 +31,7 @@ function SummaryCards({ schoolId }: { schoolId?: string }) {
   const { data, isLoading } = useStaffSummary(schoolId);
   if (isLoading || !data) {
     return (
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
+      <div className="grid gap-3 sm:grid-cols-3 mb-4 sm:mb-6">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-24" />
         ))}
@@ -43,7 +43,7 @@ function SummaryCards({ schoolId }: { schoolId?: string }) {
     .slice(0, 3);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3 mb-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-4 sm:mb-6">
       <Card>
         <CardContent className="pt-6 flex items-center gap-4">
           <Users className="w-8 h-8 text-primary" />
@@ -53,7 +53,7 @@ function SummaryCards({ schoolId }: { schoolId?: string }) {
           </div>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="hidden sm:block">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground mb-1">Theo vị trí</p>
           {topPositions.length === 0 ? (
@@ -205,6 +205,22 @@ export default function StaffListPage() {
         params={params}
         getRowId={(row) => row.id}
         onSelectionChange={setSelected}
+        mobileCard={(row) => (
+          <Link to={`/nhan-su/${row.id}`} className="flex min-h-11 items-center gap-3">
+            <StaffAvatar fullName={row.fullName} photoUrl={row.photoUrl} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{row.fullName}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {POSITION_LABELS[row.position]}
+                {classesOf.get(row.id) ? ` · ${classesOf.get(row.id)!.join(", ")}` : ""}
+              </p>
+              {row.contractEndDate && daysUntil(row.contractEndDate) < WARNING_DAYS && (
+                <p className="text-xs font-medium text-destructive">Hợp đồng hết hạn {formatDate(row.contractEndDate)}</p>
+              )}
+            </div>
+            <StatusBadge status={row.status} labels={STAFF_STATUS} />
+          </Link>
+        )}
         emptyTitle="Chưa có nhân viên"
         emptyDescription="Nhân viên được thêm sẽ hiện ở đây."
       />

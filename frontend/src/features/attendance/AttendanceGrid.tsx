@@ -1,11 +1,14 @@
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle } from "lucide-react";
+import { useIsMobile } from "@/hooks/useMobile";
 import { cn } from "@/lib/utils";
 import type { DayInfo, MonthSheet, SheetCell, StaffRow } from "./api";
 import { codeTone, formatDays, WEEKDAY_SHORT } from "./codes";
 
 const NAME_WIDTH = 208;
+// Điện thoại: cột tên hẹp để thấy nhiều ngày hơn
+const NAME_WIDTH_MOBILE = 120;
 const DAY_WIDTH = 40;
 const TOTAL_WIDTH = 60;
 const ROW_HEIGHT = 40;
@@ -63,23 +66,25 @@ const Row = memo(function Row({
   row,
   days,
   backgrounds,
+  nameWidth,
   onOpen,
 }: {
   row: StaffRow;
   days: DayInfo[];
   backgrounds: string[];
+  nameWidth: number;
   onOpen: (staffId: string, date: string) => void;
 }) {
   return (
     <>
       <div
         className="sticky left-0 z-10 flex flex-col justify-center border-r border-b bg-background px-2 min-w-0"
-        style={{ width: NAME_WIDTH }}
+        style={{ width: nameWidth }}
       >
         <span className="truncate text-sm font-medium">{row.fullName}</span>
         <span className="truncate text-xs text-muted-foreground">
           {row.staffCode}
-          {row.machineCode ? ` · máy ${row.machineCode}` : ""}
+          {row.machineCode && nameWidth === NAME_WIDTH ? ` · máy ${row.machineCode}` : ""}
         </span>
       </div>
       {days.map((day, i) => (
@@ -120,14 +125,24 @@ export function AttendanceGrid({ sheet, onOpen }: { sheet: MonthSheet; onOpen: (
     estimateSize: () => ROW_HEIGHT,
     overscan: 8,
   });
-  const width = NAME_WIDTH + sheet.days.length * DAY_WIDTH + TOTALS.length * TOTAL_WIDTH;
+  const nameWidth = useIsMobile() ? NAME_WIDTH_MOBILE : NAME_WIDTH;
+  const width = nameWidth + sheet.days.length * DAY_WIDTH + TOTALS.length * TOTAL_WIDTH;
   const backgrounds = useMemo(() => sheet.days.map(dayBackground), [sheet.days]);
   const open = useCallback((staffId: string, date: string) => onOpen(staffId, date), [onOpen]);
+
+  // Tháng hiện tại: cuộn để cột hôm nay nằm gần mép phải, thấy được các ngày đã qua
+  useEffect(() => {
+    const el = parentRef.current;
+    const index = sheet.days.findIndex((d) => d.date === new Date().toLocaleDateString("sv-SE"));
+    if (!el || index < 0) return;
+    const visibleDays = Math.floor((el.clientWidth - nameWidth) / DAY_WIDTH);
+    el.scrollLeft = Math.max(0, (index + 2 - visibleDays) * DAY_WIDTH);
+  }, [sheet.month, sheet.days, nameWidth]);
 
   return (
     <div
       ref={parentRef}
-      className="relative overflow-auto rounded-md border h-[calc(100vh-17rem)] min-h-[20rem]"
+      className="relative overflow-auto rounded-md border h-[calc(100dvh-17rem)] min-h-[20rem]"
       role="grid"
       aria-label="Bảng công tháng"
       aria-rowcount={sheet.staff.length + 1}
@@ -136,7 +151,7 @@ export function AttendanceGrid({ sheet, onOpen }: { sheet: MonthSheet; onOpen: (
         <div className="sticky top-0 z-20 flex bg-background" style={{ width, height: 48 }} role="row">
           <div
             className="sticky left-0 z-30 flex items-end border-r border-b bg-background px-2 pb-1 text-xs font-medium text-muted-foreground"
-            style={{ width: NAME_WIDTH }}
+            style={{ width: nameWidth }}
           >
             Nhân viên
           </div>
@@ -172,7 +187,7 @@ export function AttendanceGrid({ sheet, onOpen }: { sheet: MonthSheet; onOpen: (
             className="absolute left-0 flex"
             style={{ top: 48 + item.start, height: ROW_HEIGHT, width }}
           >
-            <Row row={sheet.staff[item.index]} days={sheet.days} backgrounds={backgrounds} onOpen={open} />
+            <Row row={sheet.staff[item.index]} days={sheet.days} backgrounds={backgrounds} nameWidth={nameWidth} onOpen={open} />
           </div>
         ))}
       </div>

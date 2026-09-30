@@ -134,7 +134,7 @@ export interface DemoDB {
   notifications: NotificationRec[];
 }
 
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 const STORAGE_KEY = "mnv.demo.db";
 
 let current: DemoDB | null = null;

@@ -77,6 +77,8 @@ export default function TasksPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [editing, setEditing] = useState<TaskItem | null | undefined>(undefined);
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
+  // Điện thoại: một cột theo tab trạng thái thay cho bảng 4 cột
+  const [mobileStatus, setMobileStatus] = useState<TaskStatus>("IN_PROGRESS");
 
   const byStatus = useMemo(() => {
     const map = new Map<TaskStatus, TaskItem[]>(TASK_COLUMNS.map((c) => [c.status, []]));
@@ -144,8 +146,33 @@ export default function TasksPage() {
       ) : query.isError ? (
         <ErrorState error={query.error} onRetry={() => query.refetch()} />
       ) : (
-        <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-          <div className="grid min-w-[64rem] grid-cols-4 gap-3">
+        <>
+        <div className="space-y-3 md:hidden">
+          <div className="grid grid-cols-4 gap-1 rounded-xl bg-muted p-1" role="tablist" aria-label="Trạng thái">
+            {TASK_COLUMNS.map((col) => (
+              <button
+                key={col.status}
+                type="button"
+                role="tab"
+                aria-selected={mobileStatus === col.status}
+                onClick={() => setMobileStatus(col.status)}
+                className={cn(
+                  "flex min-h-11 flex-col items-center justify-center rounded-lg text-xs font-medium leading-tight transition-colors",
+                  mobileStatus === col.status ? "bg-background shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                {col.label}
+                <span className="tabular-nums">{byStatus.get(col.status)!.length}</span>
+              </button>
+            ))}
+          </div>
+          {byStatus.get(mobileStatus)!.map((t) => (
+            <TaskCard key={t.id} task={t} onOpen={() => setOpenId(t.id)} />
+          ))}
+          {byStatus.get(mobileStatus)!.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Không có việc</p>}
+        </div>
+        <div className="hidden overflow-x-auto pb-2 md:block">
+          <div className="grid min-w-[56rem] grid-cols-4 gap-3">
             {TASK_COLUMNS.map((col) => {
               const items = byStatus.get(col.status)!;
               return (
@@ -176,6 +203,7 @@ export default function TasksPage() {
             })}
           </div>
         </div>
+        </>
       )}
 
       <TaskDetailSheet

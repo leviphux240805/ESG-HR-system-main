@@ -26,7 +26,7 @@ interface PageHeaderProps {
 /** Đầu trang chuẩn: breadcrumb, tiêu đề, mô tả, nút hành động. */
 export function PageHeader({ title, description, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="space-y-2 mb-6">
+    <div className="space-y-2 mb-4 sm:mb-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb>
           <BreadcrumbList>
@@ -49,8 +49,8 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
       )}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          {description && <p className="mt-1 text-muted-foreground">{description}</p>}
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">{title}</h1>
+          {description && <p className="mt-1 text-sm text-muted-foreground sm:text-base">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>

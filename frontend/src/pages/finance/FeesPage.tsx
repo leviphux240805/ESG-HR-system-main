@@ -25,26 +25,26 @@ function Summary({ month }: { month: string }) {
   if (!data) return <Skeleton className="mb-4 h-28" />;
   const rate = data.total ? Math.round((data.collected / data.total) * 100) : 0;
   return (
-    <div className="mb-4 grid gap-3 sm:grid-cols-3">
+    <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
       <Card>
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground">Phải thu</p>
-          <p className="text-xl font-bold tabular-nums">{formatMoney(data.total)}</p>
-          <p className="text-xs text-muted-foreground">{data.counts.PAID + data.counts.PARTIAL + data.counts.UNPAID} phiếu</p>
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-xs text-muted-foreground sm:text-sm">Phải thu</p>
+          <p className="text-sm font-bold tabular-nums sm:text-xl">{formatMoney(data.total)}</p>
+          <p className="hidden text-xs text-muted-foreground sm:block">{data.counts.PAID + data.counts.PARTIAL + data.counts.UNPAID} phiếu</p>
         </CardContent>
       </Card>
       <Card>
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground">Đã thu ({rate}%)</p>
-          <p className="text-xl font-bold tabular-nums text-green-700">{formatMoney(data.collected)}</p>
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-xs text-muted-foreground sm:text-sm">Đã thu ({rate}%)</p>
+          <p className="text-sm font-bold tabular-nums sm:text-xl text-green-700">{formatMoney(data.collected)}</p>
           <Progress value={rate} className="mt-2 h-2" aria-label="Tỷ lệ đã thu" />
         </CardContent>
       </Card>
       <Card>
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground">Còn phải thu</p>
-          <p className="text-xl font-bold tabular-nums text-destructive">{formatMoney(data.outstanding)}</p>
-          <p className="text-xs text-muted-foreground">
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-xs text-muted-foreground sm:text-sm">Còn phải thu</p>
+          <p className="text-sm font-bold tabular-nums sm:text-xl text-destructive">{formatMoney(data.outstanding)}</p>
+          <p className="hidden text-xs text-muted-foreground sm:block">
             {data.counts.UNPAID} chưa thu · {data.counts.PARTIAL} thu một phần
           </p>
         </CardContent>
@@ -107,7 +107,29 @@ function InvoicesTab({ month, onOpen }: { month: string; onOpen: (id: string) =>
   return (
     <>
       <FilterBar params={params} searchPlaceholder="Tìm theo tên trẻ, số phiếu" filters={filters} />
-      <DataTable tableId="invoices" columns={columns} query={query} params={params} getRowId={(r) => r.id} emptyTitle="Không có phiếu thu" emptyDescription="Thử đổi tháng hoặc bộ lọc." />
+      <DataTable
+        tableId="invoices"
+        columns={columns}
+        query={query}
+        params={params}
+        getRowId={(r) => r.id}
+        mobileCard={(r) => (
+          <button type="button" className="flex min-h-11 w-full items-center gap-3 text-left" onClick={() => onOpen(r.id)}>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{r.childName}</p>
+              <p className="text-xs text-muted-foreground">
+                {r.className} · {formatMoney(r.total)}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <StatusBadge status={r.status} labels={INVOICE_STATUS} />
+              {r.balance > 0 && <span className="text-xs font-medium tabular-nums text-destructive">còn {formatMoney(r.balance)}</span>}
+            </div>
+          </button>
+        )}
+        emptyTitle="Không có phiếu thu"
+        emptyDescription="Thử đổi tháng hoặc bộ lọc."
+      />
     </>
   );
 }

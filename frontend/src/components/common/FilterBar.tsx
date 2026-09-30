@@ -58,7 +58,7 @@ export function FilterBar({ params, searchPlaceholder = "Tìm kiếm...", filter
             value={params.filters[filter.key] ?? ANY}
             onValueChange={(value) => params.setFilter(filter.key, value === ANY ? undefined : value)}
           >
-            <SelectTrigger className="w-full sm:w-48 min-h-11" aria-label={filter.label}>
+            <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-48 min-h-11" aria-label={filter.label}>
               <SelectValue placeholder={filter.label} />
             </SelectTrigger>
             <SelectContent>

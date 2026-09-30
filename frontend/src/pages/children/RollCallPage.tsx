@@ -85,7 +85,7 @@ export default function RollCallPage() {
   };
 
   return (
-    <div className="pb-24">
+    <div className="pb-20">
       <PageHeader title="Điểm danh" description="Chạm để chọn trạng thái từng trẻ, rồi bấm Lưu." />
       <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_12rem]">
         <Select value={classId ?? ""} onValueChange={(v) => setParam("classId", v)}>
@@ -167,7 +167,7 @@ export default function RollCallPage() {
               );
             })}
           </ul>
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 p-3 backdrop-blur md:left-60">
+          <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-30 border-t bg-card/95 p-3 backdrop-blur md:bottom-0 md:left-60">
             <div className="mx-auto flex max-w-3xl items-center gap-3">
               <p className="flex-1 text-sm text-muted-foreground">{dirty ? "Có thay đổi chưa lưu" : `${query.data.className} · ${query.data.rows.length} trẻ`}</p>
               <Button className="min-h-11 min-w-32" onClick={save} disabled={!dirty || saving}>

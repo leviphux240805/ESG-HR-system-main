@@ -118,6 +118,21 @@ export default function ChildrenPage() {
         query={query}
         params={params}
         getRowId={(row) => row.id}
+        mobileCard={(c) => (
+          <Link to={`/tre/${c.id}`} className="flex min-h-11 items-center gap-3">
+            <StaffAvatar fullName={c.fullName} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">
+                {c.fullName} <span className="font-normal text-muted-foreground">({c.nickname})</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {c.className} · {formatAge(c.dob)}
+              </p>
+              {c.allergies && <p className="text-xs font-medium text-destructive">{c.allergies}</p>}
+            </div>
+            <span className={cn("text-sm font-semibold tabular-nums", c.attendanceRate < 85 && "text-destructive")}>{c.attendanceRate}%</span>
+          </Link>
+        )}
         emptyTitle="Không có trẻ phù hợp"
         emptyDescription="Thử bỏ bớt bộ lọc hoặc tìm theo tên khác."
       />

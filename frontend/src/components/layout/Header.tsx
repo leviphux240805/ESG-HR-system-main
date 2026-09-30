@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ChevronRight, LogOut, Menu, RotateCcw, UserCircle } from "lucide-react";
+import { ChevronRight, LogOut, RotateCcw, School, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { DEMO } from "@/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
+import { APP_NAME } from "@/lib/brand";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { NotificationBell } from "./NotificationBell";
 import { SidebarContent } from "./Sidebar";
@@ -99,24 +100,18 @@ function UserMenu() {
   );
 }
 
-export function Header() {
+export function Header({ menuOpen, onMenuOpenChange: setMenuOpen }: { menuOpen: boolean; onMenuOpenChange: (open: boolean) => void }) {
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
   const current = findNavItem(location.pathname);
 
   return (
-    <header className="sticky top-0 z-40 bg-card border-b border-border px-4 md:px-6 py-3">
+    <header className="sticky top-0 z-40 bg-card border-b border-border px-2 sm:px-4 md:px-6 py-2 md:py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden h-11 w-11"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Mở menu"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
+          {/* Điện thoại: menu mở từ thanh điều hướng dưới; ở đây chỉ còn logo */}
+          <span className="md:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sidebar-gradient" aria-label={APP_NAME} role="img">
+            <School className="w-5 h-5 text-sidebar-foreground" />
+          </span>
           <nav aria-label="Đường dẫn trang" className="hidden sm:flex items-center gap-2 text-sm min-w-0">
             {/* Nhóm trùng tên mục (Nhân sự › Nhân sự) thì bỏ bớt một lần */}
             {current?.group.label && current.group.label !== current.item.label && (

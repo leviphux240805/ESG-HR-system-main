@@ -16,6 +16,9 @@ const GRID = "hsl(var(--border))";
 const AXIS = { fontSize: 12, stroke: "hsl(var(--muted-foreground))" };
 const BAR_RADIUS: [number, number, number, number] = [4, 4, 0, 0];
 
+// Nhãn trục ngắn cho màn hình hẹp; tên đầy đủ nằm trong tooltip
+const AGE_SHORT = { NHA_TRE: "Nhà trẻ", MAM: "Bé", CHOI: "Nhỡ", LA: "Lớn" } as const;
+
 const shortMonth = (m: string) => formatMonth(m).replace("Tháng ", "T");
 const millions = (v: number) => `${Math.round(v / 1_000_000)}tr`;
 
@@ -39,7 +42,7 @@ function ChartCard({ title, children, className }: { title: string; children: Re
       <CardHeader className="pb-2">
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-64 px-2 pb-4">
+      <CardContent className="h-56 px-1 pb-4 sm:h-64 sm:px-2">
         <ResponsiveContainer width="100%" height="100%">
           {children as React.ReactElement}
         </ResponsiveContainer>
@@ -55,7 +58,7 @@ export default function ReportsPage() {
   if (query.isLoading) return <PageSkeleton />;
   if (query.isError) return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
   const d = query.data!;
-  const age = d.enrollmentByAge.map((x) => ({ label: AGE_GROUP_LABELS[x.ageGroup].split(" (")[0], count: x.count }));
+  const age = d.enrollmentByAge.map((x) => ({ label: AGE_SHORT[x.ageGroup], full: AGE_GROUP_LABELS[x.ageGroup], count: x.count }));
   const tasks = d.tasks.map((t) => ({ label: TASK_COLUMNS.find((c) => c.status === t.status)!.label, count: t.count }));
 
   return (
@@ -106,7 +109,7 @@ export default function ReportsPage() {
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="label" interval={0} {...AXIS} />
             <YAxis allowDecimals={false} width={32} {...AXIS} />
-            <Tooltip formatter={(v: number) => [`${v} trẻ`, "Sĩ số"]} />
+            <Tooltip labelFormatter={(_, p) => p?.[0]?.payload?.full ?? ""} formatter={(v: number) => [`${v} trẻ`, "Sĩ số"]} />
             <Bar dataKey="count" fill={SERIES.blue} radius={BAR_RADIUS} maxBarSize={48} />
           </BarChart>
         </ChartCard>
@@ -115,7 +118,7 @@ export default function ReportsPage() {
           <BarChart data={d.nutrition} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
             <CartesianGrid stroke={GRID} horizontal={false} />
             <XAxis type="number" allowDecimals={false} {...AXIS} />
-            <YAxis type="category" dataKey="label" width={150} {...AXIS} />
+            <YAxis type="category" dataKey="label" width={110} {...AXIS} />
             <Tooltip formatter={(v: number) => [`${v} trẻ`, "Số trẻ"]} />
             <Bar dataKey="count" fill={SERIES.blue} radius={[0, 4, 4, 0]} maxBarSize={28} />
           </BarChart>

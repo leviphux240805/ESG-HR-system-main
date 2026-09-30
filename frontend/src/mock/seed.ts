@@ -25,8 +25,8 @@ export const MEAL_PRICE = 35_000;
 export const TALENT_FEE = 400_000;
 
 const SCHOOL_DEFS = [
-  { code: "MNV-HB", name: "Mầm Non Việt – Hoa Ban", address: "Số 18 Nguyễn Chí Thanh, phường Láng, Hà Nội", classes: ["Ong Vàng", "Thỏ Ngọc", "Họa Mi", "Sóc Nâu"] },
-  { code: "MNV-SM", name: "Mầm Non Việt – Sen Mai", address: "Số 45 Lê Văn Lương, phường Yên Hòa, Hà Nội", classes: ["Cá Heo", "Bướm Xinh", "Sơn Ca", "Hướng Dương"] },
+  { code: "MNV-HB", name: "Cơ sở Hoa Ban", address: "Số 18 Nguyễn Chí Thanh, phường Láng, Hà Nội", classes: ["Ong Vàng", "Thỏ Ngọc", "Họa Mi", "Sóc Nâu"] },
+  { code: "MNV-SM", name: "Cơ sở Sen Mai", address: "Số 45 Lê Văn Lương, phường Yên Hòa, Hà Nội", classes: ["Cá Heo", "Bướm Xinh", "Sơn Ca", "Hướng Dương"] },
 ];
 
 // Mỗi cơ sở 15 nhân viên

@@ -115,6 +115,14 @@ export function visibleNavGroups(check: PermissionCheck, phase = CURRENT_PHASE, 
   })).filter((group) => group.items.length > 0);
 }
 
+/** Thứ tự ưu tiên các mục trên thanh điều hướng dưới (điện thoại); lấy 4 mục đầu tiên người dùng được thấy. */
+const MOBILE_TAB_PATHS = ["/hom-nay", "/hop-duyet", "/diem-danh", "/cong-viec", "/tre", "/nghi-phep", "/cua-toi/cham-cong"];
+
+export function mobileTabs(check: PermissionCheck): NavItem[] {
+  const visible = visibleNavGroups(check).flatMap((g) => g.items);
+  return MOBILE_TAB_PATHS.map((path) => visible.find((i) => i.path === path)).filter((i): i is NavItem => !!i).slice(0, 4);
+}
+
 /** Mọi mục có route (dùng để dựng router). */
 export function routableNavItems(phase = CURRENT_PHASE, preview = PREVIEW_MODULES): NavItem[] {
   return NAV_GROUPS.flatMap((group) => group.items).filter((item) => isAvailable(item, phase, preview));
