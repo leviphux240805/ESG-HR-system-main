@@ -16,6 +16,8 @@ Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định ch�
 | S8 | `/nhan-su/:id` phần 1: thông tin (sửa trong tab), hợp đồng & quyết định, giấy tờ (phiên bản, xem trước), lịch sử | `0458c1f` |
 | S9 | `/nhan-su/:id` phần 2: lương & phụ cấp, bảo hiểm & thuế, trình độ, phân công lớp (chờ GĐ5), điều chuyển, nghỉ việc | `9ed701f` |
 | S10 | `/nhan-su/giay-to-het-han`, chuông thông báo trên header | `95bc028` |
+| S11 | Backend thư viện văn bản (V4: thư mục, văn bản, phiên bản, xác nhận đã đọc; nhắc 1 lần/ngày) | `a7315ca` |
+| S12 | `/tai-lieu` (cây thư mục, ban hành, tỷ lệ đã đọc) và `/tai-lieu/:id` (xem trước, phiên bản, "Tôi đã đọc", nhắc) | `c1f9053` |
 
 Kiểm tra sau S10: frontend 57 test Vitest, 25 test Playwright (gồm luồng "xong" phần nhân sự: quét CCCD → hợp
 đồng → điều chuyển → lịch sử), lint 0 lỗi, build xanh; backend không đổi từ S5 (78 test xanh).
@@ -30,7 +32,15 @@ Thử tay phần nhân sự (tài khoản trong README, mật khẩu `Matkhau@12
    Điều chuyển, có nút Cho nghỉ việc.
 5. Thẻ "Giấy tờ hết hạn" ở /nhan-su → Nguyễn Thị Lan (hợp đồng còn 20 ngày) → bấm mở tab hợp đồng.
 
-Việc tiếp theo: S11 (backend thư viện văn bản) → S12 → S13 → S14 → S15.
+Kiểm tra sau S12: backend 84 test, frontend 61 test Vitest, 27 test Playwright (gồm luồng "xong" phần tài liệu:
+ban hành cần xác nhận → giáo viên bấm "Tôi đã đọc" → tỷ lệ tăng), lint 0 lỗi, build xanh.
+
+Thử tay phần tài liệu: `0900000004` (hiệu trưởng A) → Tài liệu → Ban hành văn bản, bật "Yêu cầu xác nhận đã đọc"
+→ trang chi tiết hiện 0/N. `0900000005` (giáo viên A) → chuông có thông báo → mở văn bản → "Tôi đã đọc". Hiệu trưởng
+tải lại: 1/N, tab "Đã đọc" có giáo viên; "Nhắc người chưa đọc" (email xem ở Mailpit http://localhost:8025).
+Lưu ý: backend đang chạy bằng mã cũ cần khởi động lại để chạy migration V4.
+
+Việc tiếp theo: S13 (/cua-toi/ho-so, /cua-toi/van-ban, duyệt đề xuất) → S14 (/tai-khoan) → S15 (dọn legacy, nghiệm thu).
 
 ## Giai đoạn 1 – Nền tảng (xong, chờ nghiệm thu)
 
