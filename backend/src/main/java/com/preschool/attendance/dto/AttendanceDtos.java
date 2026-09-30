@@ -79,6 +79,17 @@ public final class AttendanceDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) int discrepancyCount) {
 	}
 
+	/** Bảng công tháng của chính người đang đăng nhập. */
+	public record MySheet(
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, example = "2026-09") String month,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID staffId,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String fullName,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<DayInfo> days,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) Map<String, Cell> cells,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) Totals totals,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean locked) {
+	}
+
 	// ---- sửa một ô
 
 	public record CellDetail(

@@ -11,6 +11,7 @@ import com.preschool.attendance.dto.AttendanceDtos.DiscrepancyItem;
 import com.preschool.attendance.dto.AttendanceDtos.ImportRequest;
 import com.preschool.attendance.dto.AttendanceDtos.ImportResult;
 import com.preschool.attendance.dto.AttendanceDtos.MonthSheet;
+import com.preschool.attendance.dto.AttendanceDtos.MySheet;
 import com.preschool.attendance.dto.AttendanceDtos.ResolveRequest;
 import com.preschool.attendance.dto.AttendanceDtos.UnlockRequest;
 import com.preschool.attendance.dto.AttendanceDtos.UpdateCellRequest;
@@ -43,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Bảng công tháng của cơ sở đang chọn: xem, sửa ô, import máy chấm công, xử lý sai lệch. */
 @RestController
-@RequestMapping("/api/v1/attendance")
+@RequestMapping("/api/v1")
 @Tag(name = "Chấm công")
 public class AttendanceController {
 
@@ -60,20 +61,26 @@ public class AttendanceController {
 		this.exportService = exportService;
 	}
 
-	@GetMapping("/staff")
+	@GetMapping("/me/attendance")
+	@Operation(summary = "Bảng công tháng của tôi")
+	public MySheet mySheet(@Parameter(example = "2026-09") @RequestParam String month) {
+		return service.mySheet(month);
+	}
+
+	@GetMapping("/attendance/staff")
 	@Operation(summary = "Bảng công tháng (nhân viên × ngày, tổng, trạng thái khóa)")
 	public MonthSheet sheet(@Parameter(example = "2026-09") @RequestParam String month) {
 		return service.sheet(month);
 	}
 
-	@GetMapping("/staff/{staffId}/{date}")
+	@GetMapping("/attendance/staff/{staffId}/{date}")
 	@Operation(summary = "Chi tiết một ô: mã, giờ máy, lý do sai lệch, gợi ý")
 	public CellDetail cell(@PathVariable UUID staffId,
 			@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 		return service.cell(staffId, date);
 	}
 
-	@PutMapping("/staff/{staffId}/{date}")
+	@PutMapping("/attendance/staff/{staffId}/{date}")
 	@Operation(summary = "Sửa mã công/ghi chú của một ngày (tháng chưa khóa)")
 	public CellDetail updateCell(@PathVariable UUID staffId,
 			@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -81,38 +88,38 @@ public class AttendanceController {
 		return service.updateCell(staffId, date, request);
 	}
 
-	@PostMapping("/imports")
+	@PostMapping("/attendance/imports")
 	@Operation(summary = "Import dữ liệu máy chấm công (đã đọc từ Excel ở trình duyệt) và đối soát cả tháng")
 	public ImportResult importPunches(@Valid @RequestBody ImportRequest request) {
 		return service.importPunches(request);
 	}
 
-	@GetMapping("/discrepancies")
+	@GetMapping("/attendance/discrepancies")
 	@Operation(summary = "Các ngày sai lệch giữa máy chấm công và bảng công")
 	public List<DiscrepancyItem> discrepancies(@Parameter(example = "2026-09") @RequestParam String month) {
 		return service.discrepancies(month);
 	}
 
-	@PostMapping("/discrepancies/resolve")
+	@PostMapping("/attendance/discrepancies/resolve")
 	@Operation(summary = "Xác nhận mã cho nhiều ngày sai lệch một lần")
 	public Map<String, Integer> resolve(@Valid @RequestBody ResolveRequest request) {
 		return Map.of("resolved", service.resolve(request));
 	}
 
-	@PostMapping("/months/{month}/lock")
+	@PostMapping("/attendance/months/{month}/lock")
 	@Operation(summary = "Khóa công tháng (chốt tổng tháng; sau đó chỉ xem)")
 	public MonthSheet lock(@Parameter(example = "2026-09") @PathVariable String month) {
 		return lockService.lock(month);
 	}
 
-	@PostMapping("/months/{month}/unlock")
+	@PostMapping("/attendance/months/{month}/unlock")
 	@Operation(summary = "Mở khóa công tháng (văn phòng điều hành, bắt buộc lý do)")
 	public MonthSheet unlock(@Parameter(example = "2026-09") @PathVariable String month,
 			@Valid @RequestBody UnlockRequest request) {
 		return lockService.unlock(month, request.reason());
 	}
 
-	@GetMapping("/months/{month}/export")
+	@GetMapping("/attendance/months/{month}/export")
 	@Operation(summary = "Xuất Excel bảng công tháng")
 	@ApiResponse(responseCode = "200", content = @Content(
 			mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

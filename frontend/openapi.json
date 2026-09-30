@@ -114,7 +114,7 @@
         "tags" : [ "Tài khoản" ]
       },
       "post" : {
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "parameters" : [ {
           "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
           "in" : "header",
@@ -1079,7 +1079,7 @@
     },
     "/api/v1/document-types" : {
       "get" : {
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "scope",
@@ -1413,6 +1413,343 @@
         "tags" : [ "Chấm công" ]
       }
     },
+    "/api/v1/leave-requests" : {
+      "get" : {
+        "operationId" : "list_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "APPROVED", "REJECTED", "CANCELLED" ]
+          }
+        }, {
+          "description" : "Zero-based page index (0..N)",
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "description" : "The size of the page to be returned",
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseLeaveRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Đơn nghỉ theo cơ sở đang chọn; status=PENDING chỉ gồm đơn người xem được duyệt",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/leave-requests/approve" : {
+      "post" : {
+        "operationId" : "approveMany",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkApproveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BulkApproveResult"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Duyệt nhiều đơn một lần (đơn lỗi được liệt kê, đơn khác vẫn duyệt)",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/leave-requests/calendar" : {
+      "get" : {
+        "operationId" : "calendar",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CalendarEntry"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Lịch nghỉ tháng của cơ sở (đơn đã duyệt)",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/leave-requests/{id}/approve" : {
+      "post" : {
+        "operationId" : "approve_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReviewRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LeaveRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Duyệt: ghi mã vào bảng công, trừ phép năm, báo người xin",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/leave-requests/{id}/file-url" : {
+      "get" : {
+        "operationId" : "fileUrl_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DownloadUrlResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Link xem tệp đính kèm của đơn",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/leave-requests/{id}/reject" : {
+      "post" : {
+        "operationId" : "reject_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RejectRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LeaveRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Từ chối (cần lý do)",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
     "/api/v1/library/documents" : {
       "get" : {
         "description" : "Sắp xếp: issuedDate, title, createdAt, docNumber (mặc định ngày ban hành mới nhất).",
@@ -1509,7 +1846,7 @@
         "tags" : [ "Tài liệu" ]
       },
       "post" : {
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "parameters" : [ {
           "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
           "in" : "header",
@@ -2177,6 +2514,44 @@
         "tags" : [ "Xác thực" ]
       }
     },
+    "/api/v1/me/attendance" : {
+      "get" : {
+        "operationId" : "mySheet",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MySheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Bảng công tháng của tôi",
+        "tags" : [ "Chấm công" ]
+      }
+    },
     "/api/v1/me/change-requests" : {
       "get" : {
         "operationId" : "myRequests",
@@ -2246,6 +2621,151 @@
         "tags" : [ "Của tôi" ]
       }
     },
+    "/api/v1/me/leave-balance" : {
+      "get" : {
+        "operationId" : "balance",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "year",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LeaveBalanceDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Phép năm của tôi",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/me/leave-requests" : {
+      "get" : {
+        "operationId" : "mine",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LeaveRequestDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Đơn nghỉ của tôi (mới nhất trước)",
+        "tags" : [ "Nghỉ phép" ]
+      },
+      "post" : {
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateLeaveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LeaveRequestDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xin nghỉ (chặn trùng ngày, tháng đã khóa công, không đủ phép năm)",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
+    "/api/v1/me/leave-requests/{id}/cancel" : {
+      "post" : {
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LeaveRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Hủy đơn chưa duyệt",
+        "tags" : [ "Nghỉ phép" ]
+      }
+    },
     "/api/v1/me/library/documents" : {
       "get" : {
         "operationId" : "documents_2",
@@ -2309,7 +2829,7 @@
     },
     "/api/v1/notifications" : {
       "get" : {
-        "operationId" : "mine",
+        "operationId" : "mine_1",
         "parameters" : [ {
           "description" : "Zero-based page index (0..N)",
           "in" : "query",
@@ -4796,6 +5316,83 @@
           }
         }
       },
+      "BulkApproveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "ids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "maxItems" : 200,
+            "minItems" : 1
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "ids" ]
+      },
+      "BulkApproveResult" : {
+        "type" : "object",
+        "properties" : {
+          "approved" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "failed" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BulkFailure"
+            }
+          }
+        },
+        "required" : [ "approved", "failed" ]
+      },
+      "BulkFailure" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "message" ]
+      },
+      "CalendarEntry" : {
+        "type" : "object",
+        "properties" : {
+          "attendanceCode" : {
+            "type" : "string"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffName" : {
+            "type" : "string"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "attendanceCode", "fromDate", "requestId", "staffId", "staffName", "toDate" ]
+      },
       "Cell" : {
         "type" : "object",
         "properties" : {
@@ -5347,6 +5944,36 @@
           }
         },
         "required" : [ "fromDate", "name" ]
+      },
+      "CreateLeaveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fileId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "halfDay" : {
+            "type" : "boolean"
+          },
+          "leaveCode" : {
+            "type" : "string",
+            "pattern" : "^(P|K|O|CO|TS|T|NB)$"
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "fromDate", "leaveCode", "reason", "toDate" ]
       },
       "CreateStaffRequest" : {
         "type" : "object",
@@ -5962,6 +6589,107 @@
         },
         "required" : [ "machineCode", "workDate" ]
       },
+      "LeaveBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "annualDays" : {
+            "type" : "number"
+          },
+          "pendingDays" : {
+            "type" : "number",
+            "description" : "Đơn phép năm đang chờ duyệt"
+          },
+          "remaining" : {
+            "type" : "number",
+            "description" : "Còn lại (chưa trừ đơn chờ)"
+          },
+          "usedDays" : {
+            "type" : "number"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "annualDays", "pendingDays", "remaining", "usedDays", "year" ]
+      },
+      "LeaveRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "attendanceCode" : {
+            "type" : "string",
+            "description" : "Mã ghi vào bảng công (1/2P khi nửa ngày)"
+          },
+          "canCancel" : {
+            "type" : "boolean"
+          },
+          "canReview" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "days" : {
+            "type" : "number",
+            "description" : "Số ngày làm việc trong khoảng"
+          },
+          "file" : {
+            "$ref" : "#/components/schemas/FileRef"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "halfDay" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "leaveCode" : {
+            "type" : "string",
+            "description" : "P, K, O, CO, TS, T, NB"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "reviewNote" : {
+            "type" : "string"
+          },
+          "reviewedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reviewerName" : {
+            "type" : "string"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "APPROVED", "REJECTED", "CANCELLED" ]
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "attendanceCode", "canCancel", "canReview", "createdAt", "days", "fromDate", "halfDay", "id", "leaveCode", "reason", "schoolId", "staffCode", "staffId", "staffName", "status", "toDate" ]
+      },
       "LinkedAccount" : {
         "type" : "object",
         "properties" : {
@@ -6116,6 +6844,41 @@
           }
         },
         "required" : [ "required" ]
+      },
+      "MySheet" : {
+        "type" : "object",
+        "properties" : {
+          "cells" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/Cell"
+            }
+          },
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DayInfo"
+            }
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "locked" : {
+            "type" : "boolean"
+          },
+          "month" : {
+            "type" : "string",
+            "example" : "2026-09"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "totals" : {
+            "$ref" : "#/components/schemas/Totals"
+          }
+        },
+        "required" : [ "cells", "days", "fullName", "locked", "month", "staffId", "totals" ]
       },
       "NewAccount" : {
         "type" : "object",
@@ -6273,6 +7036,34 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/ExpiringItem"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ]
+      },
+      "PageResponseLeaveRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LeaveRequestDto"
             }
           },
           "page" : {

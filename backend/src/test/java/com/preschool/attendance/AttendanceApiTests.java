@@ -219,6 +219,15 @@ class AttendanceApiTests extends ApiTestSupport {
 		as(teacher, get("/api/v1/attendance/staff/" + staffByCode.get("102").getId() + "/2026-09-03"), schoolA.getId())
 			.andExpect(status().isForbidden());
 		putCell(teacher, schoolA.getId(), teacherStaff.getId(), "2026-09-03", "X").andExpect(status().isForbidden());
+		// Nhưng xem được bảng công của chính mình
+		putCell(principalA, schoolA.getId(), teacherStaff.getId(), "2026-09-03", "X").andExpect(status().isOk());
+		putCell(principalA, schoolA.getId(), staffByCode.get("102").getId(), "2026-09-03", "K").andExpect(status().isOk());
+		as(teacher, get("/api/v1/me/attendance?month=" + MONTH)).andExpect(status().isOk())
+			.andExpect(jsonPath("$.staffId").value(teacherStaff.getId().toString()))
+			.andExpect(jsonPath("$.cells['2026-09-03'].code").value("X"))
+			.andExpect(jsonPath("$.totals.totalWork").value(1.0))
+			.andExpect(jsonPath("$.days.length()").value(30));
+		as(principalB, get("/api/v1/me/attendance?month=" + MONTH)).andExpect(status().isNotFound());
 
 		// Hiệu trưởng B: bảng công của B không có nhân viên A; sửa ô nhân viên A → 404; chọn cơ sở A → bị chặn
 		as(principalB, get("/api/v1/attendance/staff?month=" + MONTH), schoolB.getId()).andExpect(status().isOk())

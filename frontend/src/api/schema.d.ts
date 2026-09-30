@@ -18,7 +18,7 @@ export interface paths {
         get: operations["list_1"];
         put?: never;
         /** Tạo tài khoản và gửi email mời đặt mật khẩu */
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -352,7 +352,7 @@ export interface paths {
             cookie?: never;
         };
         /** Danh mục loại giấy tờ (dùng chung toàn chuỗi) */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -452,6 +452,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/leave-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đơn nghỉ theo cơ sở đang chọn; status=PENDING chỉ gồm đơn người xem được duyệt */
+        get: operations["list_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leave-requests/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duyệt nhiều đơn một lần (đơn lỗi được liệt kê, đơn khác vẫn duyệt) */
+        post: operations["approveMany"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leave-requests/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch nghỉ tháng của cơ sở (đơn đã duyệt) */
+        get: operations["calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leave-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duyệt: ghi mã vào bảng công, trừ phép năm, báo người xin */
+        post: operations["approve_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leave-requests/{id}/file-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Link xem tệp đính kèm của đơn */
+        get: operations["fileUrl_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leave-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Từ chối (cần lý do) */
+        post: operations["reject_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/library/documents": {
         parameters: {
             query?: never;
@@ -466,7 +568,7 @@ export interface paths {
         get: operations["documents_1"];
         put?: never;
         /** Ban hành văn bản (phiên bản 1) */
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -628,6 +730,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bảng công tháng của tôi */
+        get: operations["mySheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/change-requests": {
         parameters: {
             query?: never;
@@ -640,6 +759,58 @@ export interface paths {
         put?: never;
         /** Gửi đề xuất cập nhật SĐT/địa chỉ hoặc tài khoản ngân hàng (chờ duyệt) */
         post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/leave-balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Phép năm của tôi */
+        get: operations["balance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/leave-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Đơn nghỉ của tôi (mới nhất trước) */
+        get: operations["mine"];
+        put?: never;
+        /** Xin nghỉ (chặn trùng ngày, tháng đã khóa công, không đủ phép năm) */
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/leave-requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hủy đơn chưa duyệt */
+        post: operations["cancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -688,7 +859,7 @@ export interface paths {
             cookie?: never;
         };
         /** Thông báo của tôi (mới nhất trước) */
-        get: operations["mine"];
+        get: operations["mine_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1248,6 +1419,32 @@ export interface components {
             bankAccountNo?: string;
             bankName?: string;
         };
+        BulkApproveRequest: {
+            ids: string[];
+            note?: string;
+        };
+        BulkApproveResult: {
+            /** Format: int32 */
+            approved: number;
+            failed: components["schemas"]["BulkFailure"][];
+        };
+        BulkFailure: {
+            /** Format: uuid */
+            id: string;
+            message: string;
+        };
+        CalendarEntry: {
+            attendanceCode: string;
+            /** Format: date */
+            fromDate: string;
+            /** Format: uuid */
+            requestId: string;
+            /** Format: uuid */
+            staffId: string;
+            staffName: string;
+            /** Format: date */
+            toDate: string;
+        };
         Cell: {
             /** @description Mã công; rỗng = chưa chấm */
             code?: string;
@@ -1474,6 +1671,17 @@ export interface components {
              * @description Bỏ trống = một ngày
              */
             toDate?: string;
+        };
+        CreateLeaveRequest: {
+            /** Format: uuid */
+            fileId?: string;
+            /** Format: date */
+            fromDate: string;
+            halfDay?: boolean;
+            leaveCode: string;
+            reason: string;
+            /** Format: date */
+            toDate: string;
         };
         CreateStaffRequest: {
             /** @description Bỏ trống nếu không tạo tài khoản đăng nhập */
@@ -1743,6 +1951,49 @@ export interface components {
             /** Format: date */
             workDate: string;
         };
+        LeaveBalanceDto: {
+            annualDays: number;
+            /** @description Đơn phép năm đang chờ duyệt */
+            pendingDays: number;
+            /** @description Còn lại (chưa trừ đơn chờ) */
+            remaining: number;
+            usedDays: number;
+            /** Format: int32 */
+            year: number;
+        };
+        LeaveRequestDto: {
+            /** @description Mã ghi vào bảng công (1/2P khi nửa ngày) */
+            attendanceCode: string;
+            canCancel: boolean;
+            canReview: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description Số ngày làm việc trong khoảng */
+            days: number;
+            file?: components["schemas"]["FileRef"];
+            /** Format: date */
+            fromDate: string;
+            halfDay: boolean;
+            /** Format: uuid */
+            id: string;
+            /** @description P, K, O, CO, TS, T, NB */
+            leaveCode: string;
+            reason: string;
+            reviewNote?: string;
+            /** Format: date-time */
+            reviewedAt?: string;
+            reviewerName?: string;
+            /** Format: uuid */
+            schoolId: string;
+            staffCode: string;
+            /** Format: uuid */
+            staffId: string;
+            staffName: string;
+            /** @enum {string} */
+            status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+            /** Format: date */
+            toDate: string;
+        };
         LinkedAccount: {
             active: boolean;
             email: string;
@@ -1806,6 +2057,19 @@ export interface components {
             /** @description Người xem thuộc diện phải xác nhận văn bản này */
             required: boolean;
         };
+        MySheet: {
+            cells: {
+                [key: string]: components["schemas"]["Cell"];
+            };
+            days: components["schemas"]["DayInfo"][];
+            fullName: string;
+            locked: boolean;
+            /** @example 2026-09 */
+            month: string;
+            /** Format: uuid */
+            staffId: string;
+            totals: components["schemas"]["Totals"];
+        };
         NewAccount: {
             /** @description Vai trò kèm cơ sở; bỏ trống schoolId = toàn chuỗi */
             roles: components["schemas"]["RoleAssignment"][];
@@ -1865,6 +2129,17 @@ export interface components {
         };
         PageResponseExpiringItem: {
             items: components["schemas"]["ExpiringItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PageResponseLeaveRequestDto: {
+            items: components["schemas"]["LeaveRequestDto"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -2401,7 +2676,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: {
@@ -3123,7 +3398,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 scope?: "STAFF" | "CHILD" | "LIBRARY";
@@ -3364,6 +3639,227 @@ export interface operations {
             };
         };
     };
+    list_3: {
+        parameters: {
+            query?: {
+                status?: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseLeaveRequestDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    approveMany: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BulkApproveResult"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    calendar: {
+        parameters: {
+            query: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CalendarEntry"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    approve_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeaveRequestDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    fileUrl_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DownloadUrlResponse"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reject_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeaveRequestDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     documents_1: {
         parameters: {
             query?: {
@@ -3408,7 +3904,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: {
@@ -3895,6 +4391,38 @@ export interface operations {
             };
         };
     };
+    mySheet: {
+        parameters: {
+            query: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MySheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     myRequests: {
         parameters: {
             query?: never;
@@ -3944,6 +4472,130 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ChangeRequestDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    balance: {
+        parameters: {
+            query?: {
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeaveBalanceDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeaveRequestDto"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLeaveRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeaveRequestDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeaveRequestDto"];
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
@@ -4015,7 +4667,7 @@ export interface operations {
             };
         };
     };
-    mine: {
+    mine_1: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */

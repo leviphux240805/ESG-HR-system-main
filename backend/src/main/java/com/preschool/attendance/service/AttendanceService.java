@@ -27,6 +27,7 @@ import com.preschool.attendance.dto.AttendanceDtos.ImportResult;
 import com.preschool.attendance.dto.AttendanceDtos.ImportRow;
 import com.preschool.attendance.dto.AttendanceDtos.LockInfo;
 import com.preschool.attendance.dto.AttendanceDtos.MonthSheet;
+import com.preschool.attendance.dto.AttendanceDtos.MySheet;
 import com.preschool.attendance.dto.AttendanceDtos.ResolveItem;
 import com.preschool.attendance.dto.AttendanceDtos.ResolveRequest;
 import com.preschool.attendance.dto.AttendanceDtos.StaffRow;
@@ -53,6 +54,8 @@ import com.preschool.common.audit.AuditService;
 import com.preschool.common.error.ApiException;
 import com.preschool.common.file.FileService;
 import com.preschool.security.SchoolScope;
+import com.preschool.staff.entity.Staff;
+import com.preschool.staff.repository.StaffRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,12 +85,14 @@ public class AttendanceService {
 
 	private final UserRepository users;
 
+	private final StaffRepository staffRepo;
+
 	private final AuditService audit;
 
 	public AttendanceService(AttendanceRoster roster, StaffAttendanceDayRepository days,
 			AttendancePunchRepository punches, AttendanceImportBatchRepository batches,
 			AttendanceMonthLockRepository locks, AttendanceConfigService configService, AttendanceAccess access,
-			FileService fileService, UserRepository users, AuditService audit) {
+			FileService fileService, UserRepository users, StaffRepository staffRepo, AuditService audit) {
 		this.roster = roster;
 		this.days = days;
 		this.punches = punches;
@@ -97,6 +102,7 @@ public class AttendanceService {
 		this.access = access;
 		this.fileService = fileService;
 		this.users = users;
+		this.staffRepo = staffRepo;
 		this.audit = audit;
 	}
 
@@ -213,6 +219,43 @@ public class AttendanceService {
 			.orElse(null);
 		return new MonthSheet(month.toString(), schoolId, lock, access.canManage(schoolId), access.isChainAdmin(),
 				dayInfos, staffRows, discrepancies);
+	}
+
+	/** Bảng công tháng của chính mình (nhân viên chỉ xem được bảng công của mình). */
+	@Transactional(readOnly = true)
+	public MySheet mySheet(String monthValue) {
+		YearMonth month = parseMonth(monthValue);
+		UUID staffId = SchoolScope.require().access().staffId();
+		if (staffId == null) {
+			throw ApiException.notFound("Tài khoản của bạn chưa được gắn với hồ sơ nhân viên.");
+		}
+		Staff staff = staffRepo.findById(staffId)
+			.orElseThrow(() -> ApiException.notFound("Không tìm thấy hồ sơ nhân viên."));
+		LocalDate first = month.atDay(1);
+		LocalDate last = month.atEndOfMonth();
+		AttendanceConfig config = configService.effective(staff.getSchoolId(), first);
+		Map<LocalDate, String> holidays = configService.holidayNames(staff.getSchoolId(), first, last);
+		List<DayInfo> dayInfos = new ArrayList<>();
+		for (LocalDate d = first; !d.isAfter(last); d = d.plusDays(1)) {
+			dayInfos.add(new DayInfo(d, d.getDayOfWeek().getValue(), holidays.get(d),
+					config.getWorkingWeekdays().contains(d.getDayOfWeek()),
+					config.getHalfDayWeekdays().contains(d.getDayOfWeek())));
+		}
+		Map<String, Cell> cells = new LinkedHashMap<>();
+		Map<LocalDate, String> codes = new HashMap<>();
+		int late = 0;
+		for (StaffAttendanceDay row : days.findByStaffIdAndWorkDateBetween(staffId, first, last)) {
+			cells.put(row.getWorkDate().toString(), new Cell(row.getStatusCode(), row.getSource().name(),
+					row.isDiscrepancy(), row.getLateMinutes(), row.isCountedLate(), row.getNote()));
+			if (row.getStatusCode() != null) {
+				codes.put(row.getWorkDate(), row.getStatusCode());
+			}
+			late += row.isCountedLate() ? 1 : 0;
+		}
+		MonthTotals t = MonthTotals.compute(month, codes, holidays.keySet(), config.getWorkingWeekdays(), late);
+		return new MySheet(month.toString(), staffId, staff.getFullName(), dayInfos, cells,
+				new Totals(t.totalWork(), t.paidLeave(), t.unpaidLeave(), t.holidayLeave(), t.lateCount()),
+				isLocked(staff.getSchoolId(), month));
 	}
 
 	// ------------------------------------------------------------ một ô
