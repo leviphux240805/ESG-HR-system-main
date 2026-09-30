@@ -82,6 +82,13 @@ public class LibraryReaderQuery {
 		return count != null && count > 0;
 	}
 
+	/** Văn bản yêu cầu xác nhận mà nhân viên thuộc diện cần đọc: chưa đọc trước, rồi mới ban hành trước. */
+	public List<UUID> documentsToAcknowledge(UUID staffId, int limit) {
+		String sql = "SELECT d.id " + READERS + " AND d.require_ack AND s.id = :staffId"
+				+ " ORDER BY (ack.acknowledged_at IS NOT NULL), d.issued_date DESC NULLS LAST, d.created_at DESC LIMIT :limit";
+		return jdbc.queryForList(sql, new MapSqlParameterSource("staffId", staffId).addValue("limit", limit), UUID.class);
+	}
+
 	private static Reader map(ResultSet rs, int row) throws SQLException {
 		java.sql.Timestamp at = rs.getTimestamp("acknowledged_at");
 		return new Reader(rs.getObject("staff_id", UUID.class), rs.getObject("user_id", UUID.class),

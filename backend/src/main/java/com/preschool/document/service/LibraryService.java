@@ -198,6 +198,19 @@ public class LibraryService {
 				(int) Math.ceil(total / (double) pageable.getPageSize()));
 	}
 
+	/** "Văn bản cần đọc" của tôi: văn bản yêu cầu xác nhận mà tôi thuộc diện đọc (chưa đọc trước). */
+	@Transactional(readOnly = true)
+	public List<DocumentItem> mine() {
+		UUID staffId = SchoolScope.require().access().staffId();
+		if (staffId == null) {
+			return List.of();
+		}
+		List<UUID> ids = readerQuery.documentsToAcknowledge(staffId, 200);
+		Map<UUID, LibraryDocument> byId = documents.findAllById(ids).stream()
+			.collect(Collectors.toMap(LibraryDocument::getId, Function.identity()));
+		return toItems(ids.stream().map(byId::get).filter(Objects::nonNull).toList());
+	}
+
 	@Transactional(readOnly = true)
 	public DocumentDetail get(UUID id) {
 		LibraryDocument document = findViewable(id);

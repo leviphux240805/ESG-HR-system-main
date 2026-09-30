@@ -148,6 +148,23 @@ class LibraryApiTests extends ApiTestSupport {
 	}
 
 	@Test
+	void myDocumentsListsPendingFirstAndOnlyOwnScope() throws Exception {
+		String read = publish(principalA, schoolA.getId(), "Đã đọc rồi", "[]", true);
+		as(teacherA, post(doc(read) + "/ack"), schoolA.getId()).andExpect(status().isOk());
+		String pending = publish(principalA, schoolA.getId(), "Cần đọc", "[\"TEACHER\"]", true);
+		String nurseOnly = publish(principalA, schoolA.getId(), "Chỉ y tế", "[\"NURSE\"]", true);
+		publish(principalA, schoolA.getId(), "Không cần xác nhận", "[]", false);
+
+		as(teacherA, get("/api/v1/me/library/documents")).andExpect(status().isOk())
+			.andExpect(jsonPath("$.length()").value(2))
+			.andExpect(jsonPath("$[0].id").value(pending))
+			.andExpect(jsonPath("$[0].myAck.acknowledgedAt").doesNotExist())
+			.andExpect(jsonPath("$[1].id").value(read))
+			.andExpect(jsonPath("$[*].id", not(hasItem(nurseOnly))));
+		as(teacherB, get("/api/v1/me/library/documents")).andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
 	void remindOnlyUnreadReadersAtMostOncePerDay() throws Exception {
 		String id = publish(principalA, schoolA.getId(), "Lịch họp tháng", "[]", true);
 		as(teacherA, post(doc(id) + "/ack"), schoolA.getId()).andExpect(status().isOk());

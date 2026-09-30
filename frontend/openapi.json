@@ -176,7 +176,7 @@
     },
     "/api/v1/document-types" : {
       "get" : {
-        "operationId" : "list_1",
+        "operationId" : "list_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "scope",
@@ -1134,6 +1134,136 @@
         "tags" : [ "Xác thực" ]
       }
     },
+    "/api/v1/me/change-requests" : {
+      "get" : {
+        "operationId" : "myRequests",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ChangeRequestDto"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Đề xuất cập nhật hồ sơ của tôi (mới nhất trước)",
+        "tags" : [ "Của tôi" ]
+      },
+      "post" : {
+        "operationId" : "submit",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubmitChangeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChangeRequestDto"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Gửi đề xuất cập nhật SĐT/địa chỉ hoặc tài khoản ngân hàng (chờ duyệt)",
+        "tags" : [ "Của tôi" ]
+      }
+    },
+    "/api/v1/me/library/documents" : {
+      "get" : {
+        "operationId" : "documents_2",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DocumentItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Văn bản yêu cầu tôi xác nhận đã đọc (chưa đọc trước, tối đa 200)",
+        "tags" : [ "Của tôi" ]
+      }
+    },
+    "/api/v1/me/staff" : {
+      "get" : {
+        "operationId" : "myProfile",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Hồ sơ nhân viên gắn với tài khoản (404 nếu chưa gắn)",
+        "tags" : [ "Của tôi" ]
+      }
+    },
     "/api/v1/notifications" : {
       "get" : {
         "operationId" : "mine",
@@ -1490,6 +1620,197 @@
           }
         },
         "summary" : "Thêm nhân viên (tùy chọn tạo tài khoản đăng nhập)",
+        "tags" : [ "Nhân sự" ]
+      }
+    },
+    "/api/v1/staff/change-requests" : {
+      "get" : {
+        "operationId" : "list_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "APPROVED", "REJECTED" ]
+          }
+        }, {
+          "description" : "Zero-based page index (0..N)",
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "description" : "The size of the page to be returned",
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseChangeRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Đề xuất người xem được duyệt (theo cơ sở đang chọn); status rỗng = mọi trạng thái",
+        "tags" : [ "Nhân sự" ]
+      }
+    },
+    "/api/v1/staff/change-requests/{id}/approve" : {
+      "post" : {
+        "operationId" : "approve",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReviewRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChangeRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Duyệt: ghi thay đổi vào hồ sơ",
+        "tags" : [ "Nhân sự" ]
+      }
+    },
+    "/api/v1/staff/change-requests/{id}/reject" : {
+      "post" : {
+        "operationId" : "reject",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RejectRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChangeRequestDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Từ chối (cần lý do)",
         "tags" : [ "Nhân sự" ]
       }
     },
@@ -3408,6 +3729,65 @@
         },
         "required" : [ "name" ]
       },
+      "ChangeRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "canReview" : {
+            "type" : "boolean",
+            "description" : "Người đang xem được duyệt/từ chối đề xuất này"
+          },
+          "changes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldChange"
+            }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "CONTACT", "BANK" ]
+          },
+          "reviewNote" : {
+            "type" : "string"
+          },
+          "reviewedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reviewerName" : {
+            "type" : "string"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "APPROVED", "REJECTED" ]
+          }
+        },
+        "required" : [ "canReview", "changes", "createdAt", "id", "kind", "schoolId", "schoolName", "staffCode", "staffId", "staffName", "status" ]
+      },
       "ContractDto" : {
         "type" : "object",
         "properties" : {
@@ -3841,6 +4221,21 @@
         },
         "required" : [ "daysLeft", "expiryDate", "kind", "recordId", "schoolId", "schoolName", "staffCode", "staffId", "staffName", "tab", "title" ]
       },
+      "FieldChange" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "field" ]
+      },
       "FieldIssue" : {
         "type" : "object",
         "properties" : {
@@ -4140,6 +4535,34 @@
         },
         "required" : [ "createdAt", "id", "title", "type" ]
       },
+      "PageResponseChangeRequestDto" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeRequestDto"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ]
+      },
       "PageResponseDocumentItem" : {
         "type" : "object",
         "properties" : {
@@ -4325,6 +4748,17 @@
         },
         "required" : [ "fullName", "schoolId", "schoolName", "staffCode", "staffId" ]
       },
+      "RejectRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "note" ]
+      },
       "RemindResponse" : {
         "type" : "object",
         "properties" : {
@@ -4364,6 +4798,16 @@
           }
         },
         "required" : [ "newPassword", "token" ]
+      },
+      "ReviewRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        }
       },
       "RoleAssignment" : {
         "type" : "object",
@@ -4913,6 +5357,20 @@
           }
         },
         "required" : [ "byPosition", "expiringDocuments", "total" ]
+      },
+      "SubmitChangeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "changes" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Giá trị mới theo trường; chỉ một nhóm (liên hệ hoặc ngân hàng) mỗi đề xuất. Liên hệ: phone, permProvinceCode, permWardCode, permAddressDetail, currProvinceCode, currWardCode, currAddressDetail. Ngân hàng: bankName, bankAccountNo, bankAccountHolder. Chuỗi rỗng = xóa giá trị.",
+            "minProperties" : 1
+          }
+        },
+        "required" : [ "changes" ]
       },
       "TerminateRequest" : {
         "type" : "object",
