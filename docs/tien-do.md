@@ -14,11 +14,23 @@ Kế hoạch 15 bước (S1–S15) duyệt ngày 2026-09-29; quyết định ch�
 | S6 | `/nhan-su` danh sách | `1312ccf` |
 | S7 | `/nhan-su/moi` + quét QR CCCD | `5ff88d5` |
 | S8 | `/nhan-su/:id` phần 1: thông tin (sửa trong tab), hợp đồng & quyết định, giấy tờ (phiên bản, xem trước), lịch sử | `0458c1f` |
+| S9 | `/nhan-su/:id` phần 2: lương & phụ cấp, bảo hiểm & thuế, trình độ, phân công lớp (chờ GĐ5), điều chuyển, nghỉ việc | `9ed701f` |
+| S10 | `/nhan-su/giay-to-het-han`, chuông thông báo trên header | `95bc028` |
 
-Kiểm tra sau S8: frontend 56 test Vitest, 18 test Playwright, lint 0 lỗi, build xanh; backend không đổi từ S5
-(78 test xanh).
+Kiểm tra sau S10: frontend 57 test Vitest, 25 test Playwright (gồm luồng "xong" phần nhân sự: quét CCCD → hợp
+đồng → điều chuyển → lịch sử), lint 0 lỗi, build xanh; backend không đổi từ S5 (78 test xanh).
 
-Việc tiếp theo: S9 (tab lương, bảo hiểm & thuế, trình độ; điều chuyển, nghỉ việc) → S10 → S11–S15.
+Thử tay phần nhân sự (tài khoản trong README, mật khẩu `Matkhau@123`):
+
+1. `admin@preschool.local`, chọn Cơ sở A → Nhân sự → Thêm nhân viên → Quét CCCD (ảnh mặt trước có mã QR) → chọn
+   vị trí, ngày vào làm → Thêm. Trang chuyển tới hồ sơ; tab Giấy tờ có ảnh CCCD.
+2. Tab Hợp đồng & quyết định → Thêm hợp đồng kèm PDF → bấm tên tệp để xem trước.
+3. Nút Điều chuyển → Cơ sở B, hôm nay → header tự đổi sang Cơ sở B; tab Lịch sử có 2 giai đoạn công tác.
+4. `0900000004` (hiệu trưởng A): không mở được hồ sơ vừa chuyển; hồ sơ khác không có tab Lương, không có nút
+   Điều chuyển, có nút Cho nghỉ việc.
+5. Thẻ "Giấy tờ hết hạn" ở /nhan-su → Nguyễn Thị Lan (hợp đồng còn 20 ngày) → bấm mở tab hợp đồng.
+
+Việc tiếp theo: S11 (backend thư viện văn bản) → S12 → S13 → S14 → S15.
 
 ## Giai đoạn 1 – Nền tảng (xong, chờ nghiệm thu)
 
