@@ -6,6 +6,8 @@ import path from "path";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
+    // Bản đăng thành trang tĩnh trong thư mục con (Artifact): đường dẫn tài nguyên tương đối, VITE_BASE=./
+    base: env.VITE_BASE || "/",
     server: {
       host: "::",
       port: 8080,

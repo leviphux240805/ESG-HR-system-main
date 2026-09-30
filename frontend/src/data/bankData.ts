@@ -26,7 +26,7 @@ interface BanksResponse {
 const fetchBanks = async (): Promise<Bank[]> => {
   try {
     // Using fetch to get the JSON file from the public folder
-    const response = await fetch('/banks.json');
+    const response = await fetch(`${import.meta.env.BASE_URL}banks.json`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch banks.json: ${response.status} ${response.statusText}`);

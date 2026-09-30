@@ -31,7 +31,7 @@ export const loadAddressData = async (): Promise<Province[]> => {
   }
 
   try {
-    const response = await fetch("/addressData.json");
+    const response = await fetch(`${import.meta.env.BASE_URL}addressData.json`);
     if (!response.ok) {
       throw new Error(`Failed to fetch address data: ${response.status}`);
     }
