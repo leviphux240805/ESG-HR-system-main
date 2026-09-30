@@ -7,6 +7,17 @@
 - Không tự ý đổi quyết định thiết kế. Nếu thấy cần đổi: đề xuất, chờ đồng ý, rồi cập nhật `docs/thiet-ke.md` trước khi code.
 - Tiến độ theo giai đoạn ghi ở `docs/tien-do.md` (tạo nếu chưa có).
 
+## Quy tắc làm việc
+
+- Trả lời tối thiểu: file đã đổi + bước tiếp theo. Không giải thích nếu không được hỏi.
+- Chỉ đọc mục hoặc file được chỉ định, không đọc lại toàn bộ `docs/`.
+- Code: tái sử dụng `components/ui` và component chung (`components/common`, `hooks`, `lib`), không lặp, không
+  comment thừa, không thêm thư viện khi chưa hỏi.
+- Mỗi trang: loading/empty/error, lọc và phân trang ở server, form zod, ẩn nút theo quyền (`useCan`), dữ liệu theo
+  cơ sở đang chọn (`useCurrentSchool`), dùng được ở 360px.
+- Mỗi API: test tích hợp chặn chéo cơ sở và test theo vai trò.
+- Xong mỗi bước: `./mvnw test`, `npm run lint`, `npm run build` phải qua; commit.
+
 ## Cấu trúc repo
 
 ```
