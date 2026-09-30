@@ -465,15 +465,17 @@ export function generateDb(todayDate = new Date()): DemoDB {
   // ---- Thực đơn ----
   for (const school of db.schools) {
     for (let ws = weekStart(startDate); ws <= addDays(weekStart(today), 7); ws = addDays(ws, 7)) {
+      // Không lặp món trong một tuần
+      const [breakfast, mains, soups, veggies, snacks] = [BREAKFAST, MAINS, SOUPS, VEGGIES, SNACKS].map((pool) => faker.helpers.arrayElements(pool, 5));
       db.menus.push({
         id: faker.string.uuid(),
         schoolId: school.id,
         weekStart: ws,
         days: [0, 1, 2, 3, 4].map((k) => ({
           date: addDays(ws, k),
-          breakfast: faker.helpers.arrayElement(BREAKFAST),
-          lunch: [faker.helpers.arrayElement(MAINS), faker.helpers.arrayElement(SOUPS), faker.helpers.arrayElement(VEGGIES), "Cơm trắng"],
-          snack: faker.helpers.arrayElement(SNACKS),
+          breakfast: breakfast[k],
+          lunch: [mains[k], soups[k], veggies[k], "Cơm trắng"],
+          snack: snacks[k],
         })),
       });
     }

@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { matchPath } from "react-router-dom";
-import { Baby, CalendarCheck, CalendarOff, ClipboardCheck, Clock, Inbox, ListTodo, type LucideIcon, Receipt, School, Sun, Users } from "lucide-react";
+import { Baby, CalendarCheck, CalendarOff, ClipboardCheck, Clock, Inbox, ListTodo, type LucideIcon, Receipt, Ruler, UtensilsCrossed, School, Sun, Users } from "lucide-react";
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. Bản demo: mở mọi mục đã có trang. */
@@ -41,6 +41,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/diem-danh", label: "Điểm danh", icon: ClipboardCheck, phase: 1, permission: view("classes"), page: () => import("@/pages/children/RollCallPage") },
       { path: "/lop-hoc", label: "Lớp học", icon: School, phase: 1, permission: view("classes"), page: () => import("@/pages/classes/ClassesPage") },
       { path: "/tre", label: "Hồ sơ trẻ", icon: Baby, phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildrenPage") },
+      { path: "/thuc-don", label: "Thực đơn tuần", icon: UtensilsCrossed, phase: 1, permission: view("health"), page: () => import("@/pages/health/MenuPage") },
+      { path: "/can-do", label: "Cân đo", icon: Ruler, phase: 1, permission: view("health"), page: () => import("@/pages/health/GrowthPage") },
     ],
   },
   {
@@ -79,6 +81,7 @@ export interface SubRoute {
 
 export const SUB_ROUTES: SubRoute[] = [
   { path: "/tre/:id", label: "Chi tiết", parent: "/tre", phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildProfilePage") },
+  { path: "/can-do/:childId", label: "Biểu đồ tăng trưởng", parent: "/can-do", phase: 1, permission: view("health"), page: () => import("@/pages/health/GrowthChartPage") },
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 1, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
   { path: "/nhan-su/de-xuat", label: "Đề xuất cập nhật hồ sơ", parent: "/nhan-su", phase: 1, permission: view("staff"), page: () => import("@/pages/staff/ChangeRequestsPage") },
   { path: "/nhan-su/giay-to-het-han", label: "Giấy tờ sắp hết hạn", parent: "/nhan-su", phase: 1, permission: view("staff"), page: () => import("@/pages/staff/StaffExpiringPage") },

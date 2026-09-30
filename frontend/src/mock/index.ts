@@ -12,6 +12,7 @@ import "./handlers/finance";
 import "./handlers/staff";
 import "./handlers/attendance";
 import "./handlers/tasks";
+import "./handlers/health";
 
 configureDb(() => generateDb(new Date()), () => iso(new Date()));
 
