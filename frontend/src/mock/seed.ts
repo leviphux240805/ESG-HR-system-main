@@ -249,7 +249,8 @@ export function generateDb(todayDate = new Date()): DemoDB {
           address: `${addr.detail}, ${addr.ward.split("|")[1]}, Hà Nội`,
           allergies: faker.datatype.boolean({ probability: 0.08 }) ? faker.helpers.arrayElement(ALLERGIES) : undefined,
           healthNote: faker.datatype.boolean({ probability: 0.05 }) ? "Hay viêm họng, cần giữ ấm" : undefined,
-          enrolledOn: `${faker.number.int({ min: bornYear + 2, max: schoolYear })}-08-${faker.helpers.arrayElement(["05", "15", "25"])}`,
+          // Phần lớn trẻ học từ năm trước; khoảng 15% mới nhập học tháng 8 năm nay
+          enrolledOn: `${faker.datatype.boolean({ probability: 0.15 }) ? schoolYear : faker.number.int({ min: Math.min(bornYear + 1, schoolYear - 1), max: schoolYear - 1 })}-08-${faker.helpers.arrayElement(["05", "15", "25"])}`,
         };
         if (child.enrolledOn > `${schoolYear}-08-25`) child.enrolledOn = `${schoolYear}-08-25`;
         db.children.push(child);
