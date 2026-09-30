@@ -29,6 +29,11 @@ export async function apiAs(request: APIRequestContext, identifier: string, scho
   const headers: Record<string, string> = { Authorization: `Bearer ${accessToken}` };
   if (schoolId) headers["X-School-Id"] = schoolId;
   return {
+    async get<T = Record<string, unknown>>(path: string): Promise<T> {
+      const res = await request.get(path, { headers });
+      expect(res.ok(), await res.text()).toBeTruthy();
+      return res.json();
+    },
     async post<T = Record<string, unknown>>(path: string, data: unknown): Promise<T> {
       const res = await request.post(path, { data, headers });
       expect(res.ok(), await res.text()).toBeTruthy();
@@ -44,4 +49,36 @@ export async function createStaffA(request: APIRequestContext, fullName: string)
     schoolId: SCHOOL_A,
     fields: { fullName, phone: "07" + randomDigits(8), position: "TEACHER", startDate: "2026-09-01" },
   });
+}
+
+/** Từ chối mọi đề xuất cập nhật đang chờ (dọn dữ liệu của lần chạy trước bị dừng giữa chừng). */
+export async function clearPendingChangeRequests(request: APIRequestContext) {
+  const admin = await apiAs(request, "admin@preschool.local");
+  const page = await admin.get<{ items: { id: string }[] }>("/api/v1/staff/change-requests?status=PENDING&size=100");
+  for (const item of page.items) {
+    await admin.post(`/api/v1/staff/change-requests/${item.id}/reject`, { note: "Dọn dữ liệu e2e" });
+  }
+}
+
+export const pdf = (name: string) => ({ name, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%e2e\n") });
+
+/** Hiệu trưởng Cơ sở A ban hành văn bản; trả đường dẫn trang chi tiết. */
+export async function publishDocument(page: Page, title: string, options: { requireAck?: boolean; roles?: string[]; folder?: string } = {}) {
+  await page.goto("/tai-lieu");
+  await page.getByRole("button", { name: "Ban hành văn bản" }).click();
+  const sheet = page.getByRole("dialog");
+  if (options.folder) {
+    await sheet.getByLabel("Thư mục").click();
+    await page.getByRole("option", { name: options.folder }).click();
+  }
+  await sheet.getByLabel("Tiêu đề").fill(title);
+  await sheet.getByLabel("Số hiệu").fill(`${randomDigits(3)}/2026/QĐ`);
+  await sheet.getByLabel("Ngày ban hành").fill("2026-09-30");
+  for (const role of options.roles ?? []) await sheet.getByRole("checkbox", { name: role }).click();
+  if (options.requireAck) await sheet.getByRole("switch", { name: "Yêu cầu xác nhận đã đọc" }).click();
+  await sheet.getByTestId("file-input").setInputFiles(pdf("van-ban.pdf"));
+  await expect(sheet.getByText("van-ban.pdf")).toBeVisible();
+  await sheet.getByRole("button", { name: "Ban hành" }).click();
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  return new URL(page.url()).pathname;
 }

@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   Baby,
   BarChart3,
+  BookOpenCheck,
   CalendarCheck,
   CalendarOff,
   ClipboardCheck,
@@ -99,7 +100,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Của tôi",
     items: [
-      { path: "/cua-toi/ho-so", label: "Hồ sơ của tôi", icon: UserRound, phase: 2 },
+      { path: "/cua-toi/ho-so", label: "Hồ sơ của tôi", icon: UserRound, phase: 2, page: () => import("@/pages/me/MyProfilePage") },
+      { path: "/cua-toi/van-ban", label: "Văn bản cần đọc", icon: BookOpenCheck, phase: 2, page: () => import("@/pages/me/MyDocumentsPage") },
       { path: "/cua-toi/viec", label: "Việc của tôi", icon: ListChecks, phase: 3 },
       { path: "/cua-toi/cham-cong", label: "Chấm công của tôi", icon: Clock, phase: 3 },
       { path: "/cua-toi/phieu-luong", label: "Phiếu lương của tôi", icon: FileText, phase: 4 },
@@ -123,6 +125,7 @@ export interface SubRoute {
 
 export const SUB_ROUTES: SubRoute[] = [
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 2, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
+  { path: "/nhan-su/de-xuat", label: "Đề xuất cập nhật hồ sơ", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/ChangeRequestsPage") },
   { path: "/nhan-su/giay-to-het-han", label: "Giấy tờ sắp hết hạn", parent: "/nhan-su", phase: 2, permission: view("staff"), page: () => import("@/pages/staff/StaffExpiringPage") },
   { path: "/tai-lieu/:id", label: "Văn bản", parent: "/tai-lieu", phase: 2, permission: view("documents"), page: () => import("@/pages/library/LibraryDocumentPage") },
   // Đặt sau các đường dẫn cố định: tìm breadcrumb duyệt theo thứ tự

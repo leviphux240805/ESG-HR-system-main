@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
-import { AlertTriangle, Plus, Users } from "lucide-react";
+import { AlertTriangle, ClipboardCheck, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCan } from "@/hooks/useCan";
 import { Card, CardContent } from "@/components/ui/card";
@@ -174,6 +174,11 @@ export default function StaffListPage() {
                 </Link>
               </Button>
             )}
+            <Button asChild variant="outline" className="min-h-11">
+              <Link to="/nhan-su/de-xuat">
+                <ClipboardCheck className="w-4 h-4 mr-2" /> Đề xuất cập nhật
+              </Link>
+            </Button>
             {selected.length > 0 && (
               <ExportButton
                 label={`Xuất ${selected.length} đã chọn`}

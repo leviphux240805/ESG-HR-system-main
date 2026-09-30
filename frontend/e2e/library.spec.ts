@@ -1,28 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
-import { login, randomDigits } from "./helpers";
-
-const pdf = (name: string) => ({ name, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%e2e\n") });
-
-/** Hiệu trưởng Cơ sở A ban hành văn bản; trả đường dẫn trang chi tiết. */
-async function publish(page: Page, title: string, options: { requireAck?: boolean; roles?: string[]; folder?: string } = {}) {
-  await page.goto("/tai-lieu");
-  await page.getByRole("button", { name: "Ban hành văn bản" }).click();
-  const sheet = page.getByRole("dialog");
-  if (options.folder) {
-    await sheet.getByLabel("Thư mục").click();
-    await page.getByRole("option", { name: options.folder }).click();
-  }
-  await sheet.getByLabel("Tiêu đề").fill(title);
-  await sheet.getByLabel("Số hiệu").fill(`${randomDigits(3)}/2026/QĐ`);
-  await sheet.getByLabel("Ngày ban hành").fill("2026-09-30");
-  for (const role of options.roles ?? []) await sheet.getByRole("checkbox", { name: role }).click();
-  if (options.requireAck) await sheet.getByRole("switch", { name: "Yêu cầu xác nhận đã đọc" }).click();
-  await sheet.getByTestId("file-input").setInputFiles(pdf("van-ban.pdf"));
-  await expect(sheet.getByText("van-ban.pdf")).toBeVisible();
-  await sheet.getByRole("button", { name: "Ban hành" }).click();
-  await expect(page.getByRole("heading", { name: title })).toBeVisible();
-  return new URL(page.url()).pathname;
-}
+import { expect, test } from "@playwright/test";
+import { login, publishDocument as publish, randomDigits } from "./helpers";
 
 // Định nghĩa "xong" phần tài liệu: ban hành cần xác nhận → giáo viên xác nhận → người ban hành thấy tỷ lệ tăng
 test("ban hành văn bản cần xác nhận, giáo viên bấm Tôi đã đọc, tỷ lệ đã đọc tăng", async ({ page, browser }) => {
