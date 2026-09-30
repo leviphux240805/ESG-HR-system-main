@@ -86,4 +86,16 @@ describe("API giả", () => {
     setSessionRole("teacher");
     expect((await call("GET", "/staff", undefined, a.id)).status).toBe(403);
   });
+
+  it("chấm công: tháng đã khóa không sửa được; sửa ô tháng đang mở cập nhật tổng", async () => {
+    setSessionRole("principal");
+    const school = db().schools[0].id;
+    const staffId = db().staff.find((s) => s.schoolId === school)!.id;
+    expect((await call("PUT", `/attendance/staff/${staffId}/2026-08-03`, { code: "K" }, school)).status).toBe(409);
+    const before = await call<{ staff: { staffId: string; totals: { unpaidLeave: number } }[] }>("GET", "/attendance/staff?month=2026-09", undefined, school);
+    const unpaid = before.data.staff.find((r) => r.staffId === staffId)!.totals.unpaidLeave;
+    expect((await call("PUT", `/attendance/staff/${staffId}/2026-09-03`, { code: "K" }, school)).status).toBe(200);
+    const after = await call<{ staff: { staffId: string; totals: { unpaidLeave: number } }[] }>("GET", "/attendance/staff?month=2026-09", undefined, school);
+    expect(after.data.staff.find((r) => r.staffId === staffId)!.totals.unpaidLeave).toBe(unpaid + 1);
+  });
 });

@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/common/States";
 import { ExportButton } from "@/components/common/ExportButton";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { api } from "@/api/client";
+import { api, DEMO } from "@/api/client";
 import { ApiError } from "@/api/errors";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDateTime } from "@/lib/format";
@@ -58,11 +58,14 @@ export default function AttendancePage() {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-            <Button asChild variant="outline" className="min-h-11">
-              <Link to="/cham-cong/cau-hinh">
-                <Settings2 className="w-4 h-4 mr-2" /> Cấu hình
-              </Link>
-            </Button>
+            {/* Bản demo chưa có trang cấu hình, import máy chấm công */}
+            {!DEMO && (
+              <Button asChild variant="outline" className="min-h-11">
+                <Link to="/cham-cong/cau-hinh">
+                  <Settings2 className="w-4 h-4 mr-2" /> Cấu hình
+                </Link>
+              </Button>
+            )}
           </>
         }
       />
@@ -107,7 +110,7 @@ export default function AttendancePage() {
             )}
             <span className="text-muted-foreground">{data.staff.length} nhân viên</span>
             <div className="ml-auto flex flex-wrap gap-2">
-              {data.canManage && !locked && (
+              {data.canManage && !locked && !DEMO && (
                 <Button className="min-h-11" onClick={() => setDialog("import")}>
                   <FileUp className="w-4 h-4 mr-2" /> Import máy chấm công
                 </Button>

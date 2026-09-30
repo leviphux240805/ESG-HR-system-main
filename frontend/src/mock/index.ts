@@ -10,6 +10,7 @@ import "./handlers/school";
 import "./handlers/leave";
 import "./handlers/finance";
 import "./handlers/staff";
+import "./handlers/attendance";
 
 configureDb(() => generateDb(new Date()), () => iso(new Date()));
 
