@@ -31,3 +31,5 @@ dist-ssr
 dist-artifact
 
 .vercel
+.env*
+!.env.example
