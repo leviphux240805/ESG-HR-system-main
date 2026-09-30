@@ -76,4 +76,14 @@ describe("API giả", () => {
     const { data: again } = await call<{ classes: { id: string; shortStaffed: boolean }[] }>("GET", "/today", undefined, school);
     expect(again.classes.find((c) => c.id === short.id)!.shortStaffed).toBe(false);
   });
+
+  it("nhân sự: BGH chỉ thấy cơ sở đang chọn, giáo viên không xem danh sách", async () => {
+    setSessionRole("principal");
+    const [a, b] = db().schools;
+    const { data } = await call<{ items: { schoolId: string }[]; totalElements: number }>("GET", "/staff?size=100", undefined, b.id);
+    expect(data.totalElements).toBe(15);
+    expect(data.items.every((s) => s.schoolId === b.id)).toBe(true);
+    setSessionRole("teacher");
+    expect((await call("GET", "/staff", undefined, a.id)).status).toBe(403);
+  });
 });

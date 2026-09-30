@@ -25,6 +25,7 @@ import {
 import { options, POSITION_LABELS, type Position, STAFF_STATUS } from "@/features/staff/labels";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
 import { daysUntil, WARNING_DAYS } from "@/features/staff/dates";
+import { useClasses } from "@/features/school/api";
 
 function SummaryCards({ schoolId }: { schoolId?: string }) {
   const { data, isLoading } = useStaffSummary(schoolId);
@@ -91,6 +92,12 @@ export default function StaffListPage() {
   const query = useStaffList(params);
   const [selected, setSelected] = useState<StaffListItem[]>([]);
   const canCreate = useCan("manage", "staff");
+  const classes = useClasses();
+  const classesOf = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const c of classes.data ?? []) for (const t of c.teachers) map.set(t.id, [...(map.get(t.id) ?? []), c.name]);
+    return map;
+  }, [classes.data]);
 
   const filters = useMemo<FilterDef[]>(() => {
     const list: FilterDef[] = [];
@@ -131,13 +138,12 @@ export default function StaffListPage() {
         ),
       },
       { id: "position", accessorKey: "position", header: "Vị trí", enableSorting: true, cell: ({ row }) => POSITION_LABELS[row.original.position] },
-      { id: "schoolName", accessorKey: "schoolName", header: "Cơ sở" },
+      ...(isAllSchools ? [{ id: "schoolName", accessorKey: "schoolName", header: "Cơ sở" } as ColumnDef<StaffListItem>] : []),
       {
         id: "classes",
         header: "Lớp phụ trách",
         meta: { label: "Lớp phụ trách" },
-        // Phân công lớp có từ giai đoạn 5 (bảng classes)
-        cell: () => <span className="text-muted-foreground">—</span>,
+        cell: ({ row }) => classesOf.get(row.original.id)?.join(", ") ?? <span className="text-muted-foreground">—</span>,
       },
       { id: "startDate", accessorKey: "startDate", header: "Ngày vào làm", enableSorting: true, cell: ({ row }) => formatDate(row.original.startDate) },
       { id: "status", accessorKey: "status", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.status} labels={STAFF_STATUS} /> },
@@ -157,7 +163,7 @@ export default function StaffListPage() {
         },
       },
     ],
-    [],
+    [classesOf, isAllSchools],
   );
 
   return (

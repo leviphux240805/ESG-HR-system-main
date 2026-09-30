@@ -181,7 +181,7 @@ export function generateDb(todayDate = new Date()): DemoDB {
           position,
           schoolId: school.id,
           schoolName: school.name,
-          startDate: `${startYear}-${faker.helpers.arrayElement(["03", "06", "08", "09"])}-01`,
+          startDate: iso(faker.date.between({ from: `${startYear}-01-05`, to: `${startYear}-11-30` })),
           status: "ACTIVE",
           bank: { bankName: faker.helpers.arrayElement(["Vietcombank", "BIDV", "Techcombank", "VietinBank", "MB Bank"]), bankAccountNo: faker.string.numeric(12), bankAccountHolder: fullName.toUpperCase() },
         };
@@ -189,8 +189,13 @@ export function generateDb(todayDate = new Date()): DemoDB {
         db.staff.push(rec);
 
         const contractStart = rec.startDate;
-        const indefinite = Number(contractStart.slice(0, 4)) < schoolYear - 3;
-        const end = indefinite ? undefined : `${schoolYear + faker.number.int({ min: 0, max: 2 })}-${faker.helpers.arrayElement(["10", "12", "05", "08"])}-31`;
+        const indefinite = Number(contractStart.slice(0, 4)) < schoolYear - 4;
+        // Vài hợp đồng sắp hết hạn để thấy cảnh báo "Giấy tờ sắp hết hạn"
+        const end = indefinite
+          ? undefined
+          : staffNo % 4 === 0
+            ? addDays(today, faker.number.int({ min: 8, max: 28 }))
+            : `${schoolYear + faker.number.int({ min: 1, max: 2 })}-${faker.helpers.arrayElement(["10", "12", "05", "08"])}-31`;
         db.contracts[rec.id] = [
           { id: faker.string.uuid(), contractNo: `${faker.string.numeric(3)}/HĐLĐ-MNV`, contractType: indefinite ? "INDEFINITE" : "DEFINITE", startDate: contractStart, endDate: end, signedOn: contractStart },
         ];

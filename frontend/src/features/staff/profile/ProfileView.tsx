@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { errorMessage } from "@/api/errors";
 import { uploadFile, validateFile } from "@/api/files";
 import { formatDate } from "@/lib/format";
+import { useClasses } from "@/features/school/api";
 import { type StaffDetail, updateStaff } from "../api";
 import { POSITION_LABELS, STAFF_STATUS } from "../labels";
 import { StaffAvatar } from "../StaffAvatar";
@@ -23,13 +24,27 @@ import { SalaryTab } from "./SalaryTab";
 import { InsuranceTab } from "./InsuranceTab";
 import { QualificationsTab } from "./QualificationsTab";
 
-function ClassesTab() {
+function ClassesTab({ staff }: { staff: StaffDetail }) {
+  const classes = useClasses();
+  const mine = (classes.data ?? []).filter((c) => c.teachers.some((t) => t.id === staff.id));
+  if (mine.length === 0) {
+    return <EmptyState icon={Users} title="Chưa có phân công lớp" description="Giáo viên được phân công phụ trách lớp sẽ hiện ở đây." />;
+  }
   return (
-    <EmptyState
-      icon={Users}
-      title="Chưa có phân công lớp"
-      description="Phân công giáo viên, bảo mẫu phụ trách lớp có từ giai đoạn Lớp học & trẻ."
-    />
+    <div className="grid gap-3 sm:grid-cols-2">
+      {mine.map((c) => (
+        <Card key={c.id}>
+          <CardContent className="p-4">
+            <Link to={`/tre?classId=${c.id}`} className="font-medium hover:underline">
+              {c.name}
+            </Link>
+            <p className="text-sm text-muted-foreground">
+              Sĩ số {c.size} · Cùng lớp: {c.teachers.filter((t) => t.id !== staff.id).map((t) => t.fullName).join(", ") || "—"}
+            </p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }
 
