@@ -446,6 +446,323 @@
         "tags" : [ "Chấm công" ]
       }
     },
+    "/api/v1/attendance/discrepancies" : {
+      "get" : {
+        "operationId" : "discrepancies",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DiscrepancyItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Các ngày sai lệch giữa máy chấm công và bảng công",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/discrepancies/resolve" : {
+      "post" : {
+        "operationId" : "resolve",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResolveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "integer",
+                    "format" : "int32"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xác nhận mã cho nhiều ngày sai lệch một lần",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/imports" : {
+      "post" : {
+        "operationId" : "importPunches",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Import dữ liệu máy chấm công (đã đọc từ Excel ở trình duyệt) và đối soát cả tháng",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/staff" : {
+      "get" : {
+        "operationId" : "sheet",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonthSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Bảng công tháng (nhân viên × ngày, tổng, trạng thái khóa)",
+        "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/attendance/staff/{staffId}/{date}" : {
+      "get" : {
+        "operationId" : "cell",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "staffId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "date",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Chi tiết một ô: mã, giờ máy, lý do sai lệch, gợi ý",
+        "tags" : [ "Chấm công" ]
+      },
+      "put" : {
+        "operationId" : "updateCell",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "staffId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "date",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateCellRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Sửa mã công/ghi chú của một ngày (tháng chưa khóa)",
+        "tags" : [ "Chấm công" ]
+      }
+    },
     "/api/v1/auth/forgot-password" : {
       "post" : {
         "description" : "Luôn trả 204 dù tài khoản có tồn tại hay không, để không lộ thông tin tài khoản.",
@@ -4327,6 +4644,91 @@
           }
         }
       },
+      "Cell" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Mã công; rỗng = chưa chấm"
+          },
+          "countedLate" : {
+            "type" : "boolean"
+          },
+          "discrepancy" : {
+            "type" : "boolean"
+          },
+          "lateMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "source" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "countedLate", "discrepancy", "lateMinutes", "source" ]
+      },
+      "CellDetail" : {
+        "type" : "object",
+        "properties" : {
+          "checkIn" : {
+            "type" : "string"
+          },
+          "checkOut" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "countedLate" : {
+            "type" : "boolean"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "discrepancy" : {
+            "type" : "boolean"
+          },
+          "discrepancyReason" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "lateMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "leaveTime" : {
+            "type" : "string",
+            "example" : "09:30"
+          },
+          "locked" : {
+            "type" : "boolean"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "returnTime" : {
+            "type" : "string",
+            "example" : "10:15"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "suggestedStatus" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "countedLate", "date", "discrepancy", "fullName", "lateMinutes", "locked", "staffId" ]
+      },
       "CertificateDto" : {
         "type" : "object",
         "properties" : {
@@ -4812,6 +5214,31 @@
         },
         "required" : [ "fields" ]
       },
+      "DayInfo" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "halfDay" : {
+            "type" : "boolean"
+          },
+          "holiday" : {
+            "type" : "string",
+            "description" : "Tên ngày lễ (rỗng = không phải lễ)"
+          },
+          "weekday" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "1 = thứ Hai … 7 = Chủ nhật"
+          },
+          "working" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "date", "halfDay", "weekday", "working" ]
+      },
       "DependentDto" : {
         "type" : "object",
         "properties" : {
@@ -4876,6 +5303,41 @@
           }
         },
         "required" : [ "fromMonth", "fullName", "relationship" ]
+      },
+      "DiscrepancyItem" : {
+        "type" : "object",
+        "properties" : {
+          "checkIn" : {
+            "type" : "string"
+          },
+          "checkOut" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "suggestedStatus" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "date", "fullName", "reason", "staffCode", "staffId" ]
       },
       "DocumentDetail" : {
         "type" : "object",
@@ -5258,6 +5720,96 @@
         },
         "required" : [ "canManage", "date", "id", "name" ]
       },
+      "ImportRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fileId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "File Excel gốc đã upload (lưu làm chứng từ)"
+          },
+          "month" : {
+            "type" : "string",
+            "pattern" : "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRow"
+            },
+            "maxItems" : 20000,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "month", "rows" ]
+      },
+      "ImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "autoFilled" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Số ngày tự điền X/K từ máy"
+          },
+          "batchId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "discrepancyCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "matchedRows" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rowCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "staffCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unmatched" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UnmatchedCode"
+            }
+          }
+        },
+        "required" : [ "autoFilled", "batchId", "discrepancyCount", "matchedRows", "rowCount", "staffCount", "unmatched" ]
+      },
+      "ImportRow" : {
+        "type" : "object",
+        "properties" : {
+          "checkIn" : {
+            "type" : "string",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
+          "checkOut" : {
+            "type" : "string",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
+          "machineCode" : {
+            "type" : "string",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "workDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "machineCode", "workDate" ]
+      },
       "LinkedAccount" : {
         "type" : "object",
         "properties" : {
@@ -5280,6 +5832,19 @@
           }
         },
         "required" : [ "active", "email", "roles", "userId" ]
+      },
+      "LockInfo" : {
+        "type" : "object",
+        "properties" : {
+          "lockedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lockedByName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "lockedAt" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -5343,6 +5908,47 @@
           }
         },
         "required" : [ "chainWide", "email", "fullName", "id", "roles", "schools" ]
+      },
+      "MonthSheet" : {
+        "type" : "object",
+        "properties" : {
+          "canManage" : {
+            "type" : "boolean"
+          },
+          "canUnlock" : {
+            "type" : "boolean",
+            "description" : "Mở khóa: văn phòng điều hành"
+          },
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DayInfo"
+            }
+          },
+          "discrepancyCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lock" : {
+            "$ref" : "#/components/schemas/LockInfo",
+            "description" : "Rỗng = chưa khóa"
+          },
+          "month" : {
+            "type" : "string",
+            "example" : "2026-09"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staff" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffRow"
+            }
+          }
+        },
+        "required" : [ "canManage", "canUnlock", "days", "discrepancyCount", "month", "schoolId", "staff" ]
       },
       "MyAck" : {
         "type" : "object",
@@ -5715,6 +6321,42 @@
           }
         },
         "required" : [ "newPassword", "token" ]
+      },
+      "ResolveItem" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "code", "date", "staffId" ]
+      },
+      "ResolveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResolveItem"
+            },
+            "maxItems" : 5000,
+            "minItems" : 1
+          },
+          "month" : {
+            "type" : "string",
+            "pattern" : "^\\d{4}-(0[1-9]|1[0-2])$"
+          }
+        },
+        "required" : [ "items", "month" ]
       },
       "ReviewRequest" : {
         "type" : "object",
@@ -6260,6 +6902,47 @@
         },
         "required" : [ "canEdit", "canManageSalary", "canTerminate", "canTransfer", "canViewSalary", "isSelf" ]
       },
+      "StaffRow" : {
+        "type" : "object",
+        "properties" : {
+          "activeFrom" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ngày đầu thuộc cơ sở trong tháng"
+          },
+          "activeTo" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "cells" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/Cell"
+            },
+            "description" : "Ô theo ngày yyyy-MM-dd"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "machineCode" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "totals" : {
+            "$ref" : "#/components/schemas/Totals"
+          }
+        },
+        "required" : [ "activeFrom", "activeTo", "cells", "fullName", "position", "staffCode", "staffId", "totals" ]
+      },
       "StaffSummary" : {
         "type" : "object",
         "properties" : {
@@ -6333,6 +7016,28 @@
           }
         },
         "required" : [ "accessToken", "expiresIn", "tokenType" ]
+      },
+      "Totals" : {
+        "type" : "object",
+        "properties" : {
+          "holidayLeave" : {
+            "type" : "number"
+          },
+          "lateCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "paidLeave" : {
+            "type" : "number"
+          },
+          "totalWork" : {
+            "type" : "number"
+          },
+          "unpaidLeave" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "holidayLeave", "lateCount", "paidLeave", "totalWork", "unpaidLeave" ]
       },
       "TrainingDto" : {
         "type" : "object",
@@ -6420,6 +7125,46 @@
           }
         },
         "required" : [ "effectiveDate", "schoolId" ]
+      },
+      "UnmatchedCode" : {
+        "type" : "object",
+        "properties" : {
+          "machineCode" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "machineCode", "rows" ]
+      },
+      "UpdateCellRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Mã công; rỗng = xóa mã"
+          },
+          "leaveTime" : {
+            "type" : "string",
+            "description" : "Giờ ra giữa ca",
+            "example" : "09:30"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "returnTime" : {
+            "type" : "string",
+            "description" : "Giờ vào lại",
+            "example" : "10:15"
+          }
+        }
       },
       "UpdateDocumentRequest" : {
         "type" : "object",

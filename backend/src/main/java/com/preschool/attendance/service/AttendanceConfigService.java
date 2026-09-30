@@ -158,14 +158,15 @@ public class AttendanceConfigService {
 
 	// ------------------------------------------------------------ ngày lễ
 
-	/** Ngày lễ áp dụng cho cơ sở trong khoảng (toàn chuỗi + riêng cơ sở). */
+	/** Ngày lễ áp dụng cho cơ sở trong khoảng (toàn chuỗi + riêng cơ sở), kèm tên. */
 	@Transactional(readOnly = true)
-	public Set<LocalDate> holidayDates(UUID schoolId, LocalDate from, LocalDate to) {
-		return holidays.findByHolidayDateBetweenOrderByHolidayDate(from, to)
+	public Map<LocalDate, String> holidayNames(UUID schoolId, LocalDate from, LocalDate to) {
+		Map<LocalDate, String> result = new java.util.TreeMap<>();
+		holidays.findByHolidayDateBetweenOrderByHolidayDate(from, to)
 			.stream()
 			.filter(h -> h.getSchoolId() == null || h.getSchoolId().equals(schoolId))
-			.map(Holiday::getHolidayDate)
-			.collect(Collectors.toSet());
+			.forEach(h -> result.merge(h.getHolidayDate(), h.getName(), (a, b) -> a));
+		return result;
 	}
 
 	@Transactional(readOnly = true)

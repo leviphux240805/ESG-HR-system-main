@@ -113,6 +113,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendance/discrepancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Các ngày sai lệch giữa máy chấm công và bảng công */
+        get: operations["discrepancies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/discrepancies/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Xác nhận mã cho nhiều ngày sai lệch một lần */
+        post: operations["resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import dữ liệu máy chấm công (đã đọc từ Excel ở trình duyệt) và đối soát cả tháng */
+        post: operations["importPunches"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bảng công tháng (nhân viên × ngày, tổng, trạng thái khóa) */
+        get: operations["sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/staff/{staffId}/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chi tiết một ô: mã, giờ máy, lý do sai lệch, gợi ý */
+        get: operations["cell"];
+        /** Sửa mã công/ghi chú của một ngày (tháng chưa khóa) */
+        put: operations["updateCell"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -1111,6 +1197,39 @@ export interface components {
             bankAccountNo?: string;
             bankName?: string;
         };
+        Cell: {
+            /** @description Mã công; rỗng = chưa chấm */
+            code?: string;
+            countedLate: boolean;
+            discrepancy: boolean;
+            /** Format: int32 */
+            lateMinutes: number;
+            note?: string;
+            source: string;
+        };
+        CellDetail: {
+            checkIn?: string;
+            checkOut?: string;
+            code?: string;
+            countedLate: boolean;
+            /** Format: date */
+            date: string;
+            discrepancy: boolean;
+            discrepancyReason?: string;
+            fullName: string;
+            /** Format: int32 */
+            lateMinutes: number;
+            /** @example 09:30 */
+            leaveTime?: string;
+            locked: boolean;
+            note?: string;
+            /** @example 10:15 */
+            returnTime?: string;
+            source?: string;
+            /** Format: uuid */
+            staffId: string;
+            suggestedStatus?: string;
+        };
         CertificateDto: {
             /** Format: date */
             expiryDate?: string;
@@ -1315,6 +1434,19 @@ export interface components {
              */
             schoolId?: string;
         };
+        DayInfo: {
+            /** Format: date */
+            date: string;
+            halfDay: boolean;
+            /** @description Tên ngày lễ (rỗng = không phải lễ) */
+            holiday?: string;
+            /**
+             * Format: int32
+             * @description 1 = thứ Hai … 7 = Chủ nhật
+             */
+            weekday: number;
+            working: boolean;
+        };
         DependentDto: {
             /** Format: date */
             dob?: string;
@@ -1341,6 +1473,19 @@ export interface components {
             relationship: string;
             /** Format: date */
             toMonth?: string;
+        };
+        DiscrepancyItem: {
+            checkIn?: string;
+            checkOut?: string;
+            code?: string;
+            /** Format: date */
+            date: string;
+            fullName: string;
+            reason: string;
+            staffCode: string;
+            /** Format: uuid */
+            staffId: string;
+            suggestedStatus?: string;
         };
         DocumentDetail: {
             document: components["schemas"]["DocumentItem"];
@@ -1512,12 +1657,52 @@ export interface components {
             schoolId?: string;
             schoolName?: string;
         };
+        ImportRequest: {
+            /**
+             * Format: uuid
+             * @description File Excel gốc đã upload (lưu làm chứng từ)
+             */
+            fileId?: string;
+            month: string;
+            rows: components["schemas"]["ImportRow"][];
+        };
+        ImportResult: {
+            /**
+             * Format: int32
+             * @description Số ngày tự điền X/K từ máy
+             */
+            autoFilled: number;
+            /** Format: uuid */
+            batchId: string;
+            /** Format: int32 */
+            discrepancyCount: number;
+            /** Format: int32 */
+            matchedRows: number;
+            /** Format: int32 */
+            rowCount: number;
+            /** Format: int32 */
+            staffCount: number;
+            unmatched: components["schemas"]["UnmatchedCode"][];
+        };
+        ImportRow: {
+            checkIn?: string;
+            checkOut?: string;
+            machineCode: string;
+            name?: string;
+            /** Format: date */
+            workDate: string;
+        };
         LinkedAccount: {
             active: boolean;
             email: string;
             roles: ("OWNER" | "CHAIN_ADMIN" | "ACCOUNTANT" | "PRINCIPAL" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF")[];
             /** Format: uuid */
             userId: string;
+        };
+        LockInfo: {
+            /** Format: date-time */
+            lockedAt: string;
+            lockedByName?: string;
         };
         LoginRequest: {
             /**
@@ -1545,6 +1730,21 @@ export interface components {
              * @description Hồ sơ nhân viên gắn với tài khoản; rỗng = chưa gắn
              */
             staffId?: string;
+        };
+        MonthSheet: {
+            canManage: boolean;
+            /** @description Mở khóa: văn phòng điều hành */
+            canUnlock: boolean;
+            days: components["schemas"]["DayInfo"][];
+            /** Format: int32 */
+            discrepancyCount: number;
+            /** @description Rỗng = chưa khóa */
+            lock?: components["schemas"]["LockInfo"];
+            /** @example 2026-09 */
+            month: string;
+            /** Format: uuid */
+            schoolId: string;
+            staff: components["schemas"]["StaffRow"][];
         };
         MyAck: {
             /**
@@ -1695,6 +1895,17 @@ export interface components {
             newPassword: string;
             /** @description Token trong link email */
             token: string;
+        };
+        ResolveItem: {
+            code: string;
+            /** Format: date */
+            date: string;
+            /** Format: uuid */
+            staffId: string;
+        };
+        ResolveRequest: {
+            items: components["schemas"]["ResolveItem"][];
+            month: string;
         };
         ReviewRequest: {
             note?: string;
@@ -1906,6 +2117,26 @@ export interface components {
             canViewSalary: boolean;
             isSelf: boolean;
         };
+        StaffRow: {
+            /**
+             * Format: date
+             * @description Ngày đầu thuộc cơ sở trong tháng
+             */
+            activeFrom: string;
+            /** Format: date */
+            activeTo: string;
+            /** @description Ô theo ngày yyyy-MM-dd */
+            cells: {
+                [key: string]: components["schemas"]["Cell"];
+            };
+            fullName: string;
+            machineCode?: string;
+            position: string;
+            staffCode: string;
+            /** Format: uuid */
+            staffId: string;
+            totals: components["schemas"]["Totals"];
+        };
         StaffSummary: {
             byPosition: {
                 [key: string]: number;
@@ -1944,6 +2175,14 @@ export interface components {
             /** @example Bearer */
             tokenType: string;
         };
+        Totals: {
+            holidayLeave: number;
+            /** Format: int32 */
+            lateCount: number;
+            paidLeave: number;
+            totalWork: number;
+            unpaidLeave: number;
+        };
         TrainingDto: {
             courseName: string;
             /** Format: date */
@@ -1978,6 +2217,27 @@ export interface components {
             note?: string;
             /** Format: uuid */
             schoolId: string;
+        };
+        UnmatchedCode: {
+            machineCode: string;
+            name?: string;
+            /** Format: int32 */
+            rows: number;
+        };
+        UpdateCellRequest: {
+            /** @description Mã công; rỗng = xóa mã */
+            code?: string;
+            /**
+             * @description Giờ ra giữa ca
+             * @example 09:30
+             */
+            leaveTime?: string;
+            note?: string;
+            /**
+             * @description Giờ vào lại
+             * @example 10:15
+             */
+            returnTime?: string;
         };
         UpdateDocumentRequest: {
             docNumber?: string;
@@ -2318,6 +2578,224 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ConfigDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    discrepancies: {
+        parameters: {
+            query: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DiscrepancyItem"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    resolve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    importPunches: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sheet: {
+        parameters: {
+            query: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cell: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CellDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateCell: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                staffId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCellRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CellDetail"];
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */

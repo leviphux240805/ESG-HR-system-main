@@ -102,6 +102,18 @@ public class StaffAttendanceDay extends BaseEntity {
 		this.discrepancy = false;
 	}
 
+	/** Mã tự điền từ máy chấm công (X/K) hoặc bỏ mã tự điền cũ; không đụng cờ sai lệch. */
+	public void autoFill(String code) {
+		this.statusCode = code;
+		this.source = code == null ? Source.MANUAL : Source.MACHINE;
+		this.confirmedBy = null;
+	}
+
+	/** Không còn dữ liệu máy cho ngày này: bỏ kết quả đối soát cũ. */
+	public void clearReconciliation() {
+		applyReconciliation(0, false, false, null, null);
+	}
+
 	public void setDetails(String note, LocalTime leaveTime, LocalTime returnTime) {
 		this.note = note;
 		this.leaveTime = leaveTime;
