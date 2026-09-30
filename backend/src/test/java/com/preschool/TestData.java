@@ -24,10 +24,18 @@ public class TestData {
 
 	private final PasswordEncoder passwordEncoder;
 
-	public TestData(SchoolRepository schools, UserRepository users, PasswordEncoder passwordEncoder) {
+	private final com.preschool.staff.repository.StaffRepository staffRepo;
+
+	private final com.preschool.staff.repository.StaffSchoolAssignmentRepository assignments;
+
+	public TestData(SchoolRepository schools, UserRepository users, PasswordEncoder passwordEncoder,
+			com.preschool.staff.repository.StaffRepository staffRepo,
+			com.preschool.staff.repository.StaffSchoolAssignmentRepository assignments) {
 		this.schools = schools;
 		this.users = users;
 		this.passwordEncoder = passwordEncoder;
+		this.staffRepo = staffRepo;
+		this.assignments = assignments;
 	}
 
 	public School school() {
@@ -47,6 +55,37 @@ public class TestData {
 		User user = new User(email, phone, "Người thử " + role.name(), passwordEncoder.encode(PASSWORD));
 		user.addRole(role, school == null ? null : school.getId());
 		return users.save(user);
+	}
+
+	/** Hồ sơ nhân viên đang làm ở cơ sở (CCCD, SĐT ngẫu nhiên để không trùng giữa các test). */
+	@Transactional
+	public com.preschool.staff.entity.Staff staff(School school, com.preschool.staff.entity.StaffEnums.Position position) {
+		var staff = new com.preschool.staff.entity.Staff(school.getId(), "Nhân viên " + UUID.randomUUID().toString()
+			.substring(0, 6), position, java.time.LocalDate.of(2024, 8, 1));
+		staff.setCitizenId(randomDigits(12));
+		staff.setPhone("09" + randomDigits(8));
+		staffRepo.saveAndFlush(staff);
+		assignments.save(new com.preschool.staff.entity.StaffSchoolAssignment(staff.getId(), school.getId(),
+				staff.getStartDate(), null, null));
+		return staffRepo.findById(staff.getId()).orElseThrow();
+	}
+
+	/** Tài khoản gắn với hồ sơ nhân viên có sẵn. */
+	@Transactional
+	public User userForStaff(RoleCode role, School school, com.preschool.staff.entity.Staff staff) {
+		User user = user(role, school);
+		User managed = users.findById(user.getId()).orElseThrow();
+		managed.linkStaff(staff.getId());
+		return managed;
+	}
+
+	public static String randomDigits(int length) {
+		StringBuilder sb = new StringBuilder();
+		java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+		for (int i = 0; i < length; i++) {
+			sb.append(random.nextInt(10));
+		}
+		return sb.toString();
 	}
 
 	@Transactional

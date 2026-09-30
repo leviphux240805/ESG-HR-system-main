@@ -20,6 +20,12 @@ public class ApiException extends ErrorResponseException {
 		return code;
 	}
 
+	/** Kèm lỗi theo trường (field, message) để giao diện hiện dưới đúng ô nhập. */
+	public ApiException withFieldErrors(java.util.List<java.util.Map<String, String>> errors) {
+		getBody().setProperty(ProblemDetails.ERRORS, errors);
+		return this;
+	}
+
 	public static ApiException badRequest(String code, String detail) {
 		return new ApiException(HttpStatus.BAD_REQUEST, code, detail);
 	}

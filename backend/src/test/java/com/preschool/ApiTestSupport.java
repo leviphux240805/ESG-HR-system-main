@@ -42,6 +42,22 @@ public abstract class ApiTestSupport {
 			.andReturn();
 	}
 
+	/** Gọi API với tư cách `user` (đăng nhập thật), tùy chọn cơ sở đang chọn. */
+	protected org.springframework.test.web.servlet.ResultActions as(User user,
+			org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request) throws Exception {
+		return as(user, request, null);
+	}
+
+	protected org.springframework.test.web.servlet.ResultActions as(User user,
+			org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request, java.util.UUID schoolId)
+			throws Exception {
+		request.header(org.springframework.http.HttpHeaders.AUTHORIZATION, bearer(user));
+		if (schoolId != null) {
+			request.header(com.preschool.security.SchoolScope.HEADER, schoolId.toString());
+		}
+		return mvc.perform(request);
+	}
+
 	/** Header Authorization cho người dùng (đăng nhập thật qua API). */
 	protected String bearer(User user) throws Exception {
 		String body = login(user.getEmail(), false).getResponse().getContentAsString();

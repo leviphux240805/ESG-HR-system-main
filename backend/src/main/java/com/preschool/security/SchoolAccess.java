@@ -10,11 +10,12 @@ import com.preschool.account.entity.RoleCode;
  * Phạm vi truy cập của một người dùng, nạp từ {@code user_roles}.
  *
  * @param userId id người dùng
+ * @param staffId hồ sơ nhân viên gắn với tài khoản (rỗng nếu không gắn)
  * @param grants các vai trò kèm phạm vi ({@code schoolId} rỗng = toàn chuỗi)
  * @param chainWide có ít nhất một vai trò cấp chuỗi, nên được chọn "Tất cả cơ sở"
  * @param schoolIds các cơ sở (đang hoạt động) được phép truy cập
  */
-public record SchoolAccess(UUID userId, List<Grant> grants, boolean chainWide, Set<UUID> schoolIds) {
+public record SchoolAccess(UUID userId, UUID staffId, List<Grant> grants, boolean chainWide, Set<UUID> schoolIds) {
 
 	public record Grant(RoleCode role, UUID schoolId) {
 	}

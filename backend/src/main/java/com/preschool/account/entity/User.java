@@ -83,6 +83,10 @@ public class User extends BaseEntity {
 		return guardianId;
 	}
 
+	public void linkStaff(UUID staffId) {
+		this.staffId = staffId;
+	}
+
 	public void changePassword(String newPasswordHash) {
 		this.passwordHash = newPasswordHash;
 	}

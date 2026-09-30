@@ -347,10 +347,399 @@
         "summary" : "Thông tin người dùng hiện tại, vai trò và các cơ sở được phép",
         "tags" : [ "Xác thực" ]
       }
+    },
+    "/api/v1/staff" : {
+      "get" : {
+        "operationId" : "list",
+        "parameters" : [ {
+          "description" : "Tìm theo họ tên, mã NV, số điện thoại",
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Lọc một cơ sở (khi đang xem tất cả cơ sở)",
+          "in" : "query",
+          "name" : "schoolId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "position",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "TERMINATED" ]
+          }
+        }, {
+          "description" : "Chỉ nhân viên có hợp đồng hết hạn trong 30 ngày",
+          "in" : "query",
+          "name" : "contractExpiring",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "description" : "Zero-based page index (0..N)",
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "description" : "The size of the page to be returned",
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseStaffListItem"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Danh sách nhân sự (theo cơ sở đang chọn)",
+        "tags" : [ "Nhân sự" ]
+      },
+      "post" : {
+        "operationId" : "create",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateStaffRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Thêm nhân viên (tùy chọn tạo tài khoản đăng nhập)",
+        "tags" : [ "Nhân sự" ]
+      }
+    },
+    "/api/v1/staff/check-duplicates" : {
+      "post" : {
+        "operationId" : "checkDuplicates",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DuplicateCheckRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateCheckResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Kiểm tra trùng CCCD/SĐT/email toàn chuỗi",
+        "tags" : [ "Nhân sự" ]
+      }
+    },
+    "/api/v1/staff/summary" : {
+      "get" : {
+        "operationId" : "summary",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "schoolId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Tóm tắt nhân sự: tổng, theo vị trí, giấy tờ sắp hết hạn",
+        "tags" : [ "Nhân sự" ]
+      }
+    },
+    "/api/v1/staff/{id}" : {
+      "get" : {
+        "operationId" : "get",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Hồ sơ nhân viên (kèm quyền của người xem)",
+        "tags" : [ "Nhân sự" ]
+      },
+      "put" : {
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StaffFields"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Sửa hồ sơ (không gồm cơ sở, trạng thái, lương, ngân hàng)",
+        "tags" : [ "Nhân sự" ]
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "BankInfo" : {
+        "type" : "object",
+        "properties" : {
+          "bankAccountHolder" : {
+            "type" : "string"
+          },
+          "bankAccountNo" : {
+            "type" : "string"
+          },
+          "bankName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CreateStaffRequest" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/NewAccount",
+            "description" : "Bỏ trống nếu không tạo tài khoản đăng nhập"
+          },
+          "fields" : {
+            "$ref" : "#/components/schemas/StaffFields"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Cơ sở làm việc; bỏ trống = cơ sở đang chọn"
+          }
+        },
+        "required" : [ "fields" ]
+      },
       "DownloadUrlResponse" : {
         "type" : "object",
         "properties" : {
@@ -363,6 +752,50 @@
           }
         },
         "required" : [ "expiresAt", "url" ]
+      },
+      "DuplicateCheckRequest" : {
+        "type" : "object",
+        "properties" : {
+          "citizenId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "excludeStaffId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Bỏ qua chính hồ sơ này khi đang sửa"
+          },
+          "phone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DuplicateCheckResponse" : {
+        "type" : "object",
+        "properties" : {
+          "duplicates" : {
+            "type" : "array",
+            "description" : "Trường bị trùng kèm thông điệp (rỗng = không trùng)",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldIssue"
+            }
+          }
+        },
+        "required" : [ "duplicates" ]
+      },
+      "FieldIssue" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "field", "message" ]
       },
       "FileResponse" : {
         "type" : "object",
@@ -405,6 +838,29 @@
           }
         },
         "required" : [ "identifier" ]
+      },
+      "LinkedAccount" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "OWNER", "CHAIN_ADMIN", "ACCOUNTANT", "PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "STAFF" ]
+            }
+          },
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "active", "email", "roles", "userId" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -469,6 +925,49 @@
         },
         "required" : [ "chainWide", "email", "fullName", "id", "roles", "schools" ]
       },
+      "NewAccount" : {
+        "type" : "object",
+        "properties" : {
+          "roles" : {
+            "type" : "array",
+            "description" : "Vai trò kèm cơ sở; bỏ trống schoolId = toàn chuỗi",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleAssignment"
+            },
+            "maxItems" : 2147483647,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "roles" ]
+      },
+      "PageResponseStaffListItem" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffListItem"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "items", "page", "size", "totalElements", "totalPages" ]
+      },
       "Problem" : {
         "type" : "object",
         "description" : "Lỗi theo RFC 7807",
@@ -532,6 +1031,20 @@
         },
         "required" : [ "newPassword", "token" ]
       },
+      "RoleAssignment" : {
+        "type" : "object",
+        "properties" : {
+          "role" : {
+            "type" : "string",
+            "enum" : [ "OWNER", "CHAIN_ADMIN", "ACCOUNTANT", "PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "STAFF" ]
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "role" ]
+      },
       "RoleGrant" : {
         "type" : "object",
         "properties" : {
@@ -562,6 +1075,323 @@
           }
         },
         "required" : [ "code", "id", "name" ]
+      },
+      "StaffDetail" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/LinkedAccount",
+            "description" : "Tài khoản đăng nhập gắn với hồ sơ (nếu có)"
+          },
+          "bank" : {
+            "$ref" : "#/components/schemas/BankInfo",
+            "description" : "Rỗng nếu người xem không được xem thông tin lương/ngân hàng"
+          },
+          "citizenId" : {
+            "type" : "string"
+          },
+          "citizenIdIssuedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "currAddressDetail" : {
+            "type" : "string"
+          },
+          "currProvinceCode" : {
+            "type" : "string"
+          },
+          "currWardCode" : {
+            "type" : "string"
+          },
+          "dob" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "ethnicity" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "gender" : {
+            "type" : "string",
+            "enum" : [ "MALE", "FEMALE" ]
+          },
+          "healthInsuranceNo" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "permAddressDetail" : {
+            "type" : "string"
+          },
+          "permProvinceCode" : {
+            "type" : "string"
+          },
+          "permWardCode" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "$ref" : "#/components/schemas/StaffPermissions"
+          },
+          "personalTaxCode" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "photoFileId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "qualification" : {
+            "type" : "string",
+            "enum" : [ "HIGH_SCHOOL", "INTERMEDIATE", "COLLEGE", "BACHELOR", "MASTER", "OTHER" ]
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "socialInsuranceNo" : {
+            "type" : "string"
+          },
+          "specialization" : {
+            "type" : "string"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "TERMINATED" ]
+          },
+          "terminationReason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "fullName", "id", "permissions", "position", "schoolId", "schoolName", "staffCode", "startDate", "status" ]
+      },
+      "StaffFields" : {
+        "type" : "object",
+        "properties" : {
+          "citizenId" : {
+            "type" : "string",
+            "pattern" : "^\\d{12}$"
+          },
+          "citizenIdIssuedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "currAddressDetail" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "currProvinceCode" : {
+            "type" : "string",
+            "maxLength" : 5,
+            "minLength" : 0
+          },
+          "currWardCode" : {
+            "type" : "string",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
+          "dob" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "ethnicity" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "fullName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "gender" : {
+            "type" : "string",
+            "enum" : [ "MALE", "FEMALE" ]
+          },
+          "healthInsuranceNo" : {
+            "type" : "string",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "permAddressDetail" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "permProvinceCode" : {
+            "type" : "string",
+            "maxLength" : 5,
+            "minLength" : 0
+          },
+          "permWardCode" : {
+            "type" : "string",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
+          "personalTaxCode" : {
+            "type" : "string",
+            "maxLength" : 15,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "pattern" : "^[0-9 +().-]{9,20}$"
+          },
+          "photoFileId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "qualification" : {
+            "type" : "string",
+            "enum" : [ "HIGH_SCHOOL", "INTERMEDIATE", "COLLEGE", "BACHELOR", "MASTER", "OTHER" ]
+          },
+          "socialInsuranceNo" : {
+            "type" : "string",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "specialization" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "fullName", "position", "startDate" ]
+      },
+      "StaffListItem" : {
+        "type" : "object",
+        "properties" : {
+          "contractEndDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ngày hết hạn hợp đồng hiện hành; rỗng = không thời hạn hoặc chưa có"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "photoFileId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "TERMINATED" ]
+          }
+        },
+        "required" : [ "fullName", "id", "position", "schoolId", "schoolName", "staffCode", "startDate", "status" ]
+      },
+      "StaffPermissions" : {
+        "type" : "object",
+        "properties" : {
+          "canEdit" : {
+            "type" : "boolean"
+          },
+          "canManageSalary" : {
+            "type" : "boolean"
+          },
+          "canTerminate" : {
+            "type" : "boolean"
+          },
+          "canTransfer" : {
+            "type" : "boolean"
+          },
+          "canViewSalary" : {
+            "type" : "boolean"
+          },
+          "isSelf" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "canEdit", "canManageSalary", "canTerminate", "canTransfer", "canViewSalary", "isSelf" ]
+      },
+      "StaffSummary" : {
+        "type" : "object",
+        "properties" : {
+          "byPosition" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "expiringDocuments" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Hợp đồng, chứng chỉ, giấy tờ hết hạn trong 30 ngày"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Nhân viên đang làm"
+          }
+        },
+        "required" : [ "byPosition", "expiringDocuments", "total" ]
       },
       "TokenResponse" : {
         "type" : "object",

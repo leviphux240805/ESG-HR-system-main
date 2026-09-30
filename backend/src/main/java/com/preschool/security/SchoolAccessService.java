@@ -50,7 +50,7 @@ public class SchoolAccessService {
 		else {
 			grants.stream().map(SchoolAccess.Grant::schoolId).filter(activeIds::contains).forEach(allowed::add);
 		}
-		return new SchoolAccess(userId, grants, chainWide, Set.copyOf(allowed));
+		return new SchoolAccess(userId, user.getStaffId(), grants, chainWide, Set.copyOf(allowed));
 	}
 
 	@Transactional(readOnly = true)
