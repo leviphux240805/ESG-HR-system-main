@@ -1,10 +1,12 @@
 import { useCallback, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertTriangle, CalendarCheck, ChevronLeft, ChevronRight, Lock, Settings2 } from "lucide-react";
+import { AlertTriangle, CalendarCheck, ChevronLeft, ChevronRight, FileUp, Lock, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/common/States";
+import { ExportButton } from "@/components/common/ExportButton";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { api } from "@/api/client";
 import { ApiError } from "@/api/errors";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDateTime } from "@/lib/format";
@@ -12,6 +14,9 @@ import { useMonthSheet } from "@/features/attendance/api";
 import { AttendanceGrid } from "@/features/attendance/AttendanceGrid";
 import { AttendanceLegend } from "@/features/attendance/AttendanceLegend";
 import { CellSheet } from "@/features/attendance/CellSheet";
+import { DiscrepancyDialog } from "@/features/attendance/DiscrepancyDialog";
+import { ImportDialog } from "@/features/attendance/ImportDialog";
+import { MonthLockControls } from "@/features/attendance/MonthLockControls";
 import { currentMonth, isMonth, monthLabel, shiftMonth } from "@/features/attendance/codes";
 
 /** Bảng công tháng của cơ sở đang chọn (chuyển từ trang Attendance của ESG HR). */
@@ -23,6 +28,7 @@ export default function AttendancePage() {
   const needSchool = canChooseAll && isAllSchools;
   const sheet = useMonthSheet(month, !needSchool);
   const [target, setTarget] = useState<{ staffId: string; date: string } | null>(null);
+  const [dialog, setDialog] = useState<"import" | "review" | null>(null);
   const open = useCallback((staffId: string, date: string) => setTarget({ staffId, date }), []);
 
   const setMonth = (value: string) => {
@@ -90,6 +96,23 @@ export default function AttendancePage() {
               </span>
             )}
             <span className="text-muted-foreground">{data.staff.length} nhân viên</span>
+            <div className="ml-auto flex flex-wrap gap-2">
+              {data.canManage && !locked && (
+                <Button className="min-h-11" onClick={() => setDialog("import")}>
+                  <FileUp className="w-4 h-4 mr-2" /> Import máy chấm công
+                </Button>
+              )}
+              {data.discrepancyCount > 0 && data.canManage && !locked && (
+                <Button variant="outline" className="min-h-11" onClick={() => setDialog("review")}>
+                  <AlertTriangle className="w-4 h-4 mr-2" /> Xử lý sai lệch
+                </Button>
+              )}
+              <ExportButton
+                fileName={`bang-cong-${month}.xlsx`}
+                request={() => api.GET("/api/v1/attendance/months/{month}/export", { params: { path: { month } }, parseAs: "blob" })}
+              />
+              <MonthLockControls sheet={data} />
+            </div>
           </div>
           {data.staff.length === 0 ? (
             <EmptyState title="Chưa có nhân viên trong tháng" description="Nhân viên thuộc cơ sở trong tháng sẽ hiện ở đây." />
@@ -101,6 +124,16 @@ export default function AttendancePage() {
       ) : null}
 
       <CellSheet target={target} editable={!!data?.canManage && !locked} onClose={() => setTarget(null)} />
+      {data && (
+        <ImportDialog
+          open={dialog === "import"}
+          onOpenChange={(o) => setDialog(o ? "import" : null)}
+          month={month}
+          sheet={data}
+          onReview={() => setDialog("review")}
+        />
+      )}
+      <DiscrepancyDialog open={dialog === "review"} onOpenChange={(o) => setDialog(o ? "review" : null)} month={month} />
     </div>
   );
 }
