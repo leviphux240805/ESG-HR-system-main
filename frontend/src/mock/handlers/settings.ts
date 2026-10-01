@@ -95,6 +95,7 @@ function accountItem(ctx: Ctx, account: ReturnType<typeof db>["accounts"][number
     phone: staff?.phone,
     fullName: staff?.fullName ?? account.email,
     active: account.active,
+    mustChangePassword: account.mustChangePassword ?? false,
     roles: grants.map((g) => ({
       role: g.role as S["AccountRoleView"]["role"],
       schoolId: g.schoolId,
@@ -147,8 +148,16 @@ on("POST", "/accounts", (ctx) => {
   requirePrincipal(ctx);
   const body = ctx.body as S["CreateAccountRequest"];
   if (!body.staffId) throw new MockError(400, "Bản demo chỉ tạo tài khoản gắn với hồ sơ nhân viên.");
+  if (!body.email && !body.phone) throw new MockError(400, "Cần email hoặc số điện thoại để đăng nhập.");
   if (db().accounts.some((a) => a.staffId === body.staffId)) throw new MockError(409, "Hồ sơ nhân viên đã có tài khoản đăng nhập.");
-  const account = { id: newId(), staffId: body.staffId, email: body.email, active: true, roles: validateRoles(ctx, body.roles) };
+  const account = {
+    id: newId(),
+    staffId: body.staffId,
+    email: body.email,
+    active: true,
+    mustChangePassword: true,
+    roles: validateRoles(ctx, body.roles),
+  };
   db().accounts.push(account);
   return accountItem(ctx, account);
 });
@@ -174,6 +183,8 @@ function setLocked(ctx: Ctx, active: boolean) {
 
 on("POST", "/accounts/{id}/lock", (ctx) => setLocked(ctx, false));
 on("POST", "/accounts/{id}/unlock", (ctx) => setLocked(ctx, true));
-on("POST", "/accounts/{id}/send-reset", (ctx) => {
-  managedAccount(ctx, ctx.params.id);
+on("POST", "/accounts/{id}/password", (ctx) => {
+  const account = managedAccount(ctx, ctx.params.id);
+  if (grantsOf(account.staffId).grants.some((g) => g.role === "PRINCIPAL")) throw new MockError(403, "Mật khẩu tài khoản hiệu trưởng do bên vận hành quản lý.");
+  account.mustChangePassword = true;
 });

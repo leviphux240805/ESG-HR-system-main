@@ -8,6 +8,7 @@ on("GET", "/me", ({ user }) => {
     fullName: user.staff.fullName,
     email: user.staff.email,
     phone: user.staff.phone,
+    mustChangePassword: false,
     staffId: user.staff.id,
     organization: { id: "demo-org", name: "Mầm Non Việt" },
     roles: record.grants.map((g) => ({ ...g, functionGroups: g.functionGroups ?? [] })),

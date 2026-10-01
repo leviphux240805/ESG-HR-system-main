@@ -7,7 +7,7 @@ spring:
     # Cho phép dùng chung file .env ở gốc repo với docker compose
     import: optional:file:../.env[.properties]
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:preschool}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:preschool}?sslmode=${DB_SSLMODE:prefer}
     username: ${DB_USERNAME:preschool}
     password: ${DB_PASSWORD:preschool}
   jpa:
@@ -41,7 +41,8 @@ spring:
       mail.smtp.timeout: 10000
 
 server:
-  port: ${SERVER_PORT:8081}
+  # Render đặt cổng qua PORT
+  port: ${SERVER_PORT:${PORT:8081}}
 
 app:
   auth:

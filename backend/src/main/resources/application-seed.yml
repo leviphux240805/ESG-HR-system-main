@@ -1,0 +1,4 @@
+# Server demo (Render + Neon): như môi trường thật nhưng nạp seed dev để đăng nhập thử bằng tài khoản mẫu
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev

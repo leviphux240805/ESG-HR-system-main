@@ -38,10 +38,12 @@ public final class AccountDtos {
 
 	public record AccountItem(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email,
+			String email,
 			String phone,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String fullName,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean active,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+					description = "Đang dùng mật khẩu do người khác đặt, chưa tự đổi") boolean mustChangePassword,
 			Instant lastLoginAt,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AccountRoleView> roles,
 			UUID staffId, String staffCode, String staffName,
@@ -51,11 +53,16 @@ public final class AccountDtos {
 	}
 
 	public record CreateAccountRequest(
-			@NotBlank @Email @Size(max = 255) String email,
+			@Schema(description = "Email hoặc số điện thoại, cần ít nhất một") @Email @Size(max = 255) String email,
 			@Pattern(regexp = "^[0-9 +().-]{9,20}$", message = "số điện thoại không hợp lệ") String phone,
 			@Schema(description = "Bỏ trống khi gắn hồ sơ nhân viên (lấy họ tên từ hồ sơ)") @Size(max = 200) String fullName,
 			@Schema(description = "Hồ sơ nhân viên gắn với tài khoản") UUID staffId,
-			@NotNull @Size(min = 1) List<@Valid AccountRole> roles) {
+			@NotNull @Size(min = 1) List<@Valid AccountRole> roles,
+			@Schema(description = "Mật khẩu ban đầu: ít nhất 8 ký tự, gồm cả chữ và số") @NotBlank @Size(max = 200) String password) {
+	}
+
+	public record SetPasswordRequest(
+			@Schema(description = "Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số") @NotBlank @Size(max = 200) String password) {
 	}
 
 	public record UpdateRolesRequest(@NotNull @Size(min = 1) List<@Valid AccountRole> roles) {

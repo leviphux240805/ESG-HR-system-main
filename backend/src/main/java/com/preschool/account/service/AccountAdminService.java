@@ -34,6 +34,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -56,7 +57,7 @@ public class AccountAdminService {
 
 	private final AccountService accountService;
 
-	private final PasswordResetService passwordResetService;
+	private final PasswordEncoder passwordEncoder;
 
 	private final RefreshTokenRepository refreshTokens;
 
@@ -69,11 +70,11 @@ public class AccountAdminService {
 	private final Clock clock;
 
 	public AccountAdminService(UserRepository users, AccountService accountService,
-			PasswordResetService passwordResetService, RefreshTokenRepository refreshTokens, SchoolRepository schools,
+			PasswordEncoder passwordEncoder, RefreshTokenRepository refreshTokens, SchoolRepository schools,
 			NamedParameterJdbcTemplate jdbc, AuditService audit, Clock clock) {
 		this.users = users;
 		this.accountService = accountService;
-		this.passwordResetService = passwordResetService;
+		this.passwordEncoder = passwordEncoder;
 		this.refreshTokens = refreshTokens;
 		this.schools = schools;
 		this.jdbc = jdbc;
@@ -128,8 +129,10 @@ public class AccountAdminService {
 		if (fullName == null || fullName.isBlank()) {
 			throw fieldError("fullName", "Vui lòng nhập họ tên");
 		}
-		User user = accountService.create(request.email().trim().toLowerCase(java.util.Locale.ROOT),
-				normalizePhone(request.phone()), fullName.trim(), request.staffId(), grants);
+		String email = request.email() == null || request.email().isBlank() ? null
+				: request.email().trim().toLowerCase(java.util.Locale.ROOT);
+		User user = accountService.create(email, normalizePhone(request.phone()), fullName.trim(), request.staffId(),
+				grants, request.password());
 		audit.record("account", user.getId(), Action.CREATE, null, snapshot(user));
 		return toItem(user, managed, schoolNames());
 	}
@@ -178,14 +181,15 @@ public class AccountAdminService {
 		return toItem(user, managed, schoolNames());
 	}
 
-	/** Gửi email đặt lại mật khẩu (như "Quên mật khẩu"); tài khoản bị khóa thì không gửi. */
+	/** Đặt mật khẩu mới (người dùng phải đổi ở lần đăng nhập kế tiếp) và đăng xuất mọi phiên của tài khoản. */
 	@Transactional
-	public void sendReset(UUID id) {
+	public void setPassword(UUID id, String password) {
 		User user = findManaged(id, managedSchools());
-		if (!user.isActive()) {
-			throw ApiException.conflict("ACCOUNT_LOCKED", "Tài khoản đang bị khóa, mở khóa trước khi gửi email đặt lại mật khẩu.");
-		}
-		passwordResetService.requestReset(user.getEmail());
+		requireNotPrincipal(user, "Mật khẩu tài khoản hiệu trưởng do bên vận hành quản lý.");
+		PasswordResetService.validatePassword(password);
+		user.assignPassword(passwordEncoder.encode(password));
+		refreshTokens.revokeAllForUser(user.getId(), clock.instant());
+		audit.record("account", id, Action.UPDATE, null, Map.of("password", "đặt lại"));
 	}
 
 	// ------------------------------------------------------------ hỗ trợ
@@ -242,7 +246,7 @@ public class AccountAdminService {
 			.sorted(Comparator.comparing(AccountRoleView::role).thenComparing(v -> Objects.toString(v.schoolName(), "")))
 			.toList();
 		return new AccountItem(user.getId(), user.getEmail(), user.getPhone(), user.getFullName(), user.isActive(),
-				user.getLastLoginAt(), roles, user.getStaffId(), staff == null ? null : (String) staff.get("staff_code"),
+				user.isMustChangePassword(), user.getLastLoginAt(), roles, user.getStaffId(), staff == null ? null : (String) staff.get("staff_code"),
 				staff == null ? null : (String) staff.get("full_name"),
 				user.getId().equals(SchoolScope.require().userId()), principal);
 	}
@@ -257,12 +261,13 @@ public class AccountAdminService {
 	}
 
 	private static Map<String, Object> snapshot(User user) {
-		return Map.of("email", user.getEmail(), "active", user.isActive(), "roles", user.getRoles()
-			.stream()
-			.map(r -> r.getRoleCode() + "@" + r.getSchoolId()
-					+ (r.getFunctionGroups().isEmpty() ? "" : r.getFunctionGroups().toString()))
-			.sorted()
-			.toList(), "staffId", Objects.toString(user.getStaffId(), ""));
+		return Map.of("email", Objects.toString(user.getEmail(), ""), "phone", Objects.toString(user.getPhone(), ""),
+				"active", user.isActive(), "roles", user.getRoles()
+					.stream()
+					.map(r -> r.getRoleCode() + "@" + r.getSchoolId()
+							+ (r.getFunctionGroups().isEmpty() ? "" : r.getFunctionGroups().toString()))
+					.sorted()
+					.toList(), "staffId", Objects.toString(user.getStaffId(), ""));
 	}
 
 	private static Pageable sanitize(Pageable pageable) {

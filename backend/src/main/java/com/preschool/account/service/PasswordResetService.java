@@ -30,9 +30,6 @@ public class PasswordResetService {
 
 	static final Duration TOKEN_TTL = Duration.ofMinutes(30);
 
-	/** Link mời đặt mật khẩu cho tài khoản mới. */
-	static final Duration INVITE_TTL = Duration.ofDays(7);
-
 	/** Mỗi tài khoản chỉ được xin link mới sau khoảng này (chống spam email). */
 	static final Duration REQUEST_COOLDOWN = Duration.ofMinutes(1);
 
@@ -71,7 +68,7 @@ public class PasswordResetService {
 	 */
 	@Transactional
 	public void requestReset(String identifier) {
-		Optional<User> found = authService.findByIdentifier(identifier).filter(User::isActive);
+		Optional<User> found = authService.findByIdentifier(identifier).filter(User::isActive).filter(u -> u.getEmail() != null);
 		if (found.isEmpty()) {
 			return;
 		}
@@ -81,41 +78,15 @@ public class PasswordResetService {
 			log.info("Bỏ qua yêu cầu đặt lại mật khẩu lặp lại của user {}", user.getId());
 			return;
 		}
-		String link = issueLink(user, TOKEN_TTL, now);
+		String link = issueLink(user, now);
 		emailService.send(user.getEmail(), "Đặt lại mật khẩu", textBody(user, link), htmlBody(user, link));
 	}
 
-	/**
-	 * Tài khoản mới do hiệu trưởng tạo: gửi email mời tự đặt mật khẩu (link {@link #INVITE_TTL}, dùng một
-	 * lần). Người tạo không bao giờ biết mật khẩu của nhân viên.
-	 */
-	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
-	public void sendInvite(User user) {
-		String link = issueLink(user, INVITE_TTL, clock.instant());
-		String text = """
-				Xin chào %s,
-
-				Nhà trường đã tạo tài khoản Preschool Management cho bạn (đăng nhập bằng email %s).
-				Mở link sau để tự đặt mật khẩu (hiệu lực %d ngày, dùng một lần):
-
-				%s
-				""".formatted(user.getFullName(), user.getEmail(), INVITE_TTL.toDays(), link);
-		String html = """
-				<p>Xin chào %s,</p>
-				<p>Nhà trường đã tạo tài khoản Preschool Management cho bạn (đăng nhập bằng email <b>%s</b>).</p>
-				<p><a href="%s" style="display:inline-block;padding:10px 18px;background:#166534;color:#fff;\
-				text-decoration:none;border-radius:6px">Đặt mật khẩu</a></p>
-				<p>Link có hiệu lực %d ngày và chỉ dùng được một lần.</p>
-				""".formatted(HtmlUtils.htmlEscape(user.getFullName()), HtmlUtils.htmlEscape(user.getEmail()),
-				HtmlUtils.htmlEscape(link), INVITE_TTL.toDays());
-		emailService.send(user.getEmail(), "Tài khoản Preschool Management của bạn", text, html);
-	}
-
 	/** Tạo link đặt mật khẩu mới (vô hiệu link cũ chưa dùng). */
-	private String issueLink(User user, Duration ttl, Instant now) {
+	private String issueLink(User user, Instant now) {
 		resetTokens.invalidateAll(user.getId(), now);
 		String rawToken = SecureTokens.newRawToken();
-		resetTokens.save(new PasswordResetToken(user, SecureTokens.hash(rawToken), now.plus(ttl)));
+		resetTokens.save(new PasswordResetToken(user, SecureTokens.hash(rawToken), now.plus(TOKEN_TTL)));
 		return UriComponentsBuilder.fromUri(mailProps.frontendUrl())
 			.path("/reset-password")
 			.queryParam("token", rawToken)

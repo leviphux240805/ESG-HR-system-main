@@ -7,8 +7,10 @@ const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://localhost:8025";
 test("quên mật khẩu: gửi yêu cầu, nhận email có link, mở được trang đặt lại", async ({ page, request }) => {
   await request.delete(`${MAILPIT}/api/v1/messages`);
 
+  // Trang đăng nhập tạm ẩn link (chưa dùng email); luồng email giữ lại để bật lại sau
   await page.goto("/login");
-  await page.getByRole("link", { name: "Quên mật khẩu?" }).click();
+  await expect(page.getByText(/Liên hệ hiệu trưởng để được cấp hoặc đặt lại mật khẩu/)).toBeVisible();
+  await page.goto("/forgot-password");
   await page.getByLabel("Email hoặc số điện thoại").fill(ACCOUNTS.staffB);
   await page.getByRole("button", { name: "Gửi link đặt lại mật khẩu" }).click();
   await expect(page.getByText(/Nếu tài khoản tồn tại, email hướng dẫn/)).toBeVisible();

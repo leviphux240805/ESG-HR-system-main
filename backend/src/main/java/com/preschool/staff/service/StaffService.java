@@ -226,7 +226,8 @@ public class StaffService {
 			accountService.create(staff.getEmail(), staff.getPhone(), staff.getFullName(), staff.getId(),
 					request.account().roles().stream()
 						.map(r -> new RoleAssignment(r.role(), r.schoolId(), r.functionGroups()))
-						.toList());
+						.toList(),
+					request.account().password());
 		}
 		// Đọc lại để có mã NV do DB sinh
 		return toDetail(staffRepo.findById(staff.getId()).orElseThrow());

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { ChevronRight, Eye, EyeOff, GraduationCap, Loader2, Lock, type LucideIcon, User, UserCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -139,12 +138,6 @@ function PasswordLogin() {
               Ghi nhớ đăng nhập
             </label>
           </div>
-          <Link
-            to="/forgot-password"
-            className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-          >
-            Quên mật khẩu?
-          </Link>
         </div>
 
         <Button type="submit" className="w-full py-6 text-base font-medium" disabled={isLoading}>
@@ -154,7 +147,7 @@ function PasswordLogin() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Chưa có tài khoản? Tài khoản do hiệu trưởng cấp.
+        Chưa có tài khoản hoặc quên mật khẩu? Liên hệ hiệu trưởng để được cấp hoặc đặt lại mật khẩu.
       </p>
     </AuthLayout>
   );

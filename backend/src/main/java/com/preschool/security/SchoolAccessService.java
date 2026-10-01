@@ -49,7 +49,8 @@ public class SchoolAccessService {
 			.map(School::getId)
 			.filter(granted::contains)
 			.forEach(allowed::add);
-		return new SchoolAccess(userId, user.getStaffId(), user.getOrganizationId(), grants, Set.copyOf(allowed));
+		return new SchoolAccess(userId, user.getStaffId(), user.getOrganizationId(), grants, Set.copyOf(allowed),
+				user.isMustChangePassword());
 	}
 
 	@Transactional(readOnly = true)

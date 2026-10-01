@@ -2,7 +2,9 @@ package com.preschool.account.service;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -114,6 +116,32 @@ public class AuthService {
 		}
 		refreshTokens.findByTokenHash(SecureTokens.hash(rawToken))
 			.ifPresent(token -> refreshTokens.revokeFamily(token.getFamilyId(), clock.instant()));
+	}
+
+	/**
+	 * Người dùng tự đổi mật khẩu: kiểm tra mật khẩu hiện tại, đăng xuất mọi phiên rồi cấp cặp token mới cho phiên
+	 * đang dùng (giữ lựa chọn "ghi nhớ đăng nhập" của phiên này).
+	 */
+	@Transactional
+	public AuthResult changePassword(UUID userId, String currentPassword, String newPassword, String rawRefresh) {
+		User user = users.findById(userId).filter(User::isActive).orElseThrow(AuthService::accountDisabled);
+		if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+			throw ApiException.badRequest("PASSWORD_INCORRECT", "Mật khẩu hiện tại không đúng.")
+				.withFieldErrors(List.of(Map.of("field", "currentPassword", "message", "mật khẩu hiện tại không đúng")));
+		}
+		PasswordResetService.validatePassword(newPassword);
+		if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+			throw ApiException.badRequest("PASSWORD_UNCHANGED", "Mật khẩu mới phải khác mật khẩu hiện tại.")
+				.withFieldErrors(List.of(Map.of("field", "newPassword", "message", "mật khẩu mới phải khác mật khẩu hiện tại")));
+		}
+		boolean rememberMe = rawRefresh != null && refreshTokens.findByTokenHash(SecureTokens.hash(rawRefresh))
+			.filter(t -> t.getUser().getId().equals(userId))
+			.map(RefreshToken::isRememberMe)
+			.orElse(false);
+		user.changePassword(passwordEncoder.encode(newPassword));
+		Instant now = clock.instant();
+		refreshTokens.revokeAllForUser(userId, now);
+		return issueTokens(user, UUID.randomUUID(), rememberMe, now);
 	}
 
 	private AuthResult issueTokens(User user, UUID familyId, boolean rememberMe, Instant now) {

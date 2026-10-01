@@ -20,14 +20,18 @@ import com.preschool.school.entity.School;
 import com.preschool.staff.entity.Staff;
 import com.preschool.staff.entity.StaffEnums.Position;
 
+import jakarta.servlet.http.Cookie;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Quản lý tài khoản: chỉ hiệu trưởng, trong các trường mình làm hiệu trưởng; không gán vai trò hiệu trưởng, không sửa
- * hay khóa tài khoản hiệu trưởng; vai trò ở trường khác được giữ nguyên; chặn tự khóa.
+ * Quản lý tài khoản: chỉ hiệu trưởng, trong các trường mình làm hiệu trưởng; không gán vai trò hiệu trưởng, không sửa,
+ * khóa hay đặt lại mật khẩu tài khoản hiệu trưởng; vai trò ở trường khác được giữ nguyên; chặn tự khóa. Mật khẩu do
+ * người khác đặt phải được đổi trước khi dùng API.
  */
 class AccountAdminTests extends ApiTestSupport {
 
@@ -136,11 +140,62 @@ class AccountAdminTests extends ApiTestSupport {
 		mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(teacher.getEmail(), TestData.PASSWORD)))
 			.andExpect(status().is4xxClientError());
-		as(principal, post("/api/v1/accounts/" + teacher.getId() + "/send-reset")).andExpect(status().isConflict());
 		as(principal, post("/api/v1/accounts/" + teacher.getId() + "/unlock")).andExpect(status().isOk())
 			.andExpect(jsonPath("$.active").value(true));
 		login(teacher.getEmail(), false);
-		as(principal, post("/api/v1/accounts/" + teacher.getId() + "/send-reset")).andExpect(status().isAccepted());
+	}
+
+	@Test
+	void phoneOnlyAccountMustChangeInitialPasswordBeforeUsingApi() throws Exception {
+		String phone = "09" + TestData.randomDigits(8);
+		as(principal, post("/api/v1/accounts").contentType(MediaType.APPLICATION_JSON)
+			.content(accountJson(phone, "Batdau2026")))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.email").doesNotExist())
+			.andExpect(jsonPath("$.mustChangePassword").value(true));
+		as(principal, post("/api/v1/accounts").contentType(MediaType.APPLICATION_JSON)
+			.content(accountJson(null, "Batdau2026")))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("ACCOUNT_LOGIN_REQUIRED"));
+		as(principal, post("/api/v1/accounts").contentType(MediaType.APPLICATION_JSON)
+			.content(accountJson("09" + TestData.randomDigits(8), "12345678")))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("PASSWORD_TOO_WEAK"));
+
+		String token = accessToken(phone, "Batdau2026");
+		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, token))
+			.andExpect(status().isOk()).andExpect(jsonPath("$.mustChangePassword").value(true));
+		mvc.perform(get("/api/v1/schools").header(HttpHeaders.AUTHORIZATION, token))
+			.andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("PASSWORD_CHANGE_REQUIRED"));
+
+		changePassword(token, "Saimatkhau1", "Matmoi2026")
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0].field").value("currentPassword"));
+		changePassword(token, "Batdau2026", "Batdau2026")
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("PASSWORD_UNCHANGED"));
+		String body = changePassword(token, "Batdau2026", "Matmoi2026")
+			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		String fresh = "Bearer " + JsonPath.read(body, "$.accessToken");
+		mvc.perform(get("/api/v1/schools").header(HttpHeaders.AUTHORIZATION, fresh)).andExpect(status().isOk());
+		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, fresh))
+			.andExpect(jsonPath("$.mustChangePassword").value(false));
+	}
+
+	@Test
+	void principalResetsPasswordOnlyForManagedNonPrincipalAccounts() throws Exception {
+		User teacher = data.user(RoleCode.TEACHER, schoolA);
+		Cookie session = new Cookie("refresh_token",
+				login(teacher.getEmail(), true).getResponse().getCookie("refresh_token").getValue());
+
+		setPassword(principal, teacher, "12345678").andExpect(status().isBadRequest());
+		setPassword(principal, teacher, "Datlai2026").andExpect(status().isNoContent());
+		mvc.perform(post("/api/v1/auth/refresh").cookie(session)).andExpect(status().isUnauthorized());
+		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, accessToken(teacher.getEmail(), "Datlai2026")))
+			.andExpect(jsonPath("$.mustChangePassword").value(true));
+		as(principal, get("/api/v1/accounts?q=" + teacher.getEmail()))
+			.andExpect(jsonPath("$.items[0].mustChangePassword").value(true));
+
+		setPassword(data.vicePrincipal(schoolA, FunctionGroup.HR), teacher, "Datlai2026").andExpect(status().isForbidden());
+		setPassword(principal, data.user(RoleCode.TEACHER, otherSchool), "Datlai2026").andExpect(status().isNotFound());
+		setPassword(principal, data.principal(schoolA), "Datlai2026")
+			.andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("PRINCIPAL_ACCOUNT"));
 	}
 
 	private static String email() {
@@ -156,11 +211,35 @@ class AccountAdminTests extends ApiTestSupport {
 			.content("{\"roles\":" + roles + "}"));
 	}
 
+	private String accountJson(String phone, String password) {
+		return """
+				{"fullName":"Chỉ có SĐT","phone":%s,"password":"%s","roles":%s}"""
+			.formatted(phone == null ? "null" : "\"" + phone + "\"", password, roles("TEACHER", schoolA));
+	}
+
+	private String accessToken(String identifier, String password) throws Exception {
+		String body = mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(identifier, password)))
+			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		return "Bearer " + JsonPath.read(body, "$.accessToken");
+	}
+
+	private ResultActions changePassword(String token, String current, String next) throws Exception {
+		return mvc.perform(post("/api/v1/auth/change-password").header(HttpHeaders.AUTHORIZATION, token)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"currentPassword\":\"%s\",\"newPassword\":\"%s\"}".formatted(current, next)));
+	}
+
+	private ResultActions setPassword(User user, User target, String password) throws Exception {
+		return as(user, post("/api/v1/accounts/" + target.getId() + "/password").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"password\":\"%s\"}".formatted(password)));
+	}
+
 	private ResultActions create(User user, String email, UUID staffId, String roles) throws Exception {
 		String staff = staffId == null ? "" : ",\"staffId\":\"%s\"".formatted(staffId);
 		String name = staffId == null ? ",\"fullName\":\"Người Thử\"" : "";
 		return as(user, post("/api/v1/accounts").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\"%s%s,\"roles\":%s}".formatted(email, name, staff, roles)));
+			.content("{\"email\":\"%s\"%s%s,\"roles\":%s,\"password\":\"Batdau2026\"}".formatted(email, name, staff, roles)));
 	}
 
 }

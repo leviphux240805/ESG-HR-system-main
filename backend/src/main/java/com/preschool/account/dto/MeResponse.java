@@ -11,9 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public record MeResponse(
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email,
+		String email,
 		String phone,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String fullName,
+		@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+				description = "Phải đổi mật khẩu trước khi dùng các chức năng khác") boolean mustChangePassword,
 		@Schema(description = "Hồ sơ nhân viên gắn với tài khoản; rỗng = chưa gắn") UUID staffId,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) OrganizationSummary organization,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<RoleGrant> roles,

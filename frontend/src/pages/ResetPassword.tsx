@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { AuthLayout, authInputClass } from "@/components/auth/AuthLayout";
 import { resetPassword } from "@/api";
 import { errorMessage } from "@/api";
+import { isStrongPassword, PASSWORD_RULE } from "@/lib/password";
 
-/** Kiểm tra nhanh phía giao diện; backend kiểm tra lại (ít nhất 8 ký tự, gồm chữ và số). */
+/** Kiểm tra nhanh phía giao diện; backend kiểm tra lại. */
 function passwordProblem(password: string, confirm: string): string | null {
-  if (password.length < 8 || !/\p{L}/u.test(password) || !/\d/.test(password)) {
-    return "Mật khẩu phải có ít nhất 8 ký tự, gồm cả chữ và số.";
-  }
+  if (!isStrongPassword(password)) return PASSWORD_RULE;
   if (password !== confirm) return "Mật khẩu nhập lại không khớp.";
   return null;
 }

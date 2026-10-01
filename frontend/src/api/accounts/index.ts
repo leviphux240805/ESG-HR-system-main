@@ -38,8 +38,9 @@ export async function unlockAccount(id: string) {
   return unwrap(await api.POST("/api/v1/accounts/{id}/unlock", { params: { path: { id } } }));
 }
 
-export async function sendAccountReset(id: string) {
-  return unwrap(await api.POST("/api/v1/accounts/{id}/send-reset", { params: { path: { id } } }));
+/** Đặt mật khẩu mới cho tài khoản; người dùng phải đổi ở lần đăng nhập kế tiếp. */
+export async function setAccountPassword(id: string, password: string) {
+  return unwrap(await api.POST("/api/v1/accounts/{id}/password", { params: { path: { id } }, body: { password } }));
 }
 
 export async function createAccount(body: S["CreateAccountRequest"]) {

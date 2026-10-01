@@ -69,6 +69,19 @@ chấm công bị ẩn; upload file trả "Bản demo chưa hỗ trợ". Việc 
     mục tổ chức (năm học, khối, khoản thu, món chung, văn bản chung, ngày lễ chung) chỉ hiệu trưởng sửa; loại giấy tờ,
     tham số lương/bảo hiểm, chuẩn WHO dùng chung toàn hệ thống.
   - Tiếp theo: chủ dự án commit; sửa các e2e có sẵn lỗi trên nhánh demo.
+- Triển khai thử + tài khoản không email (2026-10-02, chưa commit).
+  - Triển khai: `backend/Dockerfile`, `render.yaml` (Render free + Neon, profile `seed` nạp dữ liệu mẫu), Vercel chuyển
+    tiếp `/api` sang Render (`frontend/vercel.json`); file qua Cloudflare R2, email qua Brevo cổng 2525 (README).
+  - Tài khoản không email: V14 (`users.email` không bắt buộc, cần email hoặc SĐT; `must_change_password`). Tạo tài
+    khoản kèm mật khẩu ban đầu (trang Tài khoản, Thêm nhân viên); `POST /accounts/{id}/password` thay `send-reset`;
+    `POST /auth/change-password`; backend chặn mọi API (trừ `GET /me`, `/auth/*`) khi phải đổi mật khẩu; trang
+    `/doi-mat-khau` (bắt buộc lần đầu, hoặc từ menu tài khoản); trang đăng nhập bỏ link "Quên mật khẩu" (API và trang
+    quên mật khẩu giữ để bật lại sau).
+  - Kiểm tra: backend 220/222 xanh (2 test lệch ngày `StaffExpiryTests`, `StaffLifecycleTests` chỉ đỏ khi chạy từ
+    0h–7h giờ VN vì test dùng giờ máy, server dùng UTC; chạy với `-Duser.timezone=UTC` thì xanh); `npm test` (92),
+    lint, build, build:demo xanh; e2e `accounts`, `schools`, `forgot-password`, `staff-create` xanh; `auth.spec.ts`
+    đỏ sẵn do `/cua-toi/van-ban` chưa có route trên nhánh demo.
+  - Tiếp theo: chủ dự án commit; tạo Neon/Render/R2/Brevo theo README; sửa 2 test lệch ngày.
 
 ## Giai đoạn hiện tại: 3 – Chấm công, nghỉ phép, công việc (đang làm)
 

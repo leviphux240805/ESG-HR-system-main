@@ -77,8 +77,18 @@ tài khoản từ `0900000003` tới `0900000008` gắn với một hồ sơ, ha
 trường, tài khoản, dữ liệu dùng chung của tổ chức kia.
 
 Tổ chức và hiệu trưởng mới do bên vận hành tạo bằng SQL: `SELECT provision_organization('<uuid>', 'Tên');` (chép
-danh mục mặc định), thêm tài khoản vào `users` với `organization_id`, tạo trường đầu tiên rồi gán `PRINCIPAL` ở
-`user_roles`. Sau đó hiệu trưởng tự thêm trường ở **Quản trị › Trường**.
+danh mục mặc định), tạo trường đầu tiên, thêm tài khoản rồi gán `PRINCIPAL` ở `user_roles`. Mật khẩu ban đầu băm
+bằng pgcrypto; `must_change_password = true` để hiệu trưởng đổi ở lần đăng nhập đầu:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+INSERT INTO users (organization_id, phone, full_name, password_hash, must_change_password)
+VALUES ('<uuid tổ chức>', '0912345678', 'Họ tên', crypt('Matkhau2026', gen_salt('bf', 10)), true);
+```
+
+Sau đó hiệu trưởng tự thêm trường ở **Quản trị › Trường** và tạo tài khoản ở **Quản trị › Tài khoản**: nhập số điện
+thoại hoặc email cùng mật khẩu ban đầu, rồi báo cho người dùng. Người dùng phải đổi mật khẩu ở lần đăng nhập đầu. Quên
+mật khẩu thì hiệu trưởng đặt lại ở cùng trang; tạm thời chưa gửi email.
 
 ## Thử nhanh
 
@@ -118,6 +128,36 @@ nếu cách lần chạy trước hơn 1 phút (backend giới hạn 1 yêu cầ
 
 `./mvnw test` cũng ghi lại `frontend/openapi.json`. Khi API đổi: chạy test backend, rồi `npm run gen:api` trong
 `frontend/` để sinh lại type (`src/api/schema.d.ts`), commit cả hai file.
+
+## Triển khai thử (Vercel + Render + Neon)
+
+Tạm thời, chưa phải nơi chạy chính thức. Frontend ở Vercel chuyển tiếp `/api/*` sang backend ở Render (`frontend/vercel.json`),
+nên trình duyệt chỉ thấy một origin và cookie refresh vẫn hoạt động. Database ở Neon. Profile `seed` nạp dữ liệu mẫu dev.
+
+1. **Neon:** tạo project ở region Singapore. Lấy host **không có** `-pooler` (Flyway cần kết nối trực tiếp), cùng user
+   và mật khẩu.
+2. **Render:** New → Blueprint → chọn repo/nhánh (đọc `render.yaml`). Điền `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`
+   và `FRONTEND_URL` (địa chỉ Vercel). `JWT_SECRET` do Render tự sinh. Nếu tên service khác `preschool-api`, sửa
+   địa chỉ trong `frontend/vercel.json`.
+3. **Vercel:** Root Directory `frontend`, deploy lại. Không đặt `VITE_DATA_SOURCE` (mặc định `api`).
+
+4. **File – Cloudflare R2:** tạo bucket `preschool`. Vào Settings → CORS policy, dán nội dung dưới đây (thay địa chỉ
+   Vercel). Vào R2 → Manage API tokens, tạo token quyền *Object Read & Write* cho bucket này. Điền lên Render:
+   `S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`.
+
+   ```json
+   [{ "AllowedOrigins": ["https://<app>.vercel.app"], "AllowedMethods": ["GET", "PUT", "HEAD"],
+      "AllowedHeaders": ["*"], "ExposeHeaders": ["ETag"], "MaxAgeSeconds": 3600 }]
+   ```
+
+5. **Email – Brevo:** vào Senders, domains & dedicated IPs → Senders, thêm và xác minh địa chỉ gửi. Vào SMTP & API → SMTP,
+   lấy login và tạo SMTP key. Điền lên Render: `MAIL_USERNAME` (login), `MAIL_PASSWORD` (SMTP key),
+   `MAIL_FROM=Mầm Non Việt <địa-chỉ-đã-xác-minh>`. Host và cổng (`smtp-relay.brevo.com:2525`) đã có sẵn trong
+   `render.yaml`, vì gói free của Render chặn các cổng 25/465/587. Chưa có tên miền riêng nên email có thể rơi vào thư rác.
+
+Gói free của Render ngủ sau 15 phút không dùng, lần gọi đầu chờ khoảng 1 phút. Thử nhanh: đăng nhập
+`owner@preschool.local`, tải một file ở Thư viện (kiểm tra R2), rồi bấm "Quên mật khẩu" với một tài khoản có email thật
+(kiểm tra Brevo). Lỗi gửi email chỉ ghi vào log Render, không báo lên giao diện.
 
 ## Sự cố thường gặp
 

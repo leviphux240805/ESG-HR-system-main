@@ -157,7 +157,7 @@
             "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
           }
         },
-        "summary" : "Tạo tài khoản và gửi email mời đặt mật khẩu",
+        "summary" : "Tạo tài khoản với mật khẩu ban đầu (người dùng đổi ở lần đăng nhập đầu)",
         "tags" : [ "Tài khoản" ]
       }
     },
@@ -205,6 +205,56 @@
           }
         },
         "summary" : "Khóa tài khoản (thu hồi mọi phiên đăng nhập)",
+        "tags" : [ "Tài khoản" ]
+      }
+    },
+    "/api/v1/accounts/{id}/password" : {
+      "post" : {
+        "operationId" : "setPassword",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Đặt mật khẩu mới (người dùng đổi ở lần đăng nhập kế tiếp; đăng xuất mọi phiên)",
         "tags" : [ "Tài khoản" ]
       }
     },
@@ -262,46 +312,6 @@
           }
         },
         "summary" : "Gán lại vai trò theo cơ sở",
-        "tags" : [ "Tài khoản" ]
-      }
-    },
-    "/api/v1/accounts/{id}/send-reset" : {
-      "post" : {
-        "operationId" : "sendReset",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }, {
-          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
-          "in" : "header",
-          "name" : "X-School-Id",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "202" : {
-            "description" : "Accepted"
-          },
-          "default" : {
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            },
-            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
-          }
-        },
-        "summary" : "Gửi email đặt lại mật khẩu",
         "tags" : [ "Tài khoản" ]
       }
     },
@@ -1012,6 +1022,49 @@
         },
         "summary" : "Sửa mã công/ghi chú của một ngày (tháng chưa khóa)",
         "tags" : [ "Chấm công" ]
+      }
+    },
+    "/api/v1/auth/change-password" : {
+      "post" : {
+        "description" : "Đăng xuất mọi phiên khác; trả cặp token mới cho phiên này.",
+        "operationId" : "changePassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "summary" : "Tự đổi mật khẩu",
+        "tags" : [ "Xác thực" ]
       }
     },
     "/api/v1/auth/forgot-password" : {
@@ -11345,6 +11398,10 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "mustChangePassword" : {
+            "type" : "boolean",
+            "description" : "Đang dùng mật khẩu do người khác đặt, chưa tự đổi"
+          },
           "phone" : {
             "type" : "string"
           },
@@ -11373,7 +11430,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "active", "email", "fullName", "id", "principal", "roles", "self" ]
+        "required" : [ "active", "fullName", "id", "mustChangePassword", "principal", "roles", "self" ]
       },
       "AccountRole" : {
         "type" : "object",
@@ -12054,6 +12111,23 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "ChangePasswordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "currentPassword" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "newPassword" : {
+            "type" : "string",
+            "description" : "Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số, khác mật khẩu hiện tại",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "currentPassword", "newPassword" ]
       },
       "ChangeRequestDto" : {
         "type" : "object",
@@ -12979,12 +13053,19 @@
           "email" : {
             "type" : "string",
             "format" : "email",
+            "description" : "Email hoặc số điện thoại, cần ít nhất một",
             "maxLength" : 255,
             "minLength" : 0
           },
           "fullName" : {
             "type" : "string",
             "description" : "Bỏ trống khi gắn hồ sơ nhân viên (lấy họ tên từ hồ sơ)",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "description" : "Mật khẩu ban đầu: ít nhất 8 ký tự, gồm cả chữ và số",
             "maxLength" : 200,
             "minLength" : 0
           },
@@ -13006,7 +13087,7 @@
             "description" : "Hồ sơ nhân viên gắn với tài khoản"
           }
         },
-        "required" : [ "email", "roles" ]
+        "required" : [ "password", "roles" ]
       },
       "CreateCashCategoryRequest" : {
         "type" : "object",
@@ -15052,7 +15133,7 @@
             "format" : "uuid"
           }
         },
-        "required" : [ "active", "email", "roles", "userId" ]
+        "required" : [ "active", "roles", "userId" ]
       },
       "LockInfo" : {
         "type" : "object",
@@ -15150,6 +15231,10 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "mustChangePassword" : {
+            "type" : "boolean",
+            "description" : "Phải đổi mật khẩu trước khi dùng các chức năng khác"
+          },
           "organization" : {
             "$ref" : "#/components/schemas/OrganizationSummary"
           },
@@ -15175,7 +15260,7 @@
             "description" : "Hồ sơ nhân viên gắn với tài khoản; rỗng = chưa gắn"
           }
         },
-        "required" : [ "email", "fullName", "id", "organization", "roles", "schools" ]
+        "required" : [ "fullName", "id", "mustChangePassword", "organization", "roles", "schools" ]
       },
       "MeasurementDto" : {
         "type" : "object",
@@ -15522,9 +15607,15 @@
       "NewAccount" : {
         "type" : "object",
         "properties" : {
+          "password" : {
+            "type" : "string",
+            "description" : "Mật khẩu ban đầu: ít nhất 8 ký tự, gồm cả chữ và số",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
           "roles" : {
             "type" : "array",
-            "description" : "Vai trò kèm cơ sở; bỏ trống schoolId = cả tổ chức",
+            "description" : "Vai trò kèm trường",
             "items" : {
               "$ref" : "#/components/schemas/RoleAssignment"
             },
@@ -15532,7 +15623,7 @@
             "minItems" : 1
           }
         },
-        "required" : [ "roles" ]
+        "required" : [ "password", "roles" ]
       },
       "NewVersionRequest" : {
         "type" : "object",
@@ -16886,6 +16977,18 @@
           }
         },
         "required" : [ "endDate", "name", "startDate" ]
+      },
+      "SetPasswordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "password" : {
+            "type" : "string",
+            "description" : "Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "password" ]
       },
       "StaffDetail" : {
         "type" : "object",

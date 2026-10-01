@@ -17,7 +17,7 @@ export interface paths {
          */
         get: operations["list_4"];
         put?: never;
-        /** Tạo tài khoản và gửi email mời đặt mật khẩu */
+        /** Tạo tài khoản với mật khẩu ban đầu (người dùng đổi ở lần đăng nhập đầu) */
         post: operations["create_7"];
         delete?: never;
         options?: never;
@@ -42,6 +42,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/{id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đặt mật khẩu mới (người dùng đổi ở lần đăng nhập kế tiếp; đăng xuất mọi phiên) */
+        post: operations["setPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/{id}/roles": {
         parameters: {
             query?: never;
@@ -53,23 +70,6 @@ export interface paths {
         /** Gán lại vai trò theo cơ sở */
         put: operations["updateRoles"];
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/accounts/{id}/send-reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Gửi email đặt lại mật khẩu */
-        post: operations["sendReset"];
         delete?: never;
         options?: never;
         head?: never;
@@ -278,6 +278,26 @@ export interface paths {
         /** Sửa mã công/ghi chú của một ngày (tháng chưa khóa) */
         put: operations["updateCell"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tự đổi mật khẩu
+         * @description Đăng xuất mọi phiên khác; trả cặp token mới cho phiên này.
+         */
+        post: operations["changePassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2805,12 +2825,14 @@ export interface components {
     schemas: {
         AccountItem: {
             active: boolean;
-            email: string;
+            email?: string;
             fullName: string;
             /** Format: uuid */
             id: string;
             /** Format: date-time */
             lastLoginAt?: string;
+            /** @description Đang dùng mật khẩu do người khác đặt, chưa tự đổi */
+            mustChangePassword: boolean;
             phone?: string;
             /** @description Tài khoản hiệu trưởng: chỉ bên vận hành sửa vai trò, khóa */
             principal: boolean;
@@ -3087,6 +3109,11 @@ export interface components {
             issueDate?: string;
             issuedBy?: string;
             name: string;
+        };
+        ChangePasswordRequest: {
+            currentPassword: string;
+            /** @description Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số, khác mật khẩu hiện tại */
+            newPassword: string;
         };
         ChangeRequestDto: {
             /** @description Người đang xem được duyệt/từ chối đề xuất này */
@@ -3456,10 +3483,15 @@ export interface components {
             toWeekStart: string;
         };
         CreateAccountRequest: {
-            /** Format: email */
-            email: string;
+            /**
+             * Format: email
+             * @description Email hoặc số điện thoại, cần ít nhất một
+             */
+            email?: string;
             /** @description Bỏ trống khi gắn hồ sơ nhân viên (lấy họ tên từ hồ sơ) */
             fullName?: string;
+            /** @description Mật khẩu ban đầu: ít nhất 8 ký tự, gồm cả chữ và số */
+            password: string;
             phone?: string;
             roles: components["schemas"]["AccountRole"][];
             /**
@@ -4294,7 +4326,7 @@ export interface components {
         };
         LinkedAccount: {
             active: boolean;
-            email: string;
+            email?: string;
             roles: ("PRINCIPAL" | "VICE_PRINCIPAL" | "ACCOUNTANT" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF")[];
             /** Format: uuid */
             userId: string;
@@ -4335,10 +4367,12 @@ export interface components {
             status: "PRESENT" | "EXCUSED" | "ABSENT";
         };
         MeResponse: {
-            email: string;
+            email?: string;
             fullName: string;
             /** Format: uuid */
             id: string;
+            /** @description Phải đổi mật khẩu trước khi dùng các chức năng khác */
+            mustChangePassword: boolean;
             organization: components["schemas"]["OrganizationSummary"];
             phone?: string;
             roles: components["schemas"]["RoleGrant"][];
@@ -4495,7 +4529,9 @@ export interface components {
             totals: components["schemas"]["Totals"];
         };
         NewAccount: {
-            /** @description Vai trò kèm cơ sở; bỏ trống schoolId = cả tổ chức */
+            /** @description Mật khẩu ban đầu: ít nhất 8 ký tự, gồm cả chữ và số */
+            password: string;
+            /** @description Vai trò kèm trường */
             roles: components["schemas"]["RoleAssignment"][];
         };
         NewVersionRequest: {
@@ -5052,6 +5088,10 @@ export interface components {
             /** Format: date */
             startDate: string;
         };
+        SetPasswordRequest: {
+            /** @description Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số */
+            password: string;
+        };
         StaffDetail: {
             /** @description Tài khoản đăng nhập gắn với hồ sơ (nếu có) */
             account?: components["schemas"]["LinkedAccount"];
@@ -5605,6 +5645,42 @@ export interface operations {
             };
         };
     };
+    setPassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     updateRoles: {
         parameters: {
             query?: never;
@@ -5631,38 +5707,6 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["AccountItem"];
                 };
-            };
-            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    sendReset: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
-                "X-School-Id"?: string;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Accepted */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {
@@ -6163,6 +6207,39 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CellDetail"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */

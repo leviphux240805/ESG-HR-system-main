@@ -19,8 +19,10 @@ export interface SchoolRec {
 export interface AccountRec {
   id: string;
   staffId: string;
-  email: string;
+  email?: string;
   active: boolean;
+  /** Mật khẩu do hiệu trưởng đặt, người dùng chưa tự đổi. */
+  mustChangePassword?: boolean;
   roles: { role: string; schoolId: string; functionGroups?: string[] }[];
 }
 

@@ -141,7 +141,7 @@ export function TerminateSheet({ staff, open, onOpenChange }: Props) {
       {staff.account && (
         <Alert variant="destructive">
           <AlertDescription>
-            Tài khoản đăng nhập {staff.account.email} sẽ bị khóa ngay và mọi phiên đăng nhập bị thu hồi.
+            Tài khoản đăng nhập{staff.account.email ? ` ${staff.account.email}` : ""} sẽ bị khóa ngay và mọi phiên đăng nhập bị thu hồi.
           </AlertDescription>
         </Alert>
       )}

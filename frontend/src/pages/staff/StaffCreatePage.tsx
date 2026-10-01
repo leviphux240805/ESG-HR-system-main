@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -18,6 +19,7 @@ import { uploadFile } from "@/api";
 import type { components } from "@/api/schema";
 import { useAuth } from "@/contexts/AuthContext";
 import { isPrincipal } from "@/lib/permissions";
+import { isStrongPassword, PASSWORD_RULE } from "@/lib/password";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { ROLE_LABELS } from "@/lib/navigation";
 import { addStaffDocument, useDocumentTypes } from "@/api";
@@ -27,8 +29,8 @@ import { emptyStaffForm, staffFormSchema, type StaffFormValues, SUGGESTED_ROLE, 
 
 type RoleCode = components["schemas"]["RoleAssignment"]["role"];
 
-/** Vai trò gán nhanh khi tạo nhân viên (cấp cơ sở + kế toán); hiệu trưởng gán ở trang Tài khoản. */
-const ACCOUNT_ROLES: RoleCode[] = ["PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "ACCOUNTANT", "STAFF"];
+/** Vai trò gán nhanh khi tạo nhân viên; phó hiệu trưởng (cần nhóm chức năng) gán ở trang Tài khoản. */
+const ACCOUNT_ROLES: RoleCode[] = ["TEACHER", "NURSE", "KITCHEN", "ACCOUNTANT", "STAFF"];
 
 export default function StaffCreatePage() {
   const navigate = useNavigate();
@@ -44,6 +46,8 @@ export default function StaffCreatePage() {
   const [cccd, setCccd] = useState<CccdScanResult | null>(null);
   const [createAccount, setCreateAccount] = useState(false);
   const [accountRole, setAccountRole] = useState<RoleCode | undefined>(undefined);
+  const [accountPassword, setAccountPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const canCreateAccounts = isPrincipal(me?.roles ?? []);
   const position = form.watch("position");
@@ -89,7 +93,7 @@ export default function StaffCreatePage() {
       const created = await createStaff({
         schoolId,
         fields: toStaffFields(values),
-        account: createAccount && role ? { roles: [{ role, schoolId }] } : undefined,
+        account: createAccount && role ? { roles: [{ role, schoolId }], password: accountPassword } : undefined,
       });
       await uploadCccdImages(created.id, created.schoolId);
       return created;
@@ -107,8 +111,12 @@ export default function StaffCreatePage() {
       setSchoolError("Vui lòng chọn cơ sở");
       return;
     }
-    if (createAccount && !values.email) {
-      form.setError("email", { type: "manual", message: "Cần email để tạo tài khoản đăng nhập" }, { shouldFocus: true });
+    if (createAccount && !values.email && !values.phone) {
+      form.setError("phone", { type: "manual", message: "Cần số điện thoại hoặc email để tạo tài khoản đăng nhập" }, { shouldFocus: true });
+      return;
+    }
+    if (createAccount && !isStrongPassword(accountPassword)) {
+      setPasswordError(PASSWORD_RULE);
       return;
     }
     create.mutate(values);
@@ -170,7 +178,7 @@ export default function StaffCreatePage() {
               <CardContent className="space-y-4">
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={createAccount} onCheckedChange={(v) => setCreateAccount(v === true)} />
-                  Tạo tài khoản đăng nhập và gửi email mời đặt mật khẩu (dùng email ở trên)
+                  Tạo tài khoản đăng nhập (bằng số điện thoại hoặc email ở trên)
                 </label>
                 {createAccount && (
                   <div className="space-y-2 max-w-sm">
@@ -188,6 +196,23 @@ export default function StaffCreatePage() {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">Vai trò áp dụng tại cơ sở làm việc của nhân viên.</p>
+                    <Label htmlFor="account-password">
+                      Mật khẩu ban đầu<span className="text-destructive ml-0.5">*</span>
+                    </Label>
+                    <Input
+                      id="account-password"
+                      type="password"
+                      autoComplete="new-password"
+                      className="min-h-11"
+                      value={accountPassword}
+                      onChange={(e) => {
+                        setAccountPassword(e.target.value);
+                        setPasswordError(null);
+                      }}
+                    />
+                    <p className={passwordError ? "text-sm font-medium text-destructive" : "text-xs text-muted-foreground"}>
+                      {passwordError ?? `${PASSWORD_RULE} Nhân viên phải đổi ở lần đăng nhập đầu.`}
+                    </p>
                   </div>
                 )}
               </CardContent>

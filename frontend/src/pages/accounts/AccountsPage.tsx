@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { lockAccount, sendAccountReset, unlockAccount } from "@/api";
+import { lockAccount, unlockAccount } from "@/api";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
@@ -17,10 +17,10 @@ import { useListParams } from "@/hooks/useListParams";
 import { formatDateTime } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/navigation";
 import { ACCOUNT_FILTER_KEYS, type AccountItem, useAccounts } from "@/api";
-import { CreateAccountSheet, EditRolesSheet } from "@/features/accounts/AccountSheets";
+import { CreateAccountSheet, EditRolesSheet, SetPasswordSheet } from "@/features/accounts/AccountSheets";
 import { FUNCTION_GROUP_LABELS } from "@/features/accounts/roles";
 
-type Confirm = { kind: "lock" | "unlock" | "reset"; account: AccountItem };
+type Confirm = { kind: "lock" | "unlock"; account: AccountItem };
 
 const CONFIRM_TEXT: Record<Confirm["kind"], { title: string; description: (a: AccountItem) => string; action: string }> = {
   lock: {
@@ -29,11 +29,6 @@ const CONFIRM_TEXT: Record<Confirm["kind"], { title: string; description: (a: Ac
     action: "Khóa",
   },
   unlock: { title: "Mở khóa tài khoản?", description: (a) => `${a.fullName} đăng nhập lại được.`, action: "Mở khóa" },
-  reset: {
-    title: "Gửi email đặt lại mật khẩu?",
-    description: (a) => `Gửi link đặt lại mật khẩu tới ${a.email}. Mật khẩu hiện tại vẫn dùng được cho tới khi đổi.`,
-    action: "Gửi email",
-  },
 };
 
 /** Quản lý tài khoản đăng nhập (hiệu trưởng). */
@@ -44,6 +39,7 @@ export default function AccountsPage() {
   const { schools } = useCurrentSchool();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<AccountItem | null>(null);
+  const [resetting, setResetting] = useState<AccountItem | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
 
   const filters = useMemo<FilterDef[]>(
@@ -69,10 +65,7 @@ export default function AccountsPage() {
               {row.original.fullName}
               {row.original.self && <span className="ml-2 text-xs text-muted-foreground">(bạn)</span>}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {row.original.email}
-              {row.original.phone ? ` · ${row.original.phone}` : ""}
-            </p>
+            <p className="text-xs text-muted-foreground">{[row.original.email, row.original.phone].filter(Boolean).join(" · ")}</p>
           </div>
         ),
       },
@@ -116,7 +109,12 @@ export default function AccountsPage() {
       {
         id: "active",
         header: "Trạng thái",
-        cell: ({ row }) => <StatusBadge status={row.original.active ? "ACTIVE" : "LOCKED"} />,
+        cell: ({ row }) => (
+          <div className="space-y-1">
+            <StatusBadge status={row.original.active ? "ACTIVE" : "LOCKED"} />
+            {row.original.active && row.original.mustChangePassword && <p className="text-xs text-muted-foreground">Chờ đổi mật khẩu</p>}
+          </div>
+        ),
       },
       {
         id: "actions",
@@ -124,7 +122,8 @@ export default function AccountsPage() {
         enableHiding: false,
         cell: ({ row }) => {
           const a = row.original;
-          if (a.principal && !a.active) return null;
+          // Tài khoản hiệu trưởng do bên vận hành quản lý; tự đổi mật khẩu ở menu tài khoản
+          if (a.principal) return null;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -133,9 +132,9 @@ export default function AccountsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {!a.principal && <DropdownMenuItem onSelect={() => setEditing(a)}>Sửa vai trò</DropdownMenuItem>}
-                {a.active && <DropdownMenuItem onSelect={() => setConfirm({ kind: "reset", account: a })}>Gửi email đặt lại mật khẩu</DropdownMenuItem>}
-                {a.active && !a.self && !a.principal && (
+                <DropdownMenuItem onSelect={() => setEditing(a)}>Sửa vai trò</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setResetting(a)}>Đặt lại mật khẩu</DropdownMenuItem>
+                {a.active && !a.self && (
                   <DropdownMenuItem className="text-destructive" onSelect={() => setConfirm({ kind: "lock", account: a })}>
                     Khóa tài khoản
                   </DropdownMenuItem>
@@ -175,6 +174,7 @@ export default function AccountsPage() {
       />
       <CreateAccountSheet open={creating} onOpenChange={setCreating} />
       <EditRolesSheet account={editing} onClose={() => setEditing(null)} />
+      <SetPasswordSheet account={resetting} onClose={() => setResetting(null)} />
       <ConfirmDialog
         open={confirm !== null}
         onOpenChange={(open) => !open && setConfirm(null)}
@@ -186,8 +186,7 @@ export default function AccountsPage() {
           const id = confirm!.account.id;
           if (confirm!.kind === "lock") await lockAccount(id);
           if (confirm!.kind === "unlock") await unlockAccount(id);
-          if (confirm!.kind === "reset") await sendAccountReset(id);
-          toast.success(confirm!.kind === "reset" ? "Đã gửi email đặt lại mật khẩu." : confirm!.kind === "lock" ? "Đã khóa tài khoản." : "Đã mở khóa tài khoản.");
+          toast.success(confirm!.kind === "lock" ? "Đã khóa tài khoản." : "Đã mở khóa tài khoản.");
           await queryClient.invalidateQueries({ queryKey: ["accounts"] });
         }}
       />

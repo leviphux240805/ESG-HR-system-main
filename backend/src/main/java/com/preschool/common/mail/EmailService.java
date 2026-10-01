@@ -33,8 +33,12 @@ public class EmailService {
 		this.props = props;
 	}
 
+	/** Tài khoản không có email (đăng nhập bằng số điện thoại) thì bỏ qua. */
 	@Async
 	public void send(String to, String subject, String textBody, String htmlBody) {
+		if (to == null || to.isBlank()) {
+			return;
+		}
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());

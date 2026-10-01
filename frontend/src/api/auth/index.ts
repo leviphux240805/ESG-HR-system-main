@@ -16,6 +16,13 @@ export async function logout() {
   if (!IS_DEMO) await api.POST("/api/v1/auth/logout");
 }
 
+/** Tự đổi mật khẩu; backend đăng xuất các phiên khác và cấp token mới cho phiên này. */
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const tokens = unwrap(await api.POST("/api/v1/auth/change-password", { body: { currentPassword, newPassword } }));
+  setAccessToken(tokens.accessToken);
+  return tokens;
+}
+
 export async function forgotPassword(identifier: string) {
   return unwrap(await api.POST("/api/v1/auth/forgot-password", { body: { identifier: identifier.trim() } }));
 }

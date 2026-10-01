@@ -7,11 +7,12 @@ import { BrowserRouter, MemoryRouter, Navigate, Route, Routes, useLocation } fro
 import { queryClient } from "@/api/queryClient";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthenticatedLayout } from "@/components/layout/AuthenticatedLayout";
-import { FullPageSpinner, RequireAuth, RequirePermission } from "@/components/layout/RouteGuards";
+import { CHANGE_PASSWORD_PATH, FullPageSpinner, RequireAuth, RequirePermission } from "@/components/layout/RouteGuards";
 import { routableNavItems, routableSubRoutes } from "@/lib/navigation";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 
@@ -47,6 +48,14 @@ function AppRoutes() {
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route
+        path={CHANGE_PASSWORD_PATH}
+        element={
+          <RequireAuth>
+            <ChangePassword />
+          </RequireAuth>
+        }
+      />
 
       <Route
         element={

@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.preschool.account.dto.AccountDtos.AccountItem;
 import com.preschool.account.dto.AccountDtos.CreateAccountRequest;
+import com.preschool.account.dto.AccountDtos.SetPasswordRequest;
 import com.preschool.account.dto.AccountDtos.UpdateRolesRequest;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.service.AccountAdminService;
@@ -50,7 +51,7 @@ public class AccountController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Tạo tài khoản và gửi email mời đặt mật khẩu")
+	@Operation(summary = "Tạo tài khoản với mật khẩu ban đầu (người dùng đổi ở lần đăng nhập đầu)")
 	public AccountItem create(@Valid @RequestBody CreateAccountRequest request) {
 		return accounts.create(request);
 	}
@@ -72,11 +73,11 @@ public class AccountController {
 		return accounts.unlock(id);
 	}
 
-	@PostMapping("/{id}/send-reset")
-	@ResponseStatus(HttpStatus.ACCEPTED)
-	@Operation(summary = "Gửi email đặt lại mật khẩu")
-	public void sendReset(@PathVariable UUID id) {
-		accounts.sendReset(id);
+	@PostMapping("/{id}/password")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@Operation(summary = "Đặt mật khẩu mới (người dùng đổi ở lần đăng nhập kế tiếp; đăng xuất mọi phiên)")
+	public void setPassword(@PathVariable UUID id, @Valid @RequestBody SetPasswordRequest request) {
+		accounts.setPassword(id, request.password());
 	}
 
 }

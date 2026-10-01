@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { ChevronRight, LogOut, RotateCcw, School, UserCircle } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ChevronRight, KeyRound, LogOut, RotateCcw, School, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { CHANGE_PASSWORD_PATH } from "@/components/layout/RouteGuards";
 import { IS_DEMO, resetDemoData } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
@@ -58,6 +59,7 @@ async function restoreDemoData() {
 
 function UserMenu() {
   const { me, logout } = useAuth();
+  const navigate = useNavigate();
   const [confirmReset, setConfirmReset] = useState(false);
   if (!me) return null;
   const roleNames = [...new Set(me.roles.map((r) => ROLE_LABELS[r.role]))].join(", ");
@@ -73,10 +75,16 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>
           <p className="font-medium">{me.fullName}</p>
-          <p className="text-xs font-normal text-muted-foreground">{me.email}</p>
+          <p className="text-xs font-normal text-muted-foreground">{me.email ?? me.phone}</p>
           <p className="text-xs font-normal text-muted-foreground">{roleNames}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {!IS_DEMO && (
+          <DropdownMenuItem onClick={() => navigate(CHANGE_PASSWORD_PATH)}>
+            <KeyRound className="w-4 h-4 mr-2" />
+            Đổi mật khẩu
+          </DropdownMenuItem>
+        )}
         {IS_DEMO && (
           <DropdownMenuItem onClick={() => setConfirmReset(true)}>
             <RotateCcw className="w-4 h-4 mr-2" />

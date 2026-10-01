@@ -25,26 +25,23 @@ public class AccountService {
 
 	private final PasswordEncoder passwordEncoder;
 
-	private final PasswordResetService passwordResetService;
-
-	public AccountService(UserRepository users, PasswordEncoder passwordEncoder,
-			PasswordResetService passwordResetService) {
+	public AccountService(UserRepository users, PasswordEncoder passwordEncoder) {
 		this.users = users;
 		this.passwordEncoder = passwordEncoder;
-		this.passwordResetService = passwordResetService;
 	}
 
 	/**
-	 * Tạo tài khoản với mật khẩu ngẫu nhiên không ai biết, gắn hồ sơ nhân viên (nếu có), gán vai trò và gửi email
-	 * mời tự đặt mật khẩu.
+	 * Tạo tài khoản đăng nhập bằng email hoặc số điện thoại, mật khẩu do người tạo đặt (người dùng phải đổi ở lần
+	 * đăng nhập đầu), gắn hồ sơ nhân viên (nếu có) và gán vai trò.
 	 */
 	@Transactional(propagation = Propagation.MANDATORY)
-	public User create(String email, String phone, String fullName, UUID staffId, List<RoleAssignment> grants) {
-		if (email == null || email.isBlank()) {
-			throw ApiException.badRequest("ACCOUNT_EMAIL_REQUIRED", "Cần email để tạo tài khoản đăng nhập.");
+	public User create(String email, String phone, String fullName, UUID staffId, List<RoleAssignment> grants,
+			String password) {
+		if (email == null && phone == null) {
+			throw ApiException.badRequest("ACCOUNT_LOGIN_REQUIRED", "Cần email hoặc số điện thoại để đăng nhập.");
 		}
 		List<Map<String, String>> conflicts = new ArrayList<>();
-		if (users.existsByEmail(email)) {
+		if (email != null && users.existsByEmail(email)) {
 			conflicts.add(Map.of("field", "email", "message", "email đã được dùng cho một tài khoản khác"));
 		}
 		if (phone != null && users.existsByPhone(phone)) {
@@ -55,12 +52,13 @@ public class AccountService {
 				.withFieldErrors(conflicts);
 		}
 		validateGrants(grants);
+		PasswordResetService.validatePassword(password);
 
-		User user = new User(email, phone, fullName, passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+		User user = new User(email, phone, fullName, null);
+		user.assignPassword(passwordEncoder.encode(password));
 		user.linkStaff(staffId);
 		grants.forEach(user::addRole);
 		users.save(user);
-		passwordResetService.sendInvite(user);
 		return user;
 	}
 

@@ -46,6 +46,9 @@ public class SchoolScopeFilter extends OncePerRequestFilter {
 		SchoolScope scope;
 		try {
 			SchoolAccess access = accessService.load(UUID.fromString(jwtAuth.getName()));
+			if (access.mustChangePassword() && !allowedBeforePasswordChange(request)) {
+				throw ApiException.forbidden("PASSWORD_CHANGE_REQUIRED", "Bạn cần đổi mật khẩu trước khi tiếp tục.");
+			}
 			scope = new SchoolScope(access, selectedSchool(request, access));
 		}
 		catch (ApiException ex) {
@@ -72,6 +75,12 @@ public class SchoolScopeFilter extends OncePerRequestFilter {
 		finally {
 			SchoolScope.clear();
 		}
+	}
+
+	/** Đang dùng mật khẩu do người khác đặt: chỉ được xem /me và gọi /auth/* (đổi mật khẩu, đăng xuất). */
+	private static boolean allowedBeforePasswordChange(HttpServletRequest request) {
+		String path = request.getRequestURI().substring(request.getContextPath().length());
+		return path.startsWith("/api/v1/auth/") || (path.equals("/api/v1/me") && "GET".equals(request.getMethod()));
 	}
 
 	private static UUID selectedSchool(HttpServletRequest request, SchoolAccess access) {

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, X } from "lucide-react";
 import { z } from "zod";
-import { createAccount, updateAccountRoles, useStaffSearch } from "@/api";
+import { createAccount, setAccountPassword, updateAccountRoles, useStaffSearch } from "@/api";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +19,7 @@ import { ROLE_LABELS } from "@/lib/navigation";
 import { TextField } from "@/features/staff/profile/fields";
 import type { AccountItem, RoleCode } from "@/api";
 import type { FunctionGroup } from "@/lib/permissions";
+import { PASSWORD_RULE, passwordField } from "@/lib/password";
 import { ASSIGNABLE_ROLES, FUNCTION_GROUP_LABELS, type RoleRow, emptyRoleRow, roleRowErrors, toAccountRoles } from "./roles";
 
 const rolesField = z
@@ -168,7 +169,11 @@ function StaffPicker({ value, onChange }: { value: PickedStaff | null; onChange:
 
 const createSchema = z
   .object({
-    email: z.string().trim().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
+    email: z
+      .string()
+      .trim()
+      .refine((v) => v === "" || z.string().email().safeParse(v).success, "Email không hợp lệ")
+      .default(""),
     phone: z
       .string()
       .trim()
@@ -177,11 +182,13 @@ const createSchema = z
     fullName: z.string().trim().max(200).default(""),
     staff: z.custom<PickedStaff | null>().default(null),
     roles: rolesField,
+    password: passwordField,
   })
-  .refine((v) => !!v.staff || v.fullName !== "", { path: ["fullName"], message: "Nhập họ tên hoặc gắn hồ sơ nhân viên" });
+  .refine((v) => !!v.staff || v.fullName !== "", { path: ["fullName"], message: "Nhập họ tên hoặc gắn hồ sơ nhân viên" })
+  .refine((v) => v.email !== "" || v.phone !== "", { path: ["phone"], message: "Nhập email hoặc số điện thoại để đăng nhập" });
 type CreateValues = z.infer<typeof createSchema>;
 
-const emptyCreate = (): CreateValues => ({ email: "", phone: "", fullName: "", staff: null, roles: [emptyRoleRow()] });
+const emptyCreate = (): CreateValues => ({ email: "", phone: "", fullName: "", staff: null, roles: [emptyRoleRow()], password: "" });
 
 export function CreateAccountSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const queryClient = useQueryClient();
@@ -195,17 +202,18 @@ export function CreateAccountSheet({ open, onOpenChange }: { open: boolean; onOp
       open={open}
       onOpenChange={onOpenChange}
       title="Tạo tài khoản"
-      description="Người dùng nhận email mời tự đặt mật khẩu (link hiệu lực 7 ngày)."
+      description="Đăng nhập bằng email hoặc số điện thoại. Báo mật khẩu ban đầu cho người dùng; họ phải đổi ở lần đăng nhập đầu."
       form={form}
-      submitLabel="Tạo và gửi email mời"
-      successMessage="Đã tạo tài khoản và gửi email mời."
+      submitLabel="Tạo tài khoản"
+      successMessage="Đã tạo tài khoản."
       onSubmit={async (v) => {
         await createAccount({
-          email: v.email,
+          email: v.email || undefined,
           phone: v.phone || undefined,
           fullName: v.fullName || undefined,
           staffId: v.staff?.id,
           roles: toAccountRoles(v.roles),
+          password: v.password,
         });
         await queryClient.invalidateQueries({ queryKey: ["accounts"] });
       }}
@@ -222,9 +230,41 @@ export function CreateAccountSheet({ open, onOpenChange }: { open: boolean; onOp
         )}
       />
       <TextField form={form} name="fullName" label="Họ tên" description="Bỏ trống khi đã gắn hồ sơ nhân viên." />
-      <TextField form={form} name="email" label="Email đăng nhập" required />
       <TextField form={form} name="phone" label="Số điện thoại đăng nhập" inputMode="numeric" />
+      <TextField form={form} name="email" label="Email đăng nhập" description="Không bắt buộc nếu đã có số điện thoại." />
+      <TextField form={form} name="password" label="Mật khẩu ban đầu" type="password" description={PASSWORD_RULE} required />
       <RolesEditor form={form} />
+    </FormSheet>
+  );
+}
+
+// ---- đặt lại mật khẩu
+
+const passwordSchema = z.object({ password: passwordField });
+type PasswordValues = z.infer<typeof passwordSchema>;
+
+export function SetPasswordSheet({ account, onClose }: { account: AccountItem | null; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const form = useForm<PasswordValues>({ resolver: zodResolver(passwordSchema), defaultValues: { password: "" } });
+  useEffect(() => {
+    if (account) form.reset({ password: "" });
+  }, [account, form]);
+
+  return (
+    <FormSheet
+      open={account !== null}
+      onOpenChange={(open) => !open && onClose()}
+      title="Đặt lại mật khẩu"
+      description={account ? `${account.fullName} bị đăng xuất khỏi mọi thiết bị và phải đổi mật khẩu ở lần đăng nhập kế tiếp.` : undefined}
+      form={form}
+      submitLabel="Đặt mật khẩu"
+      successMessage="Đã đặt mật khẩu mới. Hãy báo cho người dùng."
+      onSubmit={async (v) => {
+        await setAccountPassword(account!.id, v.password);
+        await queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      }}
+    >
+      <TextField form={form} name="password" label="Mật khẩu mới" type="password" description={PASSWORD_RULE} required />
     </FormSheet>
   );
 }
@@ -252,7 +292,7 @@ export function EditRolesSheet({ account, onClose }: { account: AccountItem | nu
       open={account !== null}
       onOpenChange={(open) => !open && onClose()}
       title="Vai trò"
-      description={account ? `${account.fullName} – ${account.email}` : undefined}
+      description={account ? [account.fullName, account.email ?? account.phone].filter(Boolean).join(" – ") : undefined}
       form={form}
       successMessage="Đã lưu vai trò."
       onSubmit={async (v) => {

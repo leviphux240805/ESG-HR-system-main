@@ -15,12 +15,18 @@ export function FullPageSpinner() {
   );
 }
 
-/** Chưa đăng nhập → /login (nhớ trang đang mở để quay lại sau khi đăng nhập). */
+export const CHANGE_PASSWORD_PATH = "/doi-mat-khau";
+
+/**
+ * Chưa đăng nhập → /login (nhớ trang đang mở để quay lại sau khi đăng nhập). Đang dùng mật khẩu do người khác đặt →
+ * trang đổi mật khẩu (backend cũng chặn mọi API khác).
+ */
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
+  const { status, me } = useAuth();
   const location = useLocation();
   if (status === "loading") return <FullPageSpinner />;
   if (status === "anonymous") return <Navigate to="/login" replace state={{ from: location }} />;
+  if (me?.mustChangePassword && location.pathname !== CHANGE_PASSWORD_PATH) return <Navigate to={CHANGE_PASSWORD_PATH} replace />;
   return <>{children}</>;
 }
 

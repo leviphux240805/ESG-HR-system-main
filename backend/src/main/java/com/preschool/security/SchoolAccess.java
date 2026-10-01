@@ -15,8 +15,10 @@ import com.preschool.account.entity.RoleCode;
  * @param organizationId tổ chức của người dùng (dữ liệu dùng chung lọc theo tổ chức này)
  * @param grants các vai trò, mỗi vai trò gắn một trường
  * @param schoolIds các trường (đang hoạt động) được phép truy cập
+ * @param mustChangePassword đang dùng mật khẩu do người khác đặt: chỉ được đổi mật khẩu
  */
-public record SchoolAccess(UUID userId, UUID staffId, UUID organizationId, List<Grant> grants, Set<UUID> schoolIds) {
+public record SchoolAccess(UUID userId, UUID staffId, UUID organizationId, List<Grant> grants, Set<UUID> schoolIds,
+		boolean mustChangePassword) {
 
 	/** Vai trò ở một trường; {@code groups} chỉ có ở phó hiệu trưởng. */
 	public record Grant(RoleCode role, UUID schoolId, Set<FunctionGroup> groups) {

@@ -1,14 +1,18 @@
 package com.preschool.account.controller;
 
+import com.preschool.account.dto.ChangePasswordRequest;
 import com.preschool.account.dto.LoginRequest;
 import com.preschool.account.dto.TokenResponse;
 import com.preschool.account.service.AuthService;
 import com.preschool.account.service.AuthService.AuthResult;
+import com.preschool.common.openapi.OpenApiConfig;
 import com.preschool.security.AuthProperties;
+import com.preschool.security.SchoolScope;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -49,6 +53,15 @@ public class AuthController {
 	public ResponseEntity<TokenResponse> refresh(
 			@Parameter(hidden = true) @CookieValue(name = AuthProperties.REFRESH_COOKIE_NAME, required = false) String refreshToken) {
 		return tokens(authService.refresh(refreshToken));
+	}
+
+	@PostMapping("/change-password")
+	@SecurityRequirement(name = OpenApiConfig.BEARER)
+	@Operation(summary = "Tự đổi mật khẩu", description = "Đăng xuất mọi phiên khác; trả cặp token mới cho phiên này.")
+	public ResponseEntity<TokenResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+			@Parameter(hidden = true) @CookieValue(name = AuthProperties.REFRESH_COOKIE_NAME, required = false) String refreshToken) {
+		return tokens(authService.changePassword(SchoolScope.require().userId(), request.currentPassword(),
+				request.newPassword(), refreshToken));
 	}
 
 	@PostMapping("/logout")

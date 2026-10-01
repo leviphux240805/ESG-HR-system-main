@@ -21,7 +21,6 @@ import jakarta.persistence.Table;
 @Filter(name = OrganizationFilter.NAME)
 public class User extends OrganizationEntity {
 
-	@Column(nullable = false)
 	private String email;
 
 	private String phone;
@@ -40,6 +39,9 @@ public class User extends OrganizationEntity {
 
 	@Column(name = "is_active", nullable = false)
 	private boolean active = true;
+
+	@Column(name = "must_change_password", nullable = false)
+	private boolean mustChangePassword;
 
 	@Column(name = "last_login_at")
 	private Instant lastLoginAt;
@@ -101,8 +103,20 @@ public class User extends OrganizationEntity {
 		this.staffId = staffId;
 	}
 
+	/** Người dùng tự đổi (hoặc qua link đặt lại): không còn bắt đổi mật khẩu. */
 	public void changePassword(String newPasswordHash) {
 		this.passwordHash = newPasswordHash;
+		this.mustChangePassword = false;
+	}
+
+	/** Mật khẩu do người khác đặt (tạo tài khoản, hiệu trưởng đặt lại): bắt đổi ở lần đăng nhập kế tiếp. */
+	public void assignPassword(String newPasswordHash) {
+		this.passwordHash = newPasswordHash;
+		this.mustChangePassword = true;
+	}
+
+	public boolean isMustChangePassword() {
+		return mustChangePassword;
 	}
 
 	public boolean isActive() {

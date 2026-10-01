@@ -182,7 +182,8 @@ class StaffApiTests extends ApiTestSupport {
 	void onlyPrincipalsCreateLoginAccounts() throws Exception {
 		User principalA = data.vicePrincipal(schoolA, FunctionGroup.HR);
 		User admin = data.principal(schoolA, schoolB);
-		String account = "{\"roles\":[{\"role\":\"TEACHER\",\"schoolId\":\"%s\"}]}".formatted(schoolA.getId());
+		String account = "{\"roles\":[{\"role\":\"TEACHER\",\"schoolId\":\"%s\"}],\"password\":\"Batdau2026\"}"
+			.formatted(schoolA.getId());
 		String email = "moi." + UUID.randomUUID().toString().substring(0, 8) + "@test.local";
 
 		as(principalA, post("/api/v1/staff").contentType(MediaType.APPLICATION_JSON)
@@ -197,7 +198,9 @@ class StaffApiTests extends ApiTestSupport {
 			.andExpect(jsonPath("$.account.roles[0]").value("TEACHER"))
 			.andReturn().getResponse().getContentAsString();
 		String staffId = JsonPath.read(body, "$.id");
-		assertThat(users.findByEmail(email).orElseThrow().getStaffId().toString()).isEqualTo(staffId);
+		User created = users.findByEmail(email).orElseThrow();
+		assertThat(created.getStaffId().toString()).isEqualTo(staffId);
+		assertThat(created.isMustChangePassword()).isTrue();
 	}
 
 	@Test

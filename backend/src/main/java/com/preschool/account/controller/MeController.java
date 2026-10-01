@@ -44,7 +44,8 @@ public class MeController {
 		User user = users.findById(access.userId())
 			.orElseThrow(() -> ApiException.notFound("Không tìm thấy tài khoản."));
 		Organization organization = organizations.findById(access.organizationId()).orElseThrow();
-		return new MeResponse(user.getId(), user.getEmail(), user.getPhone(), user.getFullName(), user.getStaffId(),
+		return new MeResponse(user.getId(), user.getEmail(), user.getPhone(), user.getFullName(),
+				user.isMustChangePassword(), user.getStaffId(),
 				new MeResponse.OrganizationSummary(organization.getId(), organization.getName()),
 				access.grants()
 					.stream()

@@ -103,7 +103,7 @@ public final class StaffDtos {
 
 	public record LinkedAccount(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID userId,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email,
+			String email,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean active,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<RoleCode> roles) {
 	}
@@ -135,10 +135,11 @@ public final class StaffDtos {
 			@NotNull LocalDate startDate) {
 	}
 
-	/** Tạo tài khoản đăng nhập cùng lúc với hồ sơ (chỉ hiệu trưởng). */
+	/** Tạo tài khoản đăng nhập (bằng email hoặc SĐT của hồ sơ) cùng lúc với hồ sơ (chỉ hiệu trưởng). */
 	public record NewAccount(
-			@Schema(description = "Vai trò kèm cơ sở; bỏ trống schoolId = cả tổ chức")
-			@NotNull @Size(min = 1) List<@Valid RoleAssignment> roles) {
+			@Schema(description = "Vai trò kèm trường")
+			@NotNull @Size(min = 1) List<@Valid RoleAssignment> roles,
+			@Schema(description = "Mật khẩu ban đầu: ít nhất 8 ký tự, gồm cả chữ và số") @NotBlank @Size(max = 200) String password) {
 	}
 
 	public record RoleAssignment(@NotNull(message = "Vui lòng chọn vai trò.") RoleCode role,

@@ -62,7 +62,11 @@ export function refreshAccessToken(): Promise<boolean> {
   return refreshInFlight;
 }
 
-const isAuthRequest = (url: string) => new URL(url, window.location.origin).pathname.startsWith(AUTH_PATH);
+/** Endpoint xác thực không dùng access token; riêng đổi mật khẩu cần biết người đang đăng nhập. */
+const isAuthRequest = (url: string) => {
+  const path = new URL(url, window.location.origin).pathname;
+  return path.startsWith(AUTH_PATH) && path !== `${AUTH_PATH}change-password`;
+};
 
 function withHeaders(request: Request): Request {
   if (isAuthRequest(request.url)) {
