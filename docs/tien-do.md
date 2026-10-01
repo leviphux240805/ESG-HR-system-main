@@ -82,6 +82,23 @@ chấm công bị ẩn; upload file trả "Bản demo chưa hỗ trợ". Việc 
     lint, build, build:demo xanh; e2e `accounts`, `schools`, `forgot-password`, `staff-create` xanh; `auth.spec.ts`
     đỏ sẵn do `/cua-toi/van-ban` chưa có route trên nhánh demo.
   - Tiếp theo: chủ dự án commit; tạo Neon/Render/R2/Brevo theo README; sửa 2 test lệch ngày.
+- Chuyển 6 trang demo sang API thật (2026-10-02, chưa commit). Hôm nay, Hộp duyệt, Lớp học, Hồ sơ trẻ, Điểm danh,
+  Công việc trước chỉ chạy với dữ liệu giả (`src/api/contracts.ts`, đã xóa); nay dùng type sinh từ OpenAPI, mock trả
+  đúng dạng dữ liệu backend.
+  - Backend: V15 `class_substitutions`; gói `today`: `GET /today` (SQL gộp các trường đang chọn mà người xem quản lý
+    nhóm Lớp & trẻ), `POST /substitutions` (cùng trường, thông báo người thay), `GET /approvals` +
+    `POST /approvals/{type}/{id}/approve|reject` (gọi lại `LeaveService`, `TaskService`). `TodayApiTests` (4 test:
+    chéo trường, chéo tổ chức, theo vai trò). Lớp trong `/today` lấy theo năm học chứa ngày hôm nay.
+  - Giao diện: quyền giao diện mới `today` (hiệu trưởng, phó hiệu trưởng nhóm Lớp & trẻ); form trẻ dùng tỉnh +
+    phường/xã (`AddressFields` cho phép tiền tố rỗng); hồ sơ trẻ hiện phụ huynh/người đón và quá trình học (backend
+    chưa có thống kê đi học 30 ngày nên bỏ thẻ này và cột tỷ lệ đi học); Kanban đọc chi tiết việc qua `GET /tasks/{id}`.
+  - Giả định (`TODO(assumption)`): Hôm nay cho hiệu trưởng + phó hiệu trưởng nhóm Lớp & trẻ; dạy thay thêm nhóm Nhân
+    sự; duyệt việc = Hoàn thành, từ chối = quay lại Đang làm kèm bình luận; Hộp duyệt chưa gồm đề xuất sửa hồ sơ.
+  - Kiểm tra: backend 224/226 (2 test lệch ngày như trên); `npm test` (92), lint, build, build:demo xanh; e2e mới
+    `school-day.spec.ts` 4/4; toàn bộ e2e 37/52 — các lỗi có sẵn như mục trước, thêm `staff-lifecycle` chỉ đỏ từ
+    0h–7h giờ VN (điều chuyển "hôm nay" chưa áp dụng khi ngày của DB còn là hôm trước: lỗi thật, cần sửa).
+  - Tiếp theo: chủ dự án commit; sửa lỗi ngày VN/UTC ở điều chuyển và hạn giấy tờ; bổ sung thống kê đi học của trẻ
+    nếu cần.
 
 ## Giai đoạn hiện tại: 3 – Chấm công, nghỉ phép, công việc (đang làm)
 

@@ -39,11 +39,12 @@ describe("API giả", () => {
     }) as unknown as typeof setTimeout);
   });
 
-  it("chưa đăng nhập thì 401; giáo viên không vào được Hộp duyệt", async () => {
+  it("chưa đăng nhập thì 401; giáo viên không xem Hôm nay, Hộp duyệt trống", async () => {
     setSessionRole(null);
     expect((await call("GET", "/today")).status).toBe(401);
     setSessionRole("teacher");
-    expect((await call("GET", "/approvals")).status).toBe(403);
+    expect((await call("GET", "/today")).status).toBe(403);
+    expect((await call<unknown[]>("GET", "/approvals")).data).toEqual([]);
   });
 
   it("chặn cơ sở ngoài phạm vi", async () => {
@@ -68,11 +69,13 @@ describe("API giả", () => {
   it("phân công người thay xóa cảnh báo lớp thiếu người", async () => {
     setSessionRole("principal");
     const school = db().schools[0].id;
-    const { data: today } = await call<{ classes: { id: string; shortStaffed: boolean; teachers: { id: string; onLeave: boolean }[] }[]; availableStaff: { id: string }[] }>("GET", "/today", undefined, school);
+    type Today = { classes: { id: string; shortStaffed: boolean; teachers: { staffId: string; onLeave: boolean }[] }[]; availableStaff: { staffId: string; schoolId: string }[] };
+    const { data: today } = await call<Today>("GET", "/today", undefined, school);
     const short = today.classes.find((c) => c.shortStaffed)!;
     expect(short).toBeDefined();
     const absent = short.teachers.find((t) => t.onLeave)!;
-    await call("POST", "/substitutions", { classId: short.id, absentStaffId: absent.id, staffId: today.availableStaff[0].id }, school);
+    const substitute = today.availableStaff.find((s) => s.schoolId === school)!;
+    expect((await call("POST", "/substitutions", { classId: short.id, absentStaffId: absent.staffId, staffId: substitute.staffId }, school)).status).toBe(204);
     const { data: again } = await call<{ classes: { id: string; shortStaffed: boolean }[] }>("GET", "/today", undefined, school);
     expect(again.classes.find((c) => c.id === short.id)!.shortStaffed).toBe(false);
   });

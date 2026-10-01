@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
-import { AGE_GROUP_LABELS, useClasses } from "@/api";
+import { useClasses } from "@/api";
 
 /** Danh sách lớp của cơ sở: sĩ số, giáo viên, có mặt hôm nay. */
 export default function ClassesPage() {
@@ -29,7 +29,7 @@ export default function ClassesPage() {
                 <div>
                   <p className="text-lg font-semibold">{c.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {AGE_GROUP_LABELS[c.ageGroup]} · {c.room}
+                    {[c.ageGroupName, c.room].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <div>
@@ -39,19 +39,17 @@ export default function ClassesPage() {
                       {c.size}/{c.capacity}
                     </span>
                   </div>
-                  <Progress value={(c.size / c.capacity) * 100} className="mt-1 h-2" aria-label={`Sĩ số lớp ${c.name}`} />
+                  <Progress value={c.capacity ? (c.size / c.capacity) * 100 : 0} className="mt-1 h-2" aria-label={`Sĩ số lớp ${c.name}`} />
                   <p className="mt-1 text-xs text-muted-foreground">
                     {c.boys} bé trai · {c.girls} bé gái
                   </p>
                 </div>
                 <div className="text-sm">
                   <p className="text-muted-foreground">Giáo viên</p>
-                  {c.teachers.map((t) => (
-                    <p key={t.id}>{t.fullName}</p>
-                  ))}
+                  {c.teachers.length ? c.teachers.map((t) => <p key={t.id}>{t.fullName}</p>) : <p className="text-muted-foreground">Chưa phân công</p>}
                 </div>
                 <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-                  {c.presentToday === null ? (
+                  {c.presentToday == null ? (
                     <Badge variant="outline">Chưa điểm danh</Badge>
                   ) : (
                     <Badge variant="secondary">Hôm nay có mặt {c.presentToday}</Badge>

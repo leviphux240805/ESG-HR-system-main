@@ -262,7 +262,8 @@ public class ChildAttendanceService {
 			.orElse(DEFAULT_CUTOFF);
 	}
 
-	private boolean isSchoolDay(UUID schoolId, LocalDate date) {
+	/** Ngày học: trừ Chủ nhật và ngày lễ (chung tổ chức hoặc riêng trường). */
+	public boolean isSchoolDay(UUID schoolId, LocalDate date) {
 		return date.getDayOfWeek() != DayOfWeek.SUNDAY && holidays.findByHolidayDateBetweenOrderByHolidayDate(date, date)
 			.stream()
 			.noneMatch(h -> h.getSchoolId() == null || h.getSchoolId().equals(schoolId));

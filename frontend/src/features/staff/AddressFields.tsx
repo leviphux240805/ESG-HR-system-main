@@ -22,17 +22,18 @@ export function addressText(provinces: Province[], provinceCode?: string | null,
 
 interface Props<T extends FieldValues> {
   form: UseFormReturn<T>;
-  /** Tiền tố trường: "perm" (thường trú) hoặc "curr" (hiện tại). */
-  prefix: "perm" | "curr";
+  /** Tiền tố trường: "perm" (thường trú), "curr" (hiện tại) hoặc "" (provinceCode, wardCode, addressDetail). */
+  prefix: "perm" | "curr" | "";
   provinces: Province[];
   disabled?: boolean;
 }
 
 /** Ô địa chỉ: tỉnh → phường/xã → số nhà, đường. */
 export function AddressFields<T extends FieldValues>({ form, prefix, provinces, disabled }: Props<T>) {
-  const provinceField = `${prefix}ProvinceCode` as Path<T>;
-  const wardField = `${prefix}WardCode` as Path<T>;
-  const detailField = `${prefix}AddressDetail` as Path<T>;
+  const field = (name: string) => (prefix ? `${prefix}${name}` : name.charAt(0).toLowerCase() + name.slice(1)) as Path<T>;
+  const provinceField = field("ProvinceCode");
+  const wardField = field("WardCode");
+  const detailField = field("AddressDetail");
   const provinceCode = form.watch(provinceField) as string | undefined;
   const wards = useMemo(
     () => provinces.find((p) => p.province_code === provinceCode)?.wards ?? [],

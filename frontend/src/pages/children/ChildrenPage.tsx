@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/common/DataTable";
 import { FilterBar, type FilterDef } from "@/components/common/FilterBar";
 import { PageHeader } from "@/components/common/PageHeader";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { useCan } from "@/hooks/useCan";
 import { useListParams } from "@/hooks/useListParams";
 import { formatDate } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import { CHILD_FILTER_KEYS, type ChildItem, useChildren, useClasses } from "@/api";
+import { CHILD_FILTER_KEYS, CHILD_STATUS, type ChildItem, useChildren, useClasses } from "@/api";
 import { formatAge } from "@/features/school/age";
 import { ChildSheet } from "@/features/school/ChildSheet";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
@@ -20,13 +20,14 @@ export default function ChildrenPage() {
   const params = useListParams({ filterKeys: CHILD_FILTER_KEYS, defaultSort: { field: "fullName", direction: "asc" } });
   const query = useChildren(params);
   const classes = useClasses();
-  const canManage = useCan("manage", "approvals");
+  const canManage = useCan("manage", "classes");
   const [creating, setCreating] = useState(false);
 
   const filters = useMemo<FilterDef[]>(
     () => [
       { type: "select", key: "classId", label: "Lớp", options: (classes.data ?? []).map((c) => ({ value: c.id, label: c.name })) },
       { type: "select", key: "gender", label: "Giới tính", options: [{ value: "FEMALE", label: "Bé gái" }, { value: "MALE", label: "Bé trai" }] },
+      { type: "select", key: "status", label: "Trạng thái", options: Object.entries(CHILD_STATUS).map(([value, s]) => ({ value, label: s.label })) },
     ],
     [classes.data],
   );
@@ -48,7 +49,7 @@ export default function ChildrenPage() {
                 {row.original.fullName}
               </Link>
               <p className="text-xs text-muted-foreground">
-                {row.original.nickname} · {row.original.gender === "MALE" ? "Nam" : "Nữ"}
+                {[row.original.nickname, row.original.gender === "MALE" ? "Nam" : "Nữ"].filter(Boolean).join(" · ")}
               </p>
             </div>
           </div>
@@ -66,33 +67,34 @@ export default function ChildrenPage() {
           </div>
         ),
       },
-      { id: "className", accessorKey: "className", header: "Lớp", enableSorting: true },
+      { id: "className", accessorKey: "className", header: "Lớp", cell: ({ row }) => row.original.className ?? "—" },
       {
         id: "guardian",
         header: "Phụ huynh",
         meta: { label: "Phụ huynh" },
         cell: ({ row }) => (
           <div>
-            {row.original.guardianName}
-            <a href={`tel:${row.original.guardianPhone}`} className="block text-xs text-primary">
-              {row.original.guardianPhone}
-            </a>
+            {row.original.guardianName ?? "—"}
+            {row.original.guardianPhone && (
+              <a href={`tel:${row.original.guardianPhone}`} className="block text-xs text-primary">
+                {row.original.guardianPhone}
+              </a>
+            )}
           </div>
         ),
       },
       {
-        id: "allergies",
+        id: "allergyNote",
         header: "Dị ứng",
         meta: { label: "Dị ứng" },
-        cell: ({ row }) => (row.original.allergies ? <Badge variant="destructive">{row.original.allergies}</Badge> : <span className="text-muted-foreground">—</span>),
+        cell: ({ row }) =>
+          row.original.allergyNote ? <Badge variant="destructive">{row.original.allergyNote}</Badge> : <span className="text-muted-foreground">—</span>,
       },
       {
-        id: "attendanceRate",
-        accessorKey: "attendanceRate",
-        header: "Đi học 30 ngày",
-        enableSorting: true,
-        meta: { align: "right" },
-        cell: ({ row }) => <span className={cn("font-medium", row.original.attendanceRate < 85 && "text-destructive")}>{row.original.attendanceRate}%</span>,
+        id: "status",
+        header: "Trạng thái",
+        meta: { label: "Trạng thái" },
+        cell: ({ row }) => <StatusBadge status={row.original.status} labels={CHILD_STATUS} />,
       },
     ],
     [],
@@ -102,7 +104,7 @@ export default function ChildrenPage() {
     <div>
       <PageHeader
         title="Hồ sơ trẻ"
-        description="Danh sách trẻ theo lớp, thông tin phụ huynh, dị ứng và tỷ lệ đi học."
+        description="Danh sách trẻ theo lớp, thông tin phụ huynh và dị ứng."
         actions={
           canManage && (
             <Button className="min-h-11" onClick={() => setCreating(true)}>
@@ -111,7 +113,7 @@ export default function ChildrenPage() {
           )
         }
       />
-      <FilterBar params={params} searchPlaceholder="Tìm theo tên, tên gọi, mã, phụ huynh" filters={filters} />
+      <FilterBar params={params} searchPlaceholder="Tìm theo tên, tên gọi, mã" filters={filters} />
       <DataTable
         tableId="children"
         columns={columns}
@@ -123,14 +125,11 @@ export default function ChildrenPage() {
             <StaffAvatar fullName={c.fullName} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
-                {c.fullName} <span className="font-normal text-muted-foreground">({c.nickname})</span>
+                {c.fullName} {c.nickname && <span className="font-normal text-muted-foreground">({c.nickname})</span>}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {c.className} · {formatAge(c.dob)}
-              </p>
-              {c.allergies && <p className="text-xs font-medium text-destructive">{c.allergies}</p>}
+              <p className="text-xs text-muted-foreground">{[c.className, formatAge(c.dob)].filter(Boolean).join(" · ")}</p>
+              {c.allergyNote && <p className="text-xs font-medium text-destructive">{c.allergyNote}</p>}
             </div>
-            <span className={cn("text-sm font-semibold tabular-nums", c.attendanceRate < 85 && "text-destructive")}>{c.attendanceRate}%</span>
           </Link>
         )}
         emptyTitle="Không có trẻ phù hợp"

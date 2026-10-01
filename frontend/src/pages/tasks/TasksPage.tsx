@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, CheckSquare, MessageSquare, Plus, Search } from "lucide-react";
+import { CalendarClock, CheckSquare, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,18 +10,18 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { ErrorState, TableSkeleton } from "@/components/common/States";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { errorMessage } from "@/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCan } from "@/hooks/useCan";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
-import { changeStatus, PRIORITY, TASK_COLUMNS, type TaskItem, type TaskStatus, useTasks } from "@/api";
+import { changeStatus, PRIORITY, TASK_COLUMNS, type TaskItem, type TaskPriority, type TaskStatus, useTasks } from "@/api";
 import { TaskDetailSheet, TaskFormSheet } from "@/features/tasks/TaskSheets";
 
 const ALL = "ALL";
 
 function TaskCard({ task, onOpen }: { task: TaskItem; onOpen: () => void }) {
-  const done = task.checklist.filter((c) => c.done).length;
   const draggable = task.allowedStatuses.length > 0;
   return (
     <button
@@ -41,23 +41,19 @@ function TaskCard({ task, onOpen }: { task: TaskItem; onOpen: () => void }) {
       </div>
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span className={cn("flex items-center gap-1", task.overdue && "font-medium text-destructive")}>
-          <CalendarClock className="w-3.5 h-3.5" /> {formatDate(task.dueDate)}
+          <CalendarClock className="w-3.5 h-3.5" /> {task.dueAt ? formatDate(task.dueAt) : "Không hạn"}
           {task.overdue && " · quá hạn"}
         </span>
-        {task.checklist.length > 0 && (
+        {task.checklistTotal > 0 && (
           <span className="flex items-center gap-1">
-            <CheckSquare className="w-3.5 h-3.5" /> {done}/{task.checklist.length}
+            <CheckSquare className="w-3.5 h-3.5" /> {task.checklistDone}/{task.checklistTotal}
           </span>
         )}
-        {task.comments.length > 0 && (
-          <span className="flex items-center gap-1">
-            <MessageSquare className="w-3.5 h-3.5" /> {task.comments.length}
-          </span>
-        )}
+        {task.schoolName && <span>{task.schoolName}</span>}
       </div>
       <div className="flex -space-x-2">
         {task.assignees.map((a) => (
-          <StaffAvatar key={a.id} fullName={a.fullName} className="h-7 w-7 border-2 border-card text-[10px]" />
+          <StaffAvatar key={a.staffId} fullName={a.fullName} className="h-7 w-7 border-2 border-card text-[10px]" />
         ))}
       </div>
     </button>
@@ -68,12 +64,18 @@ function TaskCard({ task, onOpen }: { task: TaskItem; onOpen: () => void }) {
 export default function TasksPage() {
   const queryClient = useQueryClient();
   const canAssign = useCan("manage", "tasks");
+  const myStaffId = useAuth().me?.staffId;
   const [q, setQ] = useState("");
   const [priority, setPriority] = useState(ALL);
   const [mine, setMine] = useState(false);
   const [overdue, setOverdue] = useState(false);
   const debounced = useDebouncedValue(q, 300);
-  const query = useTasks({ q: debounced || undefined, priority: priority === ALL ? undefined : priority, mine, overdue });
+  const query = useTasks({
+    q: debounced || undefined,
+    priority: priority === ALL ? undefined : (priority as TaskPriority),
+    assigneeStaffId: mine ? myStaffId : undefined,
+    overdue,
+  });
   const [openId, setOpenId] = useState<string | null>(null);
   const [editing, setEditing] = useState<TaskItem | null | undefined>(undefined);
   const [dragOver, setDragOver] = useState<TaskStatus | null>(null);
@@ -82,10 +84,9 @@ export default function TasksPage() {
 
   const byStatus = useMemo(() => {
     const map = new Map<TaskStatus, TaskItem[]>(TASK_COLUMNS.map((c) => [c.status, []]));
-    for (const t of query.data ?? []) map.get(t.status)!.push(t);
+    for (const t of query.data ?? []) map.get(t.status)?.push(t);
     return map;
   }, [query.data]);
-  const openTask = query.data?.find((t) => t.id === openId) ?? null;
 
   const drop = async (status: TaskStatus, id: string) => {
     setDragOver(null);
@@ -116,7 +117,7 @@ export default function TasksPage() {
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="min-h-11 pl-9" placeholder="Tìm theo tên việc, người nhận" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Tìm việc" />
+          <Input className="min-h-11 pl-9" placeholder="Tìm theo tên việc" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Tìm việc" />
         </div>
         <Select value={priority} onValueChange={setPriority}>
           <SelectTrigger className="min-h-11 w-40" aria-label="Ưu tiên">
@@ -131,7 +132,7 @@ export default function TasksPage() {
             ))}
           </SelectContent>
         </Select>
-        {canAssign && (
+        {canAssign && myStaffId && (
           <Toggle variant="outline" className="min-h-11" pressed={mine} onPressedChange={setMine}>
             Việc của tôi
           </Toggle>
@@ -207,7 +208,7 @@ export default function TasksPage() {
       )}
 
       <TaskDetailSheet
-        task={openTask}
+        taskId={openId}
         onClose={() => setOpenId(null)}
         onEdit={(t) => {
           setOpenId(null);

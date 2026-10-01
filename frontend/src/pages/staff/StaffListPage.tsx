@@ -95,7 +95,7 @@ export default function StaffListPage() {
   const classes = useClasses();
   const classesOf = useMemo(() => {
     const map = new Map<string, string[]>();
-    for (const c of classes.data ?? []) for (const t of c.teachers) map.set(t.id, [...(map.get(t.id) ?? []), c.name]);
+    for (const c of classes.data ?? []) for (const t of c.teachers) map.set(t.staffId, [...(map.get(t.staffId) ?? []), c.name]);
     return map;
   }, [classes.data]);
 

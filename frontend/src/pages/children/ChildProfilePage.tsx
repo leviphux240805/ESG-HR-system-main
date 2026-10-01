@@ -10,15 +10,14 @@ import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States
 import { ApiError } from "@/api";
 import { useCan } from "@/hooks/useCan";
 import { formatDate } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import { MARK_LABELS, useChild } from "@/api";
+import { CHILD_STATUS, useChild } from "@/api";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { addressText, useAddressData } from "@/features/staff/AddressFields";
 import { formatAge } from "@/features/school/age";
 import { ChildSheet } from "@/features/school/ChildSheet";
 import { ChildFeesTab } from "@/features/finance/ChildFeesTab";
 import { ChildHealthTab } from "@/features/health/ChildHealthTab";
 import { StaffAvatar } from "@/features/staff/StaffAvatar";
-
-const MARK_DOT = { P: "bg-green-500", E: "bg-amber-400", A: "bg-red-500" } as const;
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -32,14 +31,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export default function ChildProfilePage() {
   const { id = "" } = useParams();
   const query = useChild(id);
-  const canEdit = useCan("manage", "approvals");
+  const provinces = useAddressData();
   const canSeeFees = useCan("view", "finance");
   const [editing, setEditing] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const canSeeHealth = useCan("view", "health");
   const requested = searchParams.get("tab");
   const tab = (canSeeFees && requested === "hoc-phi") || (canSeeHealth && requested === "suc-khoe") ? requested : "ho-so";
-  const breadcrumbs = [{ label: "Hồ sơ trẻ", to: "/tre" }, { label: query.data?.fullName ?? "Chi tiết" }];
+  const breadcrumbs = [{ label: "Hồ sơ trẻ", to: "/tre" }, { label: query.data?.item.fullName ?? "Chi tiết" }];
 
   if (query.isLoading) return <PageSkeleton />;
   if (query.isError) {
@@ -55,9 +54,9 @@ export default function ChildProfilePage() {
       </div>
     );
   }
-  const child = query.data!;
-  const { attendance } = child;
-  const totalDays = attendance.present + attendance.excused + attendance.absent;
+  const detail = query.data!;
+  const child = detail.item;
+  const primary = detail.guardians.find((g) => g.primary) ?? detail.guardians[0];
 
   return (
     <div className="space-y-4">
@@ -65,7 +64,7 @@ export default function ChildProfilePage() {
         title="Hồ sơ trẻ"
         breadcrumbs={breadcrumbs}
         actions={
-          canEdit && (
+          detail.canEdit && (
             <Button variant="outline" className="min-h-11" onClick={() => setEditing(true)}>
               <Pencil className="w-4 h-4 mr-2" /> Sửa
             </Button>
@@ -77,22 +76,25 @@ export default function ChildProfilePage() {
           <StaffAvatar fullName={child.fullName} className="h-20 w-20 text-lg" />
           <div className="min-w-0 flex-1 space-y-1">
             <h2 className="text-xl font-semibold">
-              {child.fullName} <span className="font-normal text-muted-foreground">({child.nickname})</span>
+              {child.fullName} {child.nickname && <span className="font-normal text-muted-foreground">({child.nickname})</span>}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {child.code} · {child.className} · {formatAge(child.dob)}
-            </p>
-            {child.allergies && (
-              <Badge variant="destructive" className="gap-1">
-                <AlertTriangle className="w-3 h-3" /> {child.allergies}
-              </Badge>
-            )}
+            <p className="text-sm text-muted-foreground">{[child.code, child.className, formatAge(child.dob)].filter(Boolean).join(" · ")}</p>
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge status={child.status} labels={CHILD_STATUS} />
+              {child.allergyNote && (
+                <Badge variant="destructive" className="gap-1">
+                  <AlertTriangle className="w-3 h-3" /> {child.allergyNote}
+                </Badge>
+              )}
+            </div>
           </div>
-          <Button asChild className="min-h-11">
-            <a href={`tel:${child.guardianPhone}`}>
-              <Phone className="w-4 h-4 mr-2" /> Gọi phụ huynh
-            </a>
-          </Button>
+          {primary?.phone && (
+            <Button asChild className="min-h-11">
+              <a href={`tel:${primary.phone}`}>
+                <Phone className="w-4 h-4 mr-2" /> Gọi phụ huynh
+              </a>
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -114,14 +116,9 @@ export default function ChildProfilePage() {
                 <dl>
                   <Row label="Ngày sinh">{formatDate(child.dob)}</Row>
                   <Row label="Giới tính">{child.gender === "MALE" ? "Nam" : "Nữ"}</Row>
-                  <Row label="Cơ sở">{child.schoolName}</Row>
-                  <Row label="Ngày nhập học">{formatDate(child.enrolledOn)}</Row>
-                  <Row label="Phụ huynh">
-                    {child.guardianName} ({child.guardianRelation})
-                  </Row>
-                  <Row label="Điện thoại">{child.guardianPhone}</Row>
-                  <Row label="Địa chỉ">{child.address}</Row>
-                  <Row label="Lưu ý sức khỏe">{child.healthNote}</Row>
+                  <Row label="Ngày nhập học">{formatDate(detail.enrolledAt)}</Row>
+                  <Row label="Địa chỉ">{addressText(provinces, detail.provinceCode, detail.wardCode, detail.addressDetail)}</Row>
+                  <Row label="Lưu ý sức khỏe">{detail.healthNote}</Row>
                 </dl>
               </CardContent>
             </Card>
@@ -129,24 +126,49 @@ export default function ChildProfilePage() {
             <div className="space-y-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Đi học 30 ngày gần nhất</CardTitle>
+                  <CardTitle className="text-base">Phụ huynh, người đón</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    {(["present", "excused", "absent"] as const).map((k, i) => (
-                      <div key={k} className="rounded-lg bg-muted p-2">
-                        <p className="text-xl font-bold">{attendance[k]}</p>
-                        <p className="text-xs text-muted-foreground">{MARK_LABELS[(["P", "E", "A"] as const)[i]]}</p>
-                      </div>
-                    ))}
-                  </div>
-                  {totalDays > 0 && (
-                    <div className="flex flex-wrap gap-1" aria-label="Điểm danh gần đây">
-                      {[...attendance.recent].reverse().map((r) => (
-                        <span key={r.date} title={`${formatDate(r.date)}: ${MARK_LABELS[r.mark]}`} className={cn("h-4 w-4 rounded", MARK_DOT[r.mark])} />
+                <CardContent>
+                  {detail.guardians.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Chưa có thông tin phụ huynh.</p>
+                  ) : (
+                    <ul className="divide-y">
+                      {detail.guardians.map((g) => (
+                        <li key={g.id} className="flex min-h-11 items-center gap-2 py-2 text-sm">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">
+                              {g.fullName} <span className="font-normal text-muted-foreground">({g.relationship})</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {[g.primary && "Liên hệ chính", g.canPickUp && "Được đón trẻ"].filter(Boolean).join(" · ")}
+                            </p>
+                          </div>
+                          {g.phone && (
+                            <a href={`tel:${g.phone}`} className="text-primary">
+                              {g.phone}
+                            </a>
+                          )}
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Quá trình học</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-1 text-sm">
+                    {detail.enrollments.map((e) => (
+                      <li key={e.id} className="flex justify-between gap-2">
+                        <span>{e.className}</span>
+                        <span className="text-muted-foreground">
+                          {formatDate(e.fromDate)} – {e.toDate ? formatDate(e.toDate) : "nay"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             </div>
@@ -163,7 +185,7 @@ export default function ChildProfilePage() {
           </TabsContent>
         )}
       </Tabs>
-      <ChildSheet open={editing} onOpenChange={setEditing} child={child} />
+      <ChildSheet open={editing} onOpenChange={setEditing} child={detail} />
     </div>
   );
 }

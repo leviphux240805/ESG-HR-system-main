@@ -30,7 +30,7 @@ const manage = (resource: Resource) => ({ action: "manage" as const, resource })
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [
-      { path: "/hom-nay", label: "Hôm nay", icon: Sun, phase: 1, permission: view("approvals"), page: () => import("@/pages/today/TodayPage") },
+      { path: "/hom-nay", label: "Hôm nay", icon: Sun, phase: 1, permission: view("today"), page: () => import("@/pages/today/TodayPage") },
       { path: "/hop-duyet", label: "Hộp duyệt", icon: Inbox, phase: 1, permission: view("approvals"), page: () => import("@/pages/approvals/ApprovalsPage") },
     ],
   },

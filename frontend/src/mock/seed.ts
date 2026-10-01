@@ -1,6 +1,18 @@
 import { fakerVI as faker } from "@faker-js/faker";
-import type { AgeGroup, ChildMark, Gender, TaskPriority, TaskStatus } from "@/api/contracts";
-import { DB_VERSION, type ClassRec, type ChildRec, type DemoDB, type LeaveRec, type StaffRec, type TaskRec } from "./db";
+import {
+  type AgeGroup,
+  type ChildMark,
+  type ChildRec,
+  type ClassRec,
+  DB_VERSION,
+  type DemoDB,
+  type Gender,
+  type LeaveRec,
+  type StaffRec,
+  type TaskPriority,
+  type TaskRec,
+  type TaskStatus,
+} from "./db";
 import { addDays, ageMonths, iso, isSchoolDay, isWorkDay, monthDays, monthOf, range, shiftMonthStr, weekStart, weekday, holidayName } from "./dates";
 import { amountDue, generate as generateInvoices, issue as issueInvoices, pay as payInvoice, PAYROLL_CATEGORY_ID, TUITION_CATEGORY_ID } from "./finance";
 import { ageInMonths, classify, valueAt } from "./growth";

@@ -126,6 +126,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hộp duyệt: đơn nghỉ và việc chờ người xem duyệt */
+        get: operations["approvals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{type}/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duyệt đơn nghỉ hoặc việc (việc chuyển sang Hoàn thành) */
+        post: operations["approve_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{type}/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Từ chối đơn nghỉ hoặc trả việc về Đang làm (bắt buộc lý do) */
+        post: operations["reject_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attendance/configs": {
         parameters: {
             query?: never;
@@ -2646,6 +2697,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/substitutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Phân công người dạy thay giáo viên nghỉ ở một lớp */
+        post: operations["assignSubstitute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tasks": {
         parameters: {
             query?: never;
@@ -2819,10 +2887,38 @@ export interface paths {
         patch: operations["changeStatus_1"];
         trace?: never;
     };
+    "/api/v1/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tình hình hôm nay: lớp, trẻ vắng, nhân viên nghỉ, việc cần xử lý */
+        get: operations["today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AbsentChild: {
+            /** Format: uuid */
+            childId: string;
+            /** Format: uuid */
+            classId: string;
+            className: string;
+            fullName: string;
+            note?: string;
+            /** @enum {string} */
+            status: "PRESENT" | "EXCUSED" | "ABSENT";
+        };
         AccountItem: {
             active: boolean;
             email?: string;
@@ -2911,6 +3007,23 @@ export interface components {
             childName: string;
             className?: string;
             matches: components["schemas"]["AllergyMatch"][];
+        };
+        ApprovalItem: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            /** @description Có khi type = LEAVE */
+            leave?: components["schemas"]["LeaveInfo"];
+            /** @description Người xin nghỉ hoặc người nhận việc */
+            requester: string;
+            /** Format: uuid */
+            schoolId?: string;
+            schoolName?: string;
+            /** @description Có khi type = TASK */
+            task?: components["schemas"]["TaskInfo"];
+            /** @enum {string} */
+            type: "LEAVE" | "TASK";
         };
         AssignTeacherRequest: {
             /**
@@ -3693,6 +3806,9 @@ export interface components {
             /** @description Có mặt / đã điểm danh (%) */
             rate: number;
         };
+        DecisionRequest: {
+            note?: string;
+        };
         DependentDto: {
             /** Format: date */
             dob?: string;
@@ -4290,6 +4406,24 @@ export interface components {
             usedDays: number;
             /** Format: int32 */
             year: number;
+        };
+        LeaveClass: {
+            /** Format: uuid */
+            classId: string;
+            className: string;
+            substituteName?: string;
+            /** Format: uuid */
+            substituteStaffId?: string;
+        };
+        LeaveInfo: {
+            attendanceCode: string;
+            days: number;
+            /** Format: date */
+            fromDate: string;
+            leaveCode: string;
+            reason: string;
+            /** Format: date */
+            toDate: string;
         };
         LeaveRequestDto: {
             /** @description Mã ghi vào bảng công (1/2P khi nửa ngày) */
@@ -5207,6 +5341,19 @@ export interface components {
             /** @description Rỗng nếu người xem không được xem lương */
             salaryConfigs?: components["schemas"]["SalaryConfigDto"][];
         };
+        StaffLeave: {
+            /** @description Mã công: P, 1/2P, K, O… */
+            attendanceCode: string;
+            /** @description Lớp đang phụ trách */
+            classes: components["schemas"]["LeaveClass"][];
+            fullName: string;
+            /** @enum {string} */
+            position: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
+            /** Format: uuid */
+            schoolId: string;
+            /** Format: uuid */
+            staffId: string;
+        };
         StaffListItem: {
             /**
              * Format: date
@@ -5231,6 +5378,15 @@ export interface components {
             startDate: string;
             /** @enum {string} */
             status: "ACTIVE" | "TERMINATED";
+        };
+        StaffOption: {
+            fullName: string;
+            /** @enum {string} */
+            position: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
+            /** Format: uuid */
+            schoolId: string;
+            /** Format: uuid */
+            staffId: string;
         };
         StaffPermissions: {
             canEdit: boolean;
@@ -5290,6 +5446,19 @@ export interface components {
                 [key: string]: string;
             };
         };
+        SubstitutionRequest: {
+            /** Format: uuid */
+            absentStaffId: string;
+            /** Format: uuid */
+            classId: string;
+            /**
+             * Format: date
+             * @description Bỏ trống = hôm nay
+             */
+            date?: string;
+            /** Format: uuid */
+            staffId: string;
+        };
         TaskDetail: {
             /** @description Người xem là người nhận việc */
             assignee: boolean;
@@ -5300,6 +5469,15 @@ export interface components {
             history: components["schemas"]["HistoryItem"][];
             recurrence?: components["schemas"]["RecurrenceDto"];
             task: components["schemas"]["TaskItem"];
+        };
+        TaskInfo: {
+            /** Format: int32 */
+            checklistDone: number;
+            /** Format: int32 */
+            checklistTotal: number;
+            /** Format: date-time */
+            dueAt?: string;
+            title: string;
         };
         TaskItem: {
             /** @description Trạng thái người xem được chuyển sang */
@@ -5364,6 +5542,58 @@ export interface components {
             /** Format: date */
             endDate: string;
             reason: string;
+        };
+        TodayClass: {
+            /** Format: int32 */
+            absent: number;
+            ageGroupName: string;
+            /** Format: int32 */
+            excused: number;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int32 */
+            present: number;
+            /** Format: uuid */
+            schoolId: string;
+            schoolName: string;
+            /** @description Có giáo viên nghỉ chưa có người thay */
+            shortStaffed: boolean;
+            /** Format: int32 */
+            size: number;
+            /** @description Đã điểm danh hôm nay */
+            taken: boolean;
+            teachers: components["schemas"]["TodayTeacher"][];
+        };
+        TodaySummary: {
+            absentChildren: components["schemas"]["AbsentChild"][];
+            /** @description Nhân viên đang làm, không nghỉ hôm nay */
+            availableStaff: components["schemas"]["StaffOption"][];
+            /** @description Được phân công dạy thay */
+            canAssignSubstitute: boolean;
+            classes: components["schemas"]["TodayClass"][];
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            pendingLeaves: number;
+            /** Format: int32 */
+            pendingTasks: number;
+            /** @description Có trường đang chọn học hôm nay */
+            schoolDay: boolean;
+            staffOnLeave: components["schemas"]["StaffLeave"][];
+            /** Format: int32 */
+            tasksDueToday: number;
+            /** Format: int32 */
+            tasksOverdue: number;
+        };
+        TodayTeacher: {
+            fullName: string;
+            onLeave: boolean;
+            /** Format: uuid */
+            staffId: string;
+            substituteName?: string;
+            /** Format: uuid */
+            substituteStaffId?: string;
         };
         TokenResponse: {
             accessToken: string;
@@ -5811,6 +6041,112 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["AgeGroupDto"];
                 };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    approvals: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApprovalItem"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    approve_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                type: "LEAVE" | "TASK";
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reject_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                type: "LEAVE" | "TASK";
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {
@@ -12693,6 +13029,40 @@ export interface operations {
             };
         };
     };
+    assignSubstitute: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubstitutionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     list: {
         parameters: {
             query?: {
@@ -13173,6 +13543,38 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TaskItem"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    today: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TodaySummary"];
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */

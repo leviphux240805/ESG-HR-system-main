@@ -23,7 +23,8 @@ export type Resource =
   | "finance" // Học phí & thu chi
   | "payroll" // Lương & phiếu lương
   | "reports" // Báo cáo & dashboard
-  | "approvals"; // Hôm nay, Hộp duyệt (ban giám hiệu)
+  | "today" // Hôm nay: lớp, trẻ vắng, dạy thay (ban giám hiệu quản lý lớp)
+  | "approvals"; // Hộp duyệt (ban giám hiệu)
 
 export type Action = "view" | "manage" | "approve" | "export";
 
@@ -56,6 +57,7 @@ export const PERMISSION_MATRIX: Record<Resource, Row> = {
   payroll: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "SCHOOL", TEACHER: "SELF", NURSE: "SELF", KITCHEN: "SELF", STAFF: "SELF" },
   // Kế toán: báo cáo tài chính
   reports: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "VIEW", TEACHER: "NONE", NURSE: "NONE", KITCHEN: "NONE", STAFF: "NONE" },
+  today: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "NONE", TEACHER: "NONE", NURSE: "NONE", KITCHEN: "NONE", STAFF: "NONE" },
   approvals: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "NONE", TEACHER: "NONE", NURSE: "NONE", KITCHEN: "NONE", STAFF: "NONE" },
 };
 
@@ -72,6 +74,7 @@ export const RESOURCE_GROUP: Record<Resource, FunctionGroup | "ANY" | null> = {
   finance: "FINANCE",
   payroll: "FINANCE",
   reports: "REPORTS",
+  today: "CLASSROOM",
   approvals: "ANY",
 };
 

@@ -39,6 +39,11 @@ export async function apiAs(request: APIRequestContext, identifier: string, scho
       expect(res.ok(), await res.text()).toBeTruthy();
       return res.json();
     },
+    async patch<T = Record<string, unknown>>(path: string, data: unknown): Promise<T> {
+      const res = await request.patch(path, { data, headers });
+      expect(res.ok(), await res.text()).toBeTruthy();
+      return res.json();
+    },
   };
 }
 

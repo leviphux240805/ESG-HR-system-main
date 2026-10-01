@@ -460,6 +460,163 @@
         "tags" : [ "Lớp học" ]
       }
     },
+    "/api/v1/approvals" : {
+      "get" : {
+        "operationId" : "approvals",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ApprovalItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Hộp duyệt: đơn nghỉ và việc chờ người xem duyệt",
+        "tags" : [ "Điều hành" ]
+      }
+    },
+    "/api/v1/approvals/{type}/{id}/approve" : {
+      "post" : {
+        "operationId" : "approve_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "LEAVE", "TASK" ]
+          }
+        }, {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DecisionRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Duyệt đơn nghỉ hoặc việc (việc chuyển sang Hoàn thành)",
+        "tags" : [ "Điều hành" ]
+      }
+    },
+    "/api/v1/approvals/{type}/{id}/reject" : {
+      "post" : {
+        "operationId" : "reject_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "LEAVE", "TASK" ]
+          }
+        }, {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DecisionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Từ chối đơn nghỉ hoặc trả việc về Đang làm (bắt buộc lý do)",
+        "tags" : [ "Điều hành" ]
+      }
+    },
     "/api/v1/attendance/configs" : {
       "get" : {
         "description" : "Bỏ trống schoolId = mặc định của tổ chức.",
@@ -10575,6 +10732,48 @@
         "tags" : [ "Nhân sự" ]
       }
     },
+    "/api/v1/substitutions" : {
+      "post" : {
+        "operationId" : "assignSubstitute",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubstitutionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Phân công người dạy thay giáo viên nghỉ ở một lớp",
+        "tags" : [ "Điều hành" ]
+      }
+    },
     "/api/v1/tasks" : {
       "get" : {
         "operationId" : "list",
@@ -11374,10 +11573,76 @@
         "summary" : "Đổi trạng thái; người nhận chỉ tới Chờ duyệt, người giao mới Hoàn thành hoặc Hủy",
         "tags" : [ "Công việc" ]
       }
+    },
+    "/api/v1/today" : {
+      "get" : {
+        "operationId" : "today",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TodaySummary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Tình hình hôm nay: lớp, trẻ vắng, nhân viên nghỉ, việc cần xử lý",
+        "tags" : [ "Điều hành" ]
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "AbsentChild" : {
+        "type" : "object",
+        "properties" : {
+          "childId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "classId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "className" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PRESENT", "EXCUSED", "ABSENT" ]
+          }
+        },
+        "required" : [ "childId", "classId", "className", "fullName", "status" ]
+      },
       "AccountItem" : {
         "type" : "object",
         "properties" : {
@@ -11600,6 +11865,43 @@
           }
         },
         "required" : [ "allergyNote", "childId", "childName", "matches" ]
+      },
+      "ApprovalItem" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "leave" : {
+            "$ref" : "#/components/schemas/LeaveInfo",
+            "description" : "Có khi type = LEAVE"
+          },
+          "requester" : {
+            "type" : "string",
+            "description" : "Người xin nghỉ hoặc người nhận việc"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "task" : {
+            "$ref" : "#/components/schemas/TaskInfo",
+            "description" : "Có khi type = TASK"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "LEAVE", "TASK" ]
+          }
+        },
+        "required" : [ "createdAt", "id", "requester", "type" ]
       },
       "AssignTeacherRequest" : {
         "type" : "object",
@@ -13581,6 +13883,16 @@
         },
         "required" : [ "date", "rate" ]
       },
+      "DecisionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        }
+      },
       "DependentDto" : {
         "type" : "object",
         "properties" : {
@@ -15034,6 +15346,52 @@
           }
         },
         "required" : [ "annualDays", "pendingDays", "remaining", "usedDays", "year" ]
+      },
+      "LeaveClass" : {
+        "type" : "object",
+        "properties" : {
+          "classId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "className" : {
+            "type" : "string"
+          },
+          "substituteName" : {
+            "type" : "string"
+          },
+          "substituteStaffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "classId", "className" ]
+      },
+      "LeaveInfo" : {
+        "type" : "object",
+        "properties" : {
+          "attendanceCode" : {
+            "type" : "string"
+          },
+          "days" : {
+            "type" : "number"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "leaveCode" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "attendanceCode", "days", "fromDate", "leaveCode", "reason", "toDate" ]
       },
       "LeaveRequestDto" : {
         "type" : "object",
@@ -17311,6 +17669,38 @@
         },
         "required" : [ "assignments", "events" ]
       },
+      "StaffLeave" : {
+        "type" : "object",
+        "properties" : {
+          "attendanceCode" : {
+            "type" : "string",
+            "description" : "Mã công: P, 1/2P, K, O…"
+          },
+          "classes" : {
+            "type" : "array",
+            "description" : "Lớp đang phụ trách",
+            "items" : {
+              "$ref" : "#/components/schemas/LeaveClass"
+            }
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "attendanceCode", "classes", "fullName", "position", "schoolId", "staffId" ]
+      },
       "StaffListItem" : {
         "type" : "object",
         "properties" : {
@@ -17361,6 +17751,27 @@
           }
         },
         "required" : [ "fullName", "id", "position", "schoolId", "schoolName", "staffCode", "startDate", "status" ]
+      },
+      "StaffOption" : {
+        "type" : "object",
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "fullName", "position", "schoolId", "staffId" ]
       },
       "StaffPermissions" : {
         "type" : "object",
@@ -17487,6 +17898,29 @@
         },
         "required" : [ "changes" ]
       },
+      "SubstitutionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "absentStaffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "classId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bỏ trống = hôm nay"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "absentStaffId", "classId", "staffId" ]
+      },
       "TaskDetail" : {
         "type" : "object",
         "properties" : {
@@ -17529,6 +17963,27 @@
           }
         },
         "required" : [ "assignee", "attachments", "checklist", "comments", "history", "task" ]
+      },
+      "TaskInfo" : {
+        "type" : "object",
+        "properties" : {
+          "checklistDone" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "checklistTotal" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "dueAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "checklistDone", "checklistTotal", "title" ]
       },
       "TaskItem" : {
         "type" : "object",
@@ -17664,6 +18119,141 @@
           }
         },
         "required" : [ "endDate", "reason" ]
+      },
+      "TodayClass" : {
+        "type" : "object",
+        "properties" : {
+          "absent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ageGroupName" : {
+            "type" : "string"
+          },
+          "excused" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "present" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "shortStaffed" : {
+            "type" : "boolean",
+            "description" : "Có giáo viên nghỉ chưa có người thay"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "taken" : {
+            "type" : "boolean",
+            "description" : "Đã điểm danh hôm nay"
+          },
+          "teachers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TodayTeacher"
+            }
+          }
+        },
+        "required" : [ "absent", "ageGroupName", "excused", "id", "name", "present", "schoolId", "schoolName", "shortStaffed", "size", "taken", "teachers" ]
+      },
+      "TodaySummary" : {
+        "type" : "object",
+        "properties" : {
+          "absentChildren" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AbsentChild"
+            }
+          },
+          "availableStaff" : {
+            "type" : "array",
+            "description" : "Nhân viên đang làm, không nghỉ hôm nay",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffOption"
+            }
+          },
+          "canAssignSubstitute" : {
+            "type" : "boolean",
+            "description" : "Được phân công dạy thay"
+          },
+          "classes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TodayClass"
+            }
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "pendingLeaves" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pendingTasks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "schoolDay" : {
+            "type" : "boolean",
+            "description" : "Có trường đang chọn học hôm nay"
+          },
+          "staffOnLeave" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffLeave"
+            }
+          },
+          "tasksDueToday" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "tasksOverdue" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "absentChildren", "availableStaff", "canAssignSubstitute", "classes", "date", "pendingLeaves", "pendingTasks", "schoolDay", "staffOnLeave", "tasksDueToday", "tasksOverdue" ]
+      },
+      "TodayTeacher" : {
+        "type" : "object",
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "onLeave" : {
+            "type" : "boolean"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "substituteName" : {
+            "type" : "string"
+          },
+          "substituteStaffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "fullName", "onLeave", "staffId" ]
       },
       "TokenResponse" : {
         "type" : "object",

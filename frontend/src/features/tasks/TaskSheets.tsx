@@ -16,7 +16,10 @@ import { errorMessage } from "@/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
-import { addComment, changeStatus, PRIORITY, saveTask, TASK_COLUMNS, type TaskFields, type TaskItem, toggleChecklist, useAssignees } from "@/api";
+import { addComment, changeStatus, createTask, PRIORITY, TASK_COLUMNS, type TaskItem, toggleChecklist, updateTask, useAssignees, useTask } from "@/api";
+import { useCurrentSchool } from "@/hooks/useCurrentSchool";
+import { POSITION_LABELS } from "@/features/staff/labels";
+import { ErrorState, PageSkeleton } from "@/components/common/States";
 
 const schema = z.object({
   title: z.string().trim().min(3, "Nhập tên việc (ít nhất 3 ký tự)."),
@@ -28,21 +31,28 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-const toValues = (task?: TaskItem | null): Values => ({
+/** Việc đang sửa: thông tin trên thẻ + mô tả từ chi tiết. */
+export type EditingTask = TaskItem & { description?: string };
+
+const toValues = (task?: EditingTask | null): Values => ({
   title: task?.title ?? "",
   description: task?.description ?? "",
   priority: task?.priority ?? "MEDIUM",
-  dueDate: task?.dueDate ?? "",
-  assigneeIds: task?.assignees.map((a) => a.id) ?? [],
+  dueDate: task?.dueAt ? new Date(task.dueAt).toLocaleDateString("sv-SE") : "",
+  assigneeIds: task?.assignees.map((a) => a.staffId) ?? [],
   checklist: "",
 });
+
+/** Hạn là cuối ngày đã chọn (giờ Việt Nam). */
+const dueAt = (date: string) => new Date(`${date}T23:59:00+07:00`).toISOString();
 
 const invalidate = (queryClient: ReturnType<typeof useQueryClient>) =>
   Promise.all(["tasks", "today", "approvals"].map((k) => queryClient.invalidateQueries({ queryKey: [k] })));
 
 /** Giao việc mới / sửa việc (ban giám hiệu). */
-export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onOpenChange: (o: boolean) => void; task?: TaskItem | null }) {
+export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onOpenChange: (o: boolean) => void; task?: EditingTask | null }) {
   const queryClient = useQueryClient();
+  const { schoolId } = useCurrentSchool();
   const assignees = useAssignees();
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: toValues(task) });
   useEffect(() => {
@@ -58,7 +68,9 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
       successMessage={task ? "Đã lưu việc." : "Đã giao việc, người nhận sẽ được thông báo."}
       submitLabel={task ? "Lưu" : "Giao việc"}
       onSubmit={async (v) => {
-        await saveTask(task?.id ?? null, { ...v, checklist: v.checklist.split("\n").filter((l) => l.trim()) } as TaskFields);
+        const common = { title: v.title, description: v.description || undefined, priority: v.priority, dueAt: dueAt(v.dueDate), assigneeStaffIds: v.assigneeIds };
+        if (task) await updateTask(task.id, common);
+        else await createTask({ ...common, schoolId: schoolId ?? undefined, checklist: v.checklist.split("\n").filter((l) => l.trim()) });
         await invalidate(queryClient);
       }}
     >
@@ -83,7 +95,7 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
                   <label key={s.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 hover:bg-muted">
                     <Checkbox checked={checked} onCheckedChange={(c) => field.onChange(c === true ? [...field.value, s.id] : field.value.filter((id) => id !== s.id))} />
                     <span className="flex-1 text-sm">{s.fullName}</span>
-                    <span className="text-xs text-muted-foreground">{s.position}</span>
+                    <span className="text-xs text-muted-foreground">{POSITION_LABELS[s.position]}</span>
                   </label>
                 );
               })}
@@ -111,8 +123,11 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
 }
 
 /** Chi tiết việc: checklist, bình luận, đổi trạng thái. */
-export function TaskDetailSheet({ task, onClose, onEdit }: { task: TaskItem | null; onClose: () => void; onEdit: (t: TaskItem) => void }) {
+export function TaskDetailSheet({ taskId, onClose, onEdit }: { taskId: string | null; onClose: () => void; onEdit: (t: EditingTask) => void }) {
   const queryClient = useQueryClient();
+  const query = useTask(taskId);
+  const detail = query.data;
+  const task = detail?.task;
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -130,29 +145,31 @@ export function TaskDetailSheet({ task, onClose, onEdit }: { task: TaskItem | nu
   };
 
   return (
-    <Sheet open={!!task} onOpenChange={(o) => !o && onClose()}>
+    <Sheet open={!!taskId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
-        {task && (
+        {query.isLoading && <PageSkeleton />}
+        {query.isError && <ErrorState error={query.error} onRetry={() => query.refetch()} />}
+        {task && detail && (
           <div className="space-y-5">
             <SheetHeader>
               <SheetTitle className="pr-6">{task.title}</SheetTitle>
               <SheetDescription>
-                Giao bởi {task.createdByName} · {formatDateTime(task.createdAt)}
+                Giao bởi {task.createdByName ?? "—"} · {formatDateTime(task.createdAt)}
               </SheetDescription>
             </SheetHeader>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <StatusBadge status={task.priority} labels={PRIORITY} />
               <span className={cn(task.overdue && "font-medium text-destructive")}>
-                Hạn {formatDate(task.dueDate)}
+                {task.dueAt ? `Hạn ${formatDate(task.dueAt)}` : "Không hạn"}
                 {task.overdue && " · quá hạn"}
               </span>
               {task.canEdit && (
-                <Button variant="ghost" size="sm" className="ml-auto min-h-9" onClick={() => onEdit(task)}>
+                <Button variant="ghost" size="sm" className="ml-auto min-h-9" onClick={() => onEdit({ ...task, description: detail.description })}>
                   <Pencil className="w-4 h-4 mr-1" /> Sửa
                 </Button>
               )}
             </div>
-            {task.description && <p className="whitespace-pre-line text-sm">{task.description}</p>}
+            {detail.description && <p className="whitespace-pre-line text-sm">{detail.description}</p>}
             <p className="text-sm">
               <span className="text-muted-foreground">Người nhận: </span>
               {task.assignees.map((a) => a.fullName).join(", ")}
@@ -171,12 +188,12 @@ export function TaskDetailSheet({ task, onClose, onEdit }: { task: TaskItem | nu
               </div>
             )}
 
-            {task.checklist.length > 0 && (
+            {detail.checklist.length > 0 && (
               <div className="space-y-1">
                 <p className="text-sm font-medium">
-                  Checklist ({task.checklist.filter((c) => c.done).length}/{task.checklist.length})
+                  Checklist ({task.checklistDone}/{task.checklistTotal})
                 </p>
-                {task.checklist.map((item) => (
+                {detail.checklist.map((item) => (
                   <label key={item.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 hover:bg-muted">
                     <Checkbox checked={item.done} disabled={busy || task.status === "DONE"} onCheckedChange={(c) => run(() => toggleChecklist(task.id, item.id, c === true))} />
                     <span className={cn("text-sm", item.done && "text-muted-foreground line-through")}>{item.content}</span>
@@ -187,12 +204,12 @@ export function TaskDetailSheet({ task, onClose, onEdit }: { task: TaskItem | nu
 
             <div className="space-y-2">
               <p className="text-sm font-medium">Trao đổi</p>
-              {task.comments.length === 0 && <p className="text-sm text-muted-foreground">Chưa có bình luận.</p>}
+              {detail.comments.length === 0 && <p className="text-sm text-muted-foreground">Chưa có bình luận.</p>}
               <ul className="space-y-2">
-                {task.comments.map((c) => (
+                {detail.comments.map((c) => (
                   <li key={c.id} className="rounded-lg bg-muted p-3 text-sm">
                     <p>
-                      <span className="font-medium">{c.author}</span> <span className="text-xs text-muted-foreground">{formatDateTime(c.at)}</span>
+                      <span className="font-medium">{c.userName}</span> <span className="text-xs text-muted-foreground">{formatDateTime(c.createdAt)}</span>
                     </p>
                     <p className="whitespace-pre-line">{c.body}</p>
                   </li>

@@ -13,8 +13,9 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
 import { errorMessage } from "@/api";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { type ApprovalItem, type ApprovalType, decideApproval, useApprovals } from "@/api";
+import { CODE_LABELS, formatDays } from "@/features/attendance/codes";
 
 const TYPE_META: Record<ApprovalType, { label: string; icon: typeof Inbox }> = {
   LEAVE: { label: "Đơn nghỉ", icon: CalendarOff },
@@ -22,6 +23,31 @@ const TYPE_META: Record<ApprovalType, { label: string; icon: typeof Inbox }> = {
 };
 
 const keyOf = (item: ApprovalItem) => `${item.type}:${item.id}`;
+
+const codeLabel = (code: string) => CODE_LABELS[code as keyof typeof CODE_LABELS] ?? code;
+
+/** Tiêu đề và các dòng mô tả ngắn của một mục chờ duyệt. */
+function describe(item: ApprovalItem, multiSchool: boolean): { title: string; details: { label: string; value: string }[] } {
+  const details: { label: string; value: string }[] = [];
+  let title = "";
+  if (item.leave) {
+    const l = item.leave;
+    title = `${codeLabel(l.attendanceCode)} (${l.attendanceCode})`;
+    details.push(
+      { label: "Thời gian", value: l.fromDate === l.toDate ? formatDate(l.fromDate) : `${formatDate(l.fromDate)} – ${formatDate(l.toDate)}` },
+      { label: "Số ngày", value: formatDays(l.days) },
+      { label: "Lý do", value: l.reason },
+    );
+  }
+  if (item.task) {
+    const t = item.task;
+    title = t.title;
+    if (t.dueAt) details.push({ label: "Hạn", value: formatDateTime(t.dueAt) });
+    if (t.checklistTotal) details.push({ label: "Checklist", value: `${t.checklistDone}/${t.checklistTotal}` });
+  }
+  if (multiSchool && item.schoolName) details.push({ label: "Trường", value: item.schoolName });
+  return { title, details };
+}
 
 /** Các module bị ảnh hưởng khi duyệt: làm mới để số liệu khớp ngay. */
 const AFFECTED = [["approvals"], ["today"], ["leave"], ["attendance"], ["tasks"], ["me"]];
@@ -50,7 +76,7 @@ function RejectDialog({ item, onClose, onDone }: { item: ApprovalItem | null; on
         <DialogHeader>
           <DialogTitle>{item?.type === "LEAVE" ? "Từ chối đơn nghỉ" : "Trả lại việc"}</DialogTitle>
           <DialogDescription>
-            {item?.title} · {item?.requester}
+            {item && describe(item, false).title} · {item?.requester}
           </DialogDescription>
         </DialogHeader>
         <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Lý do (bắt buộc)" rows={3} aria-label="Lý do" />
@@ -83,6 +109,7 @@ export default function ApprovalsPage() {
     return { ALL: all.length, LEAVE: all.filter((i) => i.type === "LEAVE").length, TASK: all.filter((i) => i.type === "TASK").length };
   }, [query.data]);
   const chosen = items.filter((i) => selected.has(keyOf(i)));
+  const multiSchool = new Set((query.data ?? []).map((i) => i.schoolId)).size > 1;
 
   const refresh = async () => {
     setSelected(new Set());
@@ -158,25 +185,25 @@ export default function ApprovalsPage() {
             {items.map((item) => {
               const Icon = TYPE_META[item.type].icon;
               const key = keyOf(item);
+              const { title, details } = describe(item, multiSchool);
               return (
                 <li key={key}>
                   <Card>
                     <CardContent className="flex gap-3 p-4">
-                      <Checkbox className="mt-1" checked={selected.has(key)} onCheckedChange={(c) => toggle(item, c === true)} aria-label={`Chọn ${item.title}`} />
+                      <Checkbox className="mt-1" checked={selected.has(key)} onCheckedChange={(c) => toggle(item, c === true)} aria-label={`Chọn ${title}`} />
                       <div className="min-w-0 flex-1 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary" className="gap-1">
                             <Icon className="w-3 h-3" /> {TYPE_META[item.type].label}
                           </Badge>
-                          <span className="font-semibold">{item.title}</span>
+                          <span className="font-semibold">{title}</span>
                         </div>
                         <p className="text-sm">
                           <span className="font-medium">{item.requester}</span>
-                          {item.requesterPosition && <span className="text-muted-foreground"> · {item.requesterPosition}</span>}
                           <span className="text-muted-foreground"> · {formatDateTime(item.createdAt)}</span>
                         </p>
                         <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
-                          {item.details.map((d) => (
+                          {details.map((d) => (
                             <div key={d.label} className="contents">
                               <dt className="text-muted-foreground">{d.label}</dt>
                               <dd className="min-w-0 break-words">{d.value}</dd>

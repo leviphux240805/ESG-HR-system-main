@@ -1,7 +1,29 @@
 import type { components } from "@/api/schema";
-import type { AgeGroup, ChildFields, ChildMark, TaskPriority, TaskStatus } from "@/api/contracts";
 
 type S = components["schemas"];
+
+/** Khối theo mã nội bộ của bản demo (khớp `code` của danh mục khối). */
+export type AgeGroup = "NHA_TRE" | "MAM" | "CHOI" | "LA";
+/** P = có mặt · E = vắng có phép · A = vắng không phép */
+export type ChildMark = "P" | "E" | "A";
+export type Gender = "MALE" | "FEMALE";
+export type TaskStatus = S["TaskItem"]["status"];
+export type TaskPriority = S["TaskItem"]["priority"];
+
+/** Thông tin trẻ lưu trong bản demo (một phụ huynh chính). */
+export interface ChildFields {
+  fullName: string;
+  nickname: string;
+  gender: Gender;
+  dob: string;
+  classId: string;
+  guardianName: string;
+  guardianRelation: string;
+  guardianPhone: string;
+  address: string;
+  allergies?: string;
+  healthNote?: string;
+}
 
 export type DemoRole = "principal" | "vice" | "teacher";
 

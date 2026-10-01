@@ -178,7 +178,7 @@ export default function StaffCreatePage() {
               <CardContent className="space-y-4">
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox checked={createAccount} onCheckedChange={(v) => setCreateAccount(v === true)} />
-                  Tạo tài khoản đăng nhập (bằng số điện thoại hoặc email ở trên)
+                  Tạo tài khoản đăng nhập (dùng SĐT hoặc email ở trên)
                 </label>
                 {createAccount && (
                   <div className="space-y-2 max-w-sm">

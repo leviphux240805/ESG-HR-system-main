@@ -13,9 +13,10 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
 import { errorMessage } from "@/api";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
-import { formatDate, formatLongDate } from "@/lib/format";
+import { formatLongDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { assignSubstitute, MARK_LABELS, type TodaySummary, useToday } from "@/api";
+import { assignSubstitute, ATTENDANCE_LABELS, type TodaySummary, useToday } from "@/api";
+import { POSITION_LABELS } from "@/features/staff/labels";
 
 function Stat({ icon: Icon, label, value, hint, to, tone }: { icon: LucideIcon; label: string; value: string; hint?: string; to?: string; tone?: "warn" }) {
   const body = (
@@ -39,7 +40,7 @@ function Stat({ icon: Icon, label, value, hint, to, tone }: { icon: LucideIcon; 
   );
 }
 
-type Short = { classId: string; className: string; absentStaffId: string; absentName: string };
+type Short = { classId: string; className: string; schoolId: string; absentStaffId: string; absentName: string };
 
 function SubstituteDialog({ target, data, onClose }: { target: Short | null; data: TodaySummary; onClose: () => void }) {
   const queryClient = useQueryClient();
@@ -74,11 +75,13 @@ function SubstituteDialog({ target, data, onClose }: { target: Short | null; dat
             <SelectValue placeholder="Chọn người thay" />
           </SelectTrigger>
           <SelectContent>
-            {data.availableStaff.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.fullName} · {s.position}
-              </SelectItem>
-            ))}
+            {data.availableStaff
+              .filter((s) => s.schoolId === target?.schoolId && s.staffId !== target?.absentStaffId)
+              .map((s) => (
+                <SelectItem key={s.staffId} value={s.staffId}>
+                  {s.fullName} · {POSITION_LABELS[s.position]}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
         <DialogFooter className="gap-2">
@@ -96,7 +99,7 @@ function SubstituteDialog({ target, data, onClose }: { target: Short | null; dat
 
 /** Trang mặc định của ban giám hiệu: tình hình trường trong ngày, dùng tốt trên điện thoại. */
 export default function TodayPage() {
-  const { school } = useCurrentSchool();
+  const { school, isAllSchools } = useCurrentSchool();
   const query = useToday();
   const [target, setTarget] = useState<Short | null>(null);
 
@@ -104,32 +107,31 @@ export default function TodayPage() {
   if (query.isError) return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
   const data = query.data!;
 
-  const enrolled = data.classes.reduce((s, c) => s + c.enrolled, 0);
+  const enrolled = data.classes.reduce((s, c) => s + c.size, 0);
   const present = data.classes.reduce((s, c) => s + c.present, 0);
   const taken = data.classes.filter((c) => c.taken);
-  const takenEnrolled = taken.reduce((s, c) => s + c.enrolled, 0);
+  const takenEnrolled = taken.reduce((s, c) => s + c.size, 0);
   const rate = takenEnrolled ? Math.round((present / takenEnrolled) * 100) : 0;
   const shorts: Short[] = data.classes.flatMap((c) =>
-    c.teachers.filter((t) => t.onLeave && !t.substituteName).map((t) => ({ classId: c.id, className: c.name, absentStaffId: t.id, absentName: t.fullName })),
+    c.teachers
+      .filter((t) => t.onLeave && !t.substituteStaffId)
+      .map((t) => ({ classId: c.id, className: c.name, schoolId: c.schoolId, absentStaffId: t.staffId, absentName: t.fullName })),
   );
-  const notTaken = data.classes.filter((c) => !c.taken);
-  const pending = data.pending.leaves + data.pending.tasks;
+  const notTaken = data.schoolDay ? data.classes.filter((c) => !c.taken) : [];
+  const pending = data.pendingLeaves + data.pendingTasks;
+  const multiSchool = new Set(data.classes.map((c) => c.schoolId)).size > 1;
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Hôm nay" description={`${formatLongDate(data.date)} · ${school?.name ?? ""}`} />
+      <PageHeader title="Hôm nay" description={`${formatLongDate(data.date)} · ${isAllSchools ? "Tất cả trường" : (school?.name ?? "")}`} />
 
-      {!data.isSchoolDay && (
-        <p className="rounded-lg bg-secondary px-4 py-3 text-sm">
-          Hôm nay trẻ nghỉ học. Số liệu sĩ số lấy theo ngày học gần nhất ({formatDate(data.schoolDay)}).
-        </p>
-      )}
+      {!data.schoolDay && <p className="rounded-lg bg-secondary px-4 py-3 text-sm">Hôm nay trẻ nghỉ học.</p>}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={Baby} label="Có mặt" value={`${present}/${enrolled}`} hint={taken.length ? `${rate}% · ${taken.length}/${data.classes.length} lớp đã điểm danh` : "Chưa lớp nào điểm danh"} />
-        <Stat icon={UserMinus} label="Trẻ vắng" value={String(data.absentChildren.length)} hint={`${data.absentChildren.filter((c) => c.mark === "A").length} không phép`} />
+        <Stat icon={UserMinus} label="Trẻ vắng" value={String(data.absentChildren.length)} hint={`${data.absentChildren.filter((c) => c.status === "ABSENT").length} không phép`} />
         <Stat icon={UserRoundCheck} label="Nhân viên nghỉ" value={String(data.staffOnLeave.length)} hint={shorts.length ? `${shorts.length} lớp thiếu người` : "Đủ người đứng lớp"} tone={shorts.length ? "warn" : undefined} />
-        <Stat icon={Inbox} label="Chờ duyệt" value={String(pending)} hint={`${data.pending.leaves} đơn nghỉ · ${data.pending.tasks} việc`} to="/hop-duyet" tone={pending ? "warn" : undefined} />
+        <Stat icon={Inbox} label="Chờ duyệt" value={String(pending)} hint={`${data.pendingLeaves} đơn nghỉ · ${data.pendingTasks} việc`} to="/hop-duyet" tone={pending ? "warn" : undefined} />
       </div>
 
       {(shorts.length > 0 || notTaken.length > 0) && (
@@ -146,9 +148,11 @@ export default function TodayPage() {
                   <p className="font-medium">Lớp {s.className} thiếu người</p>
                   <p className="text-sm text-muted-foreground">{s.absentName} nghỉ, chưa có người thay</p>
                 </div>
-                <Button className="min-h-11" onClick={() => setTarget(s)}>
-                  Phân công người thay
-                </Button>
+                {data.canAssignSubstitute && (
+                  <Button className="min-h-11" onClick={() => setTarget(s)}>
+                    Phân công người thay
+                  </Button>
+                )}
               </div>
             ))}
             {notTaken.map((c) => (
@@ -174,17 +178,20 @@ export default function TodayPage() {
             <Card key={c.id} className={cn(c.shortStaffed && "border-amber-300")}>
               <CardContent className="space-y-2 p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium">{c.name}</p>
+                  <p className="font-medium">
+                    {c.name}
+                    {multiSchool && <span className="block text-xs font-normal text-muted-foreground">{c.schoolName}</span>}
+                  </p>
                   {c.taken ? (
                     <span className="text-lg font-bold">
                       {c.present}
-                      <span className="text-sm font-normal text-muted-foreground">/{c.enrolled}</span>
+                      <span className="text-sm font-normal text-muted-foreground">/{c.size}</span>
                     </span>
                   ) : (
                     <Badge variant="outline">Chưa điểm danh</Badge>
                   )}
                 </div>
-                <Progress value={c.taken && c.enrolled ? (c.present / c.enrolled) * 100 : 0} className="h-2" aria-label={`Tỷ lệ có mặt lớp ${c.name}`} />
+                <Progress value={c.taken && c.size ? (c.present / c.size) * 100 : 0} className="h-2" aria-label={`Tỷ lệ có mặt lớp ${c.name}`} />
                 {c.taken && (
                   <p className="text-xs text-muted-foreground">
                     Vắng có phép {c.excused} · không phép {c.absent}
@@ -192,7 +199,7 @@ export default function TodayPage() {
                 )}
                 <ul className="space-y-0.5 text-sm">
                   {c.teachers.map((t) => (
-                    <li key={t.id} className={cn(t.onLeave && "text-muted-foreground")}>
+                    <li key={t.staffId} className={cn(t.onLeave && "text-muted-foreground")}>
                       {t.onLeave ? <s>{t.fullName}</s> : t.fullName}
                       {t.onLeave && (t.substituteName ? <span className="text-green-700"> → {t.substituteName}</span> : <span className="text-amber-700"> (nghỉ)</span>)}
                     </li>
@@ -215,14 +222,14 @@ export default function TodayPage() {
             ) : (
               <ul className="divide-y">
                 {data.absentChildren.map((c) => (
-                  <li key={c.id}>
-                    <Link to={`/tre/${c.id}`} className="flex min-h-11 items-center justify-between gap-2 py-2 hover:text-primary">
+                  <li key={c.childId}>
+                    <Link to={`/tre/${c.childId}`} className="flex min-h-11 items-center justify-between gap-2 py-2 hover:text-primary">
                       <span className="min-w-0">
                         <span className="block truncate font-medium">{c.fullName}</span>
                         <span className="text-xs text-muted-foreground">{c.className}</span>
                       </span>
-                      <Badge variant={c.mark === "A" ? "destructive" : "secondary"} className="shrink-0">
-                        {MARK_LABELS[c.mark]}
+                      <Badge variant={c.status === "ABSENT" ? "destructive" : "secondary"} className="shrink-0">
+                        {ATTENDANCE_LABELS[c.status]}
                       </Badge>
                     </Link>
                   </li>
@@ -245,14 +252,13 @@ export default function TodayPage() {
                   <li key={s.staffId} className="py-2">
                     <p className="font-medium">{s.fullName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {s.position} · {s.leaveCode}
-                      {s.className && ` · ${s.className}`}
+                      {POSITION_LABELS[s.position]} · {s.attendanceCode}
                     </p>
-                    {s.className && (
-                      <p className={cn("text-xs", s.substituteName ? "text-green-700" : "text-amber-700")}>
-                        {s.substituteName ? `Người thay: ${s.substituteName}` : "Chưa có người thay"}
+                    {s.classes.map((c) => (
+                      <p key={c.classId} className={cn("text-xs", c.substituteName ? "text-green-700" : "text-amber-700")}>
+                        {c.className}: {c.substituteName ? `người thay ${c.substituteName}` : "chưa có người thay"}
                       </p>
-                    )}
+                    ))}
                   </li>
                 ))}
               </ul>
@@ -268,7 +274,7 @@ export default function TodayPage() {
             {[
               { label: "Đến hạn hôm nay", value: data.tasksDueToday, icon: ClipboardList },
               { label: "Quá hạn", value: data.tasksOverdue, icon: AlertTriangle, danger: data.tasksOverdue > 0 },
-              { label: "Chờ duyệt hoàn thành", value: data.pending.tasks, icon: ListTodo },
+              { label: "Chờ duyệt hoàn thành", value: data.pendingTasks, icon: ListTodo },
             ].map((row) => (
               <Link key={row.label} to="/cong-viec" className="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-muted">
                 <row.icon className={cn("w-4 h-4", row.danger ? "text-destructive" : "text-primary")} />
@@ -281,7 +287,7 @@ export default function TodayPage() {
         </Card>
       </div>
 
-      {data.classes.length === 0 && <EmptyState title="Cơ sở chưa có lớp" />}
+      {data.classes.length === 0 && <EmptyState title="Chưa có lớp trong năm học hiện tại" />}
       <SubstituteDialog target={target} data={data} onClose={() => setTarget(null)} />
     </div>
   );

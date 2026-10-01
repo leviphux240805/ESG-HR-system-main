@@ -231,6 +231,20 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 
 - Khi chọn nhiều trường: thêm bảng so sánh giữa các trường; Hôm nay và Hộp duyệt cũng gộp các trường đang chọn.
 
+- **Hôm nay** (`GET /today`, hiệu trưởng và phó hiệu trưởng nhóm Lớp & trẻ): từng lớp có sĩ số, có mặt / vắng có
+  phép / vắng không phép, đã điểm danh chưa, giáo viên phụ trách (ai nghỉ, ai thay), lớp thiếu người; danh sách trẻ
+  vắng; nhân viên nghỉ hôm nay (đơn đã duyệt) và người có thể dạy thay; số mục chờ duyệt, việc đến hạn hôm nay và quá
+  hạn. Ngày học tính như màn hình điểm danh trẻ (trừ Chủ nhật và ngày lễ).
+
+- **Phân công dạy thay** (`POST /substitutions`, hiệu trưởng, phó hiệu trưởng nhóm Lớp & trẻ hoặc Nhân sự): chọn
+  người cùng trường thay giáo viên nghỉ ở một lớp trong ngày; người được phân công nhận thông báo. Mỗi lớp + giáo viên
+  nghỉ + ngày có một người thay (phân công lại thì thay thế).
+
+- **Hộp duyệt** (`GET /approvals`, `POST /approvals/{type}/{id}/approve|reject`): gộp đơn nghỉ chờ duyệt mà người
+  xem có quyền duyệt (không gồm đơn của chính mình) và việc chờ duyệt do người xem quản lý. Duyệt/từ chối gọi lại
+  luồng của từng module (đơn nghỉ: ghi bảng công, trừ phép, chặn tháng đã khóa; việc: duyệt = Hoàn thành, từ chối =
+  quay lại Đang làm kèm bình luận lý do). Đề xuất sửa hồ sơ vẫn duyệt ở trang riêng.
+
 - Xuất Excel cho bảng công, bảng lương, công nợ, danh sách trẻ.
 
 ## Mô hình dữ liệu
@@ -284,6 +298,7 @@ Quy ước chung: khóa chính `id` kiểu UUID; mọi bảng có `created_at`, 
 | Lương     | `payroll_records`           | period_id, staff_id, work_days, base_salary, allowances, bonus, fines, insurance_deduction, taxable_income, pit, net_salary, is_paid, paid_at, email_sent_at, payslip_file_id                                | `payroll_records`                                |
 | Lớp & trẻ | `age_groups`                | code, name, min_months, max_months, max_class_size                                                                                                                                                           | —                                                |
 | Lớp & trẻ | `classes`                   | school_id, school_year_id, age_group_id, name, room, capacity                                                                                                                                                | —                                                |
+| Lớp & trẻ | `class_substitutions`       | school_id, sub_date, class_id, absent_staff_id, staff_id — người dạy thay trong ngày; duy nhất theo (class_id, absent_staff_id, sub_date)                                                                   | —                                                |
 | Lớp & trẻ | `class_teachers`            | class_id, staff_id, role (MAIN / ASSISTANT), from_date, to_date                                                                                                                                              | —                                                |
 | Lớp & trẻ | `children`                  | school_id, child_code, full_name, nickname, dob, gender, personal_id, health_insurance_no, địa chỉ, allergy_note, status, enrolled_at, left_at                                                               | —                                                |
 | Lớp & trẻ | `guardians`                 | full_name, phone, email, citizen_id, user_id? (cổng phụ huynh sau này)                                                                                                                                       | —                                                |
@@ -386,6 +401,7 @@ Một ứng dụng Spring Boot duy nhất (modular monolith), chia package theo 
 | Thực đơn      | `GET/POST/PUT /dishes`, `GET/PUT /menus?week=&ageGroupId=`, `POST /menus/copy`, `POST /menus/{id}/publish`, `GET /menus/{id}/allergy-warnings` |
 | Học phí       | `POST /invoices/generate?month=`, `POST /invoices/{id}/issue`, `POST /invoices/{id}/payments`, `GET /receivables`                            |
 | Báo cáo       | `GET /reports/dashboard`, `GET /reports/{name}/export` (Excel)                                                                               |
+| Điều hành     | `GET /today`, `POST /substitutions`, `GET /approvals`, `POST /approvals/{type}/{id}/approve`, `.../reject`                                   |
 
 **Việc chạy nền** (`@Scheduled`, sau này có thể chuyển sang ShedLock nếu chạy nhiều instance): sinh việc lặp lại mỗi sáng, quét giấy tờ sắp hết hạn hằng ngày, nhắc phiếu thu quá hạn hằng tuần.
 
@@ -482,6 +498,7 @@ Giai đoạn 1 gồm:
 | 2026-10-01 | Giai đoạn 7 (V11, V12): `who_growth_standards` lưu bảng LMS chính thức của WHO (2006 theo ngày tuổi 0–1826, 2007 theo tháng 60–96) thay cho các mốc SD; `growth_measurements` thêm `school_id`, `class_id`, `recorded_by`, `source` (CLASS/CHECKUP/PARENT), `bmi`, z-score và `standard`; `dishes.school_id` (rỗng = chung chuỗi); `menus` duy nhất theo cơ sở + khối + tuần, có `note`, `published_at`; `menu_items` thêm `order_no`, `note`; `health_logs`, `health_checkups` thêm `school_id`; cảnh báo dị ứng so khớp ghi chú dị ứng (không phân biệt hoa thường, dấu) với tên nguyên liệu, trẻ có ghi chú dị ứng luôn được liệt kê | Xếp kênh đúng thuật toán WHO (z-score hiệu chỉnh, nội suy tháng) và kiểm chứng được với gói anthro/anthroplus; phân tách theo cơ sở (quy tắc 1); ghi nguồn số liệu cân đo |
 | 2026-10-01 | Mô hình quyền mới: bỏ `OWNER`, `CHAIN_ADMIN`; `PRINCIPAL` là vai trò cao nhất, quản lý nhiều trường, toàn quyền kể cả lương và tài khoản; thêm `VICE_PRINCIPAL` giới hạn theo trường + nhóm chức năng (`user_roles.function_groups`); mọi vai trò gắn trường. Thêm `organizations`; `organization_id` ở `schools`, `users`, các bảng có `school_id` rỗng (dùng chung trong tổ chức) và danh mục `school_years`, `age_groups`, `fee_types`; ràng buộc duy nhất tính trong tổ chức. API `/schools` (tạo, sửa, ngừng; trường mới tự gán người tạo). Hibernate filter luôn bật (cả "Tất cả trường"). Bỏ giả định "hiệu trưởng không xem lương" | Chủ dự án đổi mô hình: nhiều hiệu trưởng độc lập trên một hệ thống, dữ liệu dùng chung tách theo tổ chức; tạo tổ chức/hiệu trưởng do bên vận hành |
 | 2026-10-02 | Tạm bỏ email khỏi luồng tài khoản (V14): `users.email` không bắt buộc (cần email hoặc phone), thêm `must_change_password`; tạo tài khoản kèm mật khẩu ban đầu (bỏ email mời), `POST /accounts/{id}/password` thay `send-reset`, `POST /auth/change-password`; ẩn "Quên mật khẩu" | Chủ dự án chưa dùng email; tài khoản do hiệu trưởng hoặc bên vận hành tạo |
+| 2026-10-02 | Thêm API điều hành `GET /today`, `POST /substitutions`, `GET /approvals` + duyệt/từ chối (V15: bảng `class_substitutions`) | Trang Hôm nay, Hộp duyệt và phân công dạy thay của bản demo chạy được với backend thật |
 
 ## Nguồn
 

@@ -1,11 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/api/client";
+import { api, unwrap } from "@/api/client";
+import type { components } from "@/api/schema";
 import type { StatusMeta } from "@/components/common/StatusBadge";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
-import type { TaskFields, TaskItem, TaskPriority, TaskStatus } from "@/api/contracts";
 
-export type { TaskFields, TaskItem, TaskPriority, TaskStatus };
+type S = components["schemas"];
+export type TaskItem = S["TaskItem"];
+export type TaskDetail = S["TaskDetail"];
+export type TaskStatus = TaskItem["status"];
+export type TaskPriority = TaskItem["priority"];
+export type CreateTaskRequest = S["CreateTaskRequest"];
+export type UpdateTaskRequest = S["UpdateTaskRequest"];
 
+/** Cột Kanban (việc đã hủy không hiện trên bảng). */
 export const TASK_COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "NEW", label: "Mới" },
   { status: "IN_PROGRESS", label: "Đang làm" },
@@ -22,30 +29,56 @@ export const PRIORITY: Record<TaskPriority, StatusMeta> = {
 
 export interface TaskFilters {
   q?: string;
-  priority?: string;
-  mine?: boolean;
+  priority?: TaskPriority;
+  assigneeStaffId?: string;
   overdue?: boolean;
 }
 
+/** Việc trên bảng Kanban (tối đa 100 việc mới nhất theo bộ lọc). */
 export function useTasks(filters: TaskFilters) {
   const { queryKey } = useCurrentSchool();
   return useQuery({
     queryKey: queryKey("tasks", filters),
-    queryFn: () => apiRequest<TaskItem[]>("GET", "/tasks", { query: { ...filters, mine: filters.mine || undefined, overdue: filters.overdue || undefined } }),
+    queryFn: async () =>
+      unwrap(await api.GET("/api/v1/tasks", { params: { query: { ...filters, overdue: filters.overdue || undefined, size: 100, page: 0 } as never } })).items,
   });
 }
 
+export function useTask(id: string | null) {
+  const { queryKey } = useCurrentSchool();
+  return useQuery({
+    queryKey: queryKey("tasks", "detail", id),
+    queryFn: async () => unwrap(await api.GET("/api/v1/tasks/{id}", { params: { path: { id: id! } } })),
+    enabled: !!id,
+  });
+}
+
+/** Nhân viên đang làm ở trường đang chọn, để chọn người nhận việc. */
 export function useAssignees() {
   const { queryKey } = useCurrentSchool();
   return useQuery({
     queryKey: queryKey("tasks", "assignees"),
-    queryFn: () => apiRequest<{ id: string; fullName: string; position: string }[]>("GET", "/tasks/assignees"),
+    queryFn: async () => unwrap(await api.GET("/api/v1/staff", { params: { query: { status: "ACTIVE", size: 100, page: 0 } as never } })).items,
     staleTime: 5 * 60_000,
   });
 }
 
-export const saveTask = (id: string | null, body: TaskFields) =>
-  id ? apiRequest<TaskItem>("PUT", `/tasks/${id}`, { body }) : apiRequest<TaskItem>("POST", "/tasks", { body });
-export const changeStatus = (id: string, status: TaskStatus) => apiRequest<TaskItem>("PATCH", `/tasks/${id}/status`, { body: { status } });
-export const addComment = (id: string, body: string) => apiRequest<TaskItem>("POST", `/tasks/${id}/comments`, { body: { body } });
-export const toggleChecklist = (id: string, itemId: string, done: boolean) => apiRequest<TaskItem>("PUT", `/tasks/${id}/checklist/${itemId}`, { body: { done } });
+export async function createTask(body: CreateTaskRequest) {
+  return unwrap(await api.POST("/api/v1/tasks", { body }));
+}
+
+export async function updateTask(id: string, body: UpdateTaskRequest) {
+  return unwrap(await api.PUT("/api/v1/tasks/{id}", { params: { path: { id } }, body }));
+}
+
+export async function changeStatus(id: string, status: TaskStatus) {
+  return unwrap(await api.PATCH("/api/v1/tasks/{id}/status", { params: { path: { id } }, body: { status } }));
+}
+
+export async function addComment(id: string, body: string) {
+  return unwrap(await api.POST("/api/v1/tasks/{id}/comments", { params: { path: { id } }, body: { body } }));
+}
+
+export async function toggleChecklist(id: string, itemId: string, done: boolean) {
+  return unwrap(await api.PUT("/api/v1/tasks/{id}/checklist/{itemId}", { params: { path: { id, itemId } }, body: { done } }));
+}

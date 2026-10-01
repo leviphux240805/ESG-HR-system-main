@@ -26,7 +26,7 @@ import { QualificationsTab } from "./QualificationsTab";
 
 function ClassesTab({ staff }: { staff: StaffDetail }) {
   const classes = useClasses();
-  const mine = (classes.data ?? []).filter((c) => c.teachers.some((t) => t.id === staff.id));
+  const mine = (classes.data ?? []).filter((c) => c.teachers.some((t) => t.staffId === staff.id));
   if (mine.length === 0) {
     return <EmptyState icon={Users} title="Chưa có phân công lớp" description="Giáo viên được phân công phụ trách lớp sẽ hiện ở đây." />;
   }
@@ -39,7 +39,7 @@ function ClassesTab({ staff }: { staff: StaffDetail }) {
               {c.name}
             </Link>
             <p className="text-sm text-muted-foreground">
-              Sĩ số {c.size} · Cùng lớp: {c.teachers.filter((t) => t.id !== staff.id).map((t) => t.fullName).join(", ") || "—"}
+              Sĩ số {c.size} · Cùng lớp: {c.teachers.filter((t) => t.staffId !== staff.id).map((t) => t.fullName).join(", ") || "—"}
             </p>
           </CardContent>
         </Card>
