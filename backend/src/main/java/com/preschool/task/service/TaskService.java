@@ -416,14 +416,13 @@ public class TaskService {
 	private Specification<Task> specification(TaskQuery q) {
 		UUID myUserId = access.myUserId();
 		UUID myStaffId = access.myStaffId();
-		boolean chainManager = access.isChainManager();
-		Set<UUID> managed = chainManager ? Set.of()
-				: SchoolScope.require()
-					.effectiveSchoolIds()
-					.stream()
-					.filter(access::canManage)
-					.collect(Collectors.toSet());
-		Set<UUID> myTaskIds = chainManager || myStaffId == null ? Set.of()
+		boolean principal = access.isPrincipal();
+		Set<UUID> managed = SchoolScope.require()
+			.effectiveSchoolIds()
+			.stream()
+			.filter(access::canManage)
+			.collect(Collectors.toSet());
+		Set<UUID> myTaskIds = myStaffId == null ? Set.of()
 				: assignees.findByStaffId(myStaffId).stream().map(TaskAssignee::getTaskId).collect(Collectors.toSet());
 
 		return (root, criteria, cb) -> {
@@ -459,17 +458,18 @@ public class TaskService {
 					.collect(Collectors.toSet());
 				and.add(ids.isEmpty() ? cb.disjunction() : root.get("id").in(ids));
 			}
-			if (!chainManager) {
-				List<Predicate> or = new ArrayList<>();
-				or.add(cb.equal(root.get("createdBy"), myUserId));
-				if (!managed.isEmpty()) {
-					or.add(root.get("schoolId").in(managed));
-				}
-				if (!myTaskIds.isEmpty()) {
-					or.add(root.get("id").in(myTaskIds));
-				}
-				and.add(cb.or(or.toArray(Predicate[]::new)));
+			List<Predicate> visible = new ArrayList<>();
+			visible.add(cb.equal(root.get("createdBy"), myUserId));
+			if (!managed.isEmpty()) {
+				visible.add(root.get("schoolId").in(managed));
 			}
+			if (principal) {
+				visible.add(cb.isNull(root.get("schoolId")));
+			}
+			if (!myTaskIds.isEmpty()) {
+				visible.add(root.get("id").in(myTaskIds));
+			}
+			and.add(cb.or(visible.toArray(Predicate[]::new)));
 			return cb.and(and.toArray(Predicate[]::new));
 		};
 	}
@@ -483,7 +483,7 @@ public class TaskService {
 
 	// ------------------------------------------------------------ hỗ trợ
 
-	/** Người nhận phải đang làm việc và thuộc cơ sở của việc (việc toàn chuỗi: cơ sở nào trong phạm vi cũng được). */
+	/** Người nhận phải đang làm việc và thuộc cơ sở của việc (việc cả tổ chức: cơ sở nào trong phạm vi cũng được). */
 	private List<Staff> requireAssignableStaff(UUID schoolId, List<UUID> staffIds) {
 		List<UUID> ids = distinct(staffIds);
 		if (ids.isEmpty()) {

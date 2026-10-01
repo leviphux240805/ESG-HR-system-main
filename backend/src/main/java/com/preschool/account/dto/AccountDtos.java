@@ -2,8 +2,10 @@ package com.preschool.account.dto;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,20 +16,24 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/** Quản lý tài khoản đăng nhập (chủ chuỗi, văn phòng điều hành). */
+/** Quản lý tài khoản đăng nhập (hiệu trưởng). */
 public final class AccountDtos {
 
 	private AccountDtos() {
 	}
 
-	public record AccountRole(@NotNull RoleCode role,
-			@Schema(description = "Rỗng = toàn chuỗi") UUID schoolId) {
+	public record AccountRole(@NotNull(message = "Vui lòng chọn vai trò.") RoleCode role,
+			@NotNull(message = "Vui lòng chọn trường.") UUID schoolId,
+			@Schema(description = "Nhóm chức năng, chỉ dùng cho phó hiệu trưởng") Set<FunctionGroup> functionGroups) {
 	}
 
 	public record AccountRoleView(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) RoleCode role,
-			@Schema(description = "Rỗng = toàn chuỗi") UUID schoolId,
-			String schoolName) {
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID schoolId,
+			String schoolName,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) Set<FunctionGroup> functionGroups,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+					description = "Người đang xem sửa được vai trò này (hiệu trưởng của trường đó)") boolean editable) {
 	}
 
 	public record AccountItem(
@@ -39,7 +45,9 @@ public final class AccountDtos {
 			Instant lastLoginAt,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AccountRoleView> roles,
 			UUID staffId, String staffCode, String staffName,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Tài khoản của chính người đang xem") boolean self) {
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Tài khoản của chính người đang xem") boolean self,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+					description = "Tài khoản hiệu trưởng: chỉ bên vận hành sửa vai trò, khóa") boolean principal) {
 	}
 
 	public record CreateAccountRequest(

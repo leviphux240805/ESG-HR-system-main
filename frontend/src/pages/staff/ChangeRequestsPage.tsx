@@ -154,7 +154,7 @@ export default function ChangeRequestsPage() {
         params={params}
         getRowId={(row) => row.id}
         emptyTitle={status === "PENDING" ? "Không có đề xuất nào chờ duyệt" : "Không có đề xuất"}
-        emptyDescription="Chỉ hiện đề xuất bạn có quyền duyệt: liên hệ (hiệu trưởng, văn phòng điều hành), ngân hàng (văn phòng điều hành, kế toán)."
+        emptyDescription="Chỉ hiện đề xuất bạn có quyền duyệt: liên hệ (ban giám hiệu), ngân hàng (hiệu trưởng, kế toán)."
       />
       <ConfirmDialog
         open={approving !== null}

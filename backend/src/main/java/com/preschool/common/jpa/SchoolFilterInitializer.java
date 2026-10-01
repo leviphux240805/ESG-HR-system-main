@@ -14,10 +14,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.AbstractEntityManagerFactoryBean;
 
 /**
- * Bật {@link SchoolFilter} cho MỌI EntityManager ngay khi được tạo, theo {@link SchoolScope} của request: cả trong
- * transaction lẫn truy vấn không có transaction (query method tự khai báo của Spring Data mặc định không mở
- * transaction). Nhờ vậy quên thêm điều kiện school_id cũng không lộ dữ liệu cơ sở khác. Không có scope (đăng nhập,
- * job nền) hoặc vai trò cấp chuỗi chọn "Tất cả cơ sở" thì không lọc.
+ * Bật {@link SchoolFilter} và {@link OrganizationFilter} cho MỌI EntityManager ngay khi được tạo, theo
+ * {@link SchoolScope} của request: cả trong transaction lẫn truy vấn không có transaction (query method tự khai báo
+ * của Spring Data mặc định không mở transaction). Nhờ vậy quên thêm điều kiện school_id cũng không lộ dữ liệu trường
+ * khác hay tổ chức khác. "Tất cả trường" vẫn lọc theo các trường được gán; chỉ khi không có scope (đăng nhập, job
+ * nền) mới không lọc.
  */
 @Configuration
 public class SchoolFilterInitializer {
@@ -39,9 +40,11 @@ public class SchoolFilterInitializer {
 	}
 
 	static void enableFilter(EntityManager entityManager) {
-		SchoolScope.current().flatMap(SchoolScope::filterSchoolIds).ifPresent(schoolIds -> {
-			Set<UUID> ids = schoolIds.isEmpty() ? Set.of(NO_SCHOOL) : schoolIds;
-			entityManager.unwrap(Session.class).enableFilter(SchoolFilter.NAME).setParameterList(SchoolFilter.PARAM, ids);
+		SchoolScope.current().ifPresent(scope -> {
+			Set<UUID> ids = scope.effectiveSchoolIds().isEmpty() ? Set.of(NO_SCHOOL) : scope.effectiveSchoolIds();
+			Session session = entityManager.unwrap(Session.class);
+			session.enableFilter(SchoolFilter.NAME).setParameterList(SchoolFilter.PARAM, ids);
+			session.enableFilter(OrganizationFilter.NAME).setParameter(OrganizationFilter.PARAM, scope.organizationId());
 		});
 	}
 

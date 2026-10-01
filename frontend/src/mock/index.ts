@@ -14,6 +14,7 @@ import "./handlers/attendance";
 import "./handlers/tasks";
 import "./handlers/health";
 import "./handlers/reports";
+import "./handlers/settings";
 
 configureDb(() => generateDb(new Date()), () => iso(new Date()));
 

@@ -29,7 +29,7 @@ public class StaffJobs {
 		this.clock = clock;
 	}
 
-	/** 07:00 hằng ngày: thông báo giấy tờ hết hạn trong 30 ngày cho văn phòng điều hành và hiệu trưởng. */
+	/** 07:00 hằng ngày: thông báo giấy tờ hết hạn trong 30 ngày cho hiệu trưởng. */
 	@Scheduled(cron = "0 0 7 * * *", zone = SchedulingConfig.ZONE)
 	public void notifyExpiringDocuments() {
 		int created = expiryNotifier.run(LocalDate.now(clock.withZone(ZoneId.of(SchedulingConfig.ZONE))));

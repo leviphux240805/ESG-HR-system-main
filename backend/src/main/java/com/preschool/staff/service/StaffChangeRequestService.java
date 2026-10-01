@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.account.repository.UserRepository;
@@ -47,7 +48,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Nhân viên tự đề xuất cập nhật hồ sơ; người có quyền duyệt thì thay đổi mới được ghi vào hồ sơ. Liên hệ (SĐT, địa
- * chỉ): hiệu trưởng cơ sở hoặc văn phòng điều hành duyệt. Ngân hàng: văn phòng điều hành hoặc kế toán duyệt.
+ * chỉ): ban giám hiệu duyệt. Ngân hàng: hiệu trưởng hoặc kế toán duyệt.
  */
 @Service
 public class StaffChangeRequestService {
@@ -143,7 +144,7 @@ public class StaffChangeRequestService {
 			throw ApiException.badRequest("NO_CHANGES", "Thông tin đề xuất giống hồ sơ hiện tại.");
 		}
 		if (diff.containsKey("phone") && diff.get("phone").get("to") != null
-				&& staffRepo.phoneTakenAnywhere(diff.get("phone").get("to"), staff.getId())) {
+				&& staffRepo.phoneTakenInOrganization(SchoolScope.require().organizationId(), diff.get("phone").get("to"), staff.getId())) {
 			throw fieldError("phone", "số điện thoại đã có trong hồ sơ nhân viên khác");
 		}
 		boolean pendingSameKind = requests.findByStaffIdAndStatus(staff.getId(), ChangeRequestStatus.PENDING).stream()
@@ -188,7 +189,7 @@ public class StaffChangeRequestService {
 		Kind kind = kindOf(diff.keySet());
 		Object before = kind == Kind.BANK ? bankOf(staff) : mapper.toFields(staff);
 		diff.forEach((field, change) -> SETTERS.get(field).accept(staff, change.get("to")));
-		if (staff.getPhone() != null && staffRepo.phoneTakenAnywhere(staff.getPhone(), staff.getId())) {
+		if (staff.getPhone() != null && staffRepo.phoneTakenInOrganization(SchoolScope.require().organizationId(), staff.getPhone(), staff.getId())) {
 			throw ApiException.conflict("STAFF_DUPLICATE",
 					"Số điện thoại đề xuất đã có trong hồ sơ nhân viên khác, không duyệt được.");
 		}
@@ -223,23 +224,30 @@ public class StaffChangeRequestService {
 		return request;
 	}
 
-	/** Quyền duyệt theo quyết định giai đoạn 2 (không kể người gửi tự duyệt). */
+	/**
+	 * Quyền duyệt (không kể người gửi tự duyệt): liên hệ → hiệu trưởng, phó hiệu trưởng nhóm Nhân sự; ngân hàng →
+	 * hiệu trưởng, phó hiệu trưởng nhóm Tài chính, kế toán.
+	 */
 	boolean canReview(Kind kind, UUID schoolId) {
 		SchoolScope scope = SchoolScope.require();
 		return switch (kind) {
-			case CONTACT -> scope.hasRoleAt(RoleCode.PRINCIPAL, schoolId) || scope.hasRoleAt(RoleCode.CHAIN_ADMIN, schoolId);
-			case BANK -> scope.hasRoleAt(RoleCode.CHAIN_ADMIN, schoolId) || scope.hasRoleAt(RoleCode.ACCOUNTANT, schoolId);
+			case CONTACT -> scope.manages(schoolId, FunctionGroup.HR);
+			case BANK -> scope.manages(schoolId, FunctionGroup.FINANCE) || scope.hasRoleAt(RoleCode.ACCOUNTANT, schoolId);
 		};
 	}
 
 	private List<User> reviewers(Kind kind, UUID schoolId) {
-		Set<User> result = new LinkedHashSet<>(users.findActiveByRole(RoleCode.CHAIN_ADMIN, null));
-		if (kind == Kind.CONTACT) {
-			result.addAll(users.findActiveByRole(RoleCode.PRINCIPAL, schoolId));
-		}
-		else {
+		FunctionGroup group = kind == Kind.CONTACT ? FunctionGroup.HR : FunctionGroup.FINANCE;
+		Set<User> result = new LinkedHashSet<>(users.findActiveByRole(RoleCode.PRINCIPAL, schoolId));
+		users.findActiveByRole(RoleCode.VICE_PRINCIPAL, schoolId)
+			.stream()
+			.filter(u -> u.getRoles()
+				.stream()
+				.anyMatch(r -> r.getRoleCode() == RoleCode.VICE_PRINCIPAL && r.getSchoolId().equals(schoolId)
+						&& r.getFunctionGroups().contains(group)))
+			.forEach(result::add);
+		if (kind == Kind.BANK) {
 			result.addAll(users.findActiveByRole(RoleCode.ACCOUNTANT, schoolId));
-			result.addAll(users.findActiveByRole(RoleCode.ACCOUNTANT, null));
 		}
 		return new ArrayList<>(result);
 	}

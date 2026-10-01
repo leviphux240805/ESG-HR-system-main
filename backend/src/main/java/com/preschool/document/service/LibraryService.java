@@ -186,8 +186,8 @@ public class LibraryService {
 	@Transactional(readOnly = true)
 	public PageResponse<DocumentItem> list(UUID folderId, boolean unfiled, String q, Pageable pageable) {
 		SchoolScope scope = SchoolScope.require();
-		var viewer = new LibrarySearchQuery.Viewer(scope.userId(), scope.effectiveSchoolIds(),
-				scope.filterSchoolIds().isEmpty(), access.canPublish(null), access.publisherSchools());
+		var viewer = new LibrarySearchQuery.Viewer(scope.userId(), scope.organizationId(), scope.effectiveSchoolIds(),
+				access.canPublish(null), access.publisherSchools());
 		var criteria = new LibrarySearchQuery.Criteria(folderId, unfiled, q);
 		long total = searchQuery.count(viewer, criteria);
 		List<UUID> ids = searchQuery.find(viewer, criteria, pageable);

@@ -60,7 +60,7 @@ export default function MyAttendancePage() {
       </div>
 
       {notLinked ? (
-        <EmptyState icon={UserX} title="Tài khoản chưa gắn hồ sơ nhân viên" description="Liên hệ văn phòng điều hành để gắn hồ sơ." />
+        <EmptyState icon={UserX} title="Tài khoản chưa gắn hồ sơ nhân viên" description="Liên hệ hiệu trưởng để gắn hồ sơ." />
       ) : sheet.isLoading ? (
         <PageSkeleton />
       ) : sheet.isError ? (

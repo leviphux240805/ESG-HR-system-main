@@ -50,6 +50,7 @@ class AttendanceSchemaTests {
 					LocalTime.of(17, 0), LocalTime.of(11, 30), LocalTime.of(13, 0), 15, 3,
 					EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SATURDAY), EnumSet.of(DayOfWeek.SATURDAY),
 					new BigDecimal("12.0"));
+			config.assignOrganization(school.getOrganizationId());
 			em.persist(config);
 			return config.getId();
 		});
@@ -63,9 +64,9 @@ class AttendanceSchemaTests {
 
 		// Ngày nửa buổi phải nằm trong ngày làm việc
 		assertThatThrownBy(() -> jdbc.update("""
-				INSERT INTO attendance_configs (school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
+				INSERT INTO attendance_configs (organization_id, school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
 				  late_grace_minutes, max_late_count_allowed, working_weekdays, half_day_weekdays, annual_leave_days)
-				VALUES (?, '2026-10-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5}', '{6}', 12)""",
+				SELECT organization_id, id, '2026-10-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5}', '{6}', 12 FROM schools WHERE id = ?""",
 				school.getId())).isInstanceOf(DataIntegrityViolationException.class);
 	}
 

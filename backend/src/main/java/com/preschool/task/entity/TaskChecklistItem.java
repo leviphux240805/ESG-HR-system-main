@@ -2,7 +2,8 @@ package com.preschool.task.entity;
 
 import java.util.UUID;
 
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
 import com.preschool.common.jpa.SchoolFilter;
 
 import jakarta.persistence.Column;
@@ -13,8 +14,9 @@ import org.hibernate.annotations.Filter;
 
 @Entity
 @Table(name = "task_checklist_items")
+@Filter(name = OrganizationFilter.NAME)
 @Filter(name = SchoolFilter.NAME)
-public class TaskChecklistItem extends BaseEntity {
+public class TaskChecklistItem extends OrganizationEntity {
 
 	@Column(name = "school_id")
 	private UUID schoolId;

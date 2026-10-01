@@ -16,7 +16,7 @@ import { monthLabel } from "./codes";
 const unlockSchema = z.object({ reason: z.string().trim().min(1, "Vui lòng ghi lý do mở khóa").max(500) });
 type UnlockValues = z.infer<typeof unlockSchema>;
 
-/** Khóa công tháng (hiệu trưởng, văn phòng điều hành) và mở khóa kèm lý do (văn phòng điều hành). */
+/** Khóa công tháng (ban giám hiệu) và mở khóa kèm lý do (hiệu trưởng). */
 export function MonthLockControls({ sheet }: { sheet: MonthSheet }) {
   const queryClient = useQueryClient();
   const [confirmLock, setConfirmLock] = useState(false);
@@ -64,8 +64,8 @@ export function MonthLockControls({ sheet }: { sheet: MonthSheet }) {
         title={`Khóa công ${monthLabel(month).toLowerCase()}?`}
         description={
           sheet.discrepancyCount > 0
-            ? `Còn ${sheet.discrepancyCount} ngày sai lệch chưa xử lý. Sau khi khóa, bảng công chỉ xem; muốn sửa cần văn phòng điều hành mở khóa.`
-            : "Tổng công được chốt để tính lương. Sau khi khóa, bảng công chỉ xem; muốn sửa cần văn phòng điều hành mở khóa."
+            ? `Còn ${sheet.discrepancyCount} ngày sai lệch chưa xử lý. Sau khi khóa, bảng công chỉ xem; muốn sửa cần hiệu trưởng mở khóa.`
+            : "Tổng công được chốt để tính lương. Sau khi khóa, bảng công chỉ xem; muốn sửa cần hiệu trưởng mở khóa."
         }
         confirmText="Khóa công"
         onConfirm={async () => {

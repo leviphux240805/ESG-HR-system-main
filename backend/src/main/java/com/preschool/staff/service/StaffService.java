@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.preschool.account.entity.UserRole;
 import com.preschool.account.repository.UserRepository;
+import com.preschool.account.entity.RoleAssignment;
 import com.preschool.account.service.AccountService;
 import com.preschool.common.audit.AuditLog.Action;
 import com.preschool.common.audit.AuditService;
@@ -178,12 +179,9 @@ public class StaffService {
 				(int) Math.ceil(total / (double) pageable.getPageSize()));
 	}
 
-	/** Cơ sở trong phạm vi truy vấn native (null = mọi cơ sở: cấp chuỗi xem "Tất cả cơ sở"). */
+	/** Trường trong phạm vi truy vấn native ("Tất cả trường" = mọi trường được gán). */
 	private static Set<UUID> scopedSchools(UUID schoolId) {
-		if (schoolId != null) {
-			return Set.of(schoolId);
-		}
-		return SchoolScope.require().filterSchoolIds().orElse(null);
+		return schoolId != null ? Set.of(schoolId) : SchoolScope.require().effectiveSchoolIds();
 	}
 
 	@Transactional(readOnly = true)
@@ -209,11 +207,10 @@ public class StaffService {
 	public StaffDetail create(CreateStaffRequest request) {
 		UUID schoolId = resolveSchool(request.schoolId());
 		if (!access.canCreateIn(schoolId)) {
-			throw ApiException.forbidden("STAFF_FORBIDDEN", "Bạn không có quyền thêm nhân viên ở cơ sở này.");
+			throw ApiException.forbidden("STAFF_FORBIDDEN", "Bạn không có quyền thêm nhân viên ở trường này.");
 		}
 		if (request.account() != null && !access.canCreateAccounts()) {
-			throw ApiException.forbidden("ACCOUNT_FORBIDDEN",
-					"Chỉ văn phòng điều hành hoặc chủ chuỗi được tạo tài khoản đăng nhập.");
+			throw ApiException.forbidden("ACCOUNT_FORBIDDEN", "Chỉ hiệu trưởng được tạo tài khoản đăng nhập.");
 		}
 
 		Staff staff = new Staff(schoolId, request.fields().fullName(), request.fields().position(),
@@ -228,7 +225,7 @@ public class StaffService {
 		if (request.account() != null) {
 			accountService.create(staff.getEmail(), staff.getPhone(), staff.getFullName(), staff.getId(),
 					request.account().roles().stream()
-						.map(r -> new AccountService.Grant(r.role(), r.schoolId()))
+						.map(r -> new RoleAssignment(r.role(), r.schoolId(), r.functionGroups()))
 						.toList());
 		}
 		// Đọc lại để có mã NV do DB sinh
@@ -292,16 +289,16 @@ public class StaffService {
 		}
 	}
 
-	/** Trùng toàn chuỗi (kể cả cơ sở người dùng không thấy) nhưng không cho biết là hồ sơ nào. */
+	/** Trùng trong tổ chức (kể cả cơ sở người dùng không thấy) nhưng không cho biết là hồ sơ nào. */
 	private List<FieldIssue> duplicates(String citizenId, String phone, String email, UUID excludeId) {
 		List<FieldIssue> issues = new ArrayList<>();
-		if (citizenId != null && staffRepo.citizenIdTakenAnywhere(citizenId, excludeId)) {
+		if (citizenId != null && staffRepo.citizenIdTakenInOrganization(SchoolScope.require().organizationId(), citizenId, excludeId)) {
 			issues.add(new FieldIssue("citizenId", "số CCCD đã có trong hồ sơ nhân viên khác"));
 		}
-		if (phone != null && staffRepo.phoneTakenAnywhere(phone, excludeId)) {
+		if (phone != null && staffRepo.phoneTakenInOrganization(SchoolScope.require().organizationId(), phone, excludeId)) {
 			issues.add(new FieldIssue("phone", "số điện thoại đã có trong hồ sơ nhân viên khác"));
 		}
-		if (email != null && staffRepo.emailTakenAnywhere(email, excludeId)) {
+		if (email != null && staffRepo.emailTakenInOrganization(SchoolScope.require().organizationId(), email, excludeId)) {
 			issues.add(new FieldIssue("email", "email đã có trong hồ sơ nhân viên khác"));
 		}
 		return issues;

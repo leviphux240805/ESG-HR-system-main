@@ -101,7 +101,7 @@ export default function StaffListPage() {
 
   const filters = useMemo<FilterDef[]>(() => {
     const list: FilterDef[] = [];
-    // Lọc cơ sở chỉ có ý nghĩa khi cấp chuỗi đang xem "Tất cả cơ sở"
+    // Lọc cơ sở chỉ có ý nghĩa khi hiệu trưởng đang xem "Tất cả cơ sở"
     if (canChooseAll && isAllSchools) {
       list.push({ type: "select", key: "schoolId", label: "Cơ sở", options: schools.map((s) => ({ value: s.id, label: s.name })) });
     }

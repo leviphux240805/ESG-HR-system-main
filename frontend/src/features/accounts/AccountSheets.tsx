@@ -7,6 +7,7 @@ import { z } from "zod";
 import { createAccount, updateAccountRoles, useStaffSearch } from "@/api";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,9 +18,8 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ROLE_LABELS } from "@/lib/navigation";
 import { TextField } from "@/features/staff/profile/fields";
 import type { AccountItem, RoleCode } from "@/api";
-import { ROLE_SCOPE, type RoleRow, roleRowErrors, toAccountRoles } from "./roles";
-
-const CHAIN = "__chain__";
+import type { FunctionGroup } from "@/lib/permissions";
+import { ASSIGNABLE_ROLES, FUNCTION_GROUP_LABELS, type RoleRow, emptyRoleRow, roleRowErrors, toAccountRoles } from "./roles";
 
 const rolesField = z
   .array(z.custom<RoleRow>())
@@ -30,19 +30,22 @@ const rolesField = z
     });
   });
 
-/** Các dòng "vai trò + cơ sở"; vai trò toàn chuỗi không chọn cơ sở, kế toán chọn toàn chuỗi hoặc một cơ sở. */
+/** Các dòng "vai trò + trường" ở các trường mình làm hiệu trưởng; phó hiệu trưởng chọn thêm nhóm chức năng. */
 function RolesEditor<T extends FieldValues>({ form }: { form: UseFormReturn<T> }) {
   const { me } = useAuth();
   const { schools } = useCurrentSchool();
+  const managed = schools.filter((s) => me?.roles.some((r) => r.role === "PRINCIPAL" && r.schoolId === s.id));
   const f = form as unknown as UseFormReturn<{ roles: RoleRow[] }>;
   const rows = f.watch("roles");
-  const isOwner = !!me?.roles.some((r) => r.role === "OWNER");
-  const roleOptions = (Object.keys(ROLE_LABELS) as RoleCode[]).filter((r) => r !== "OWNER" || isOwner);
   const errors = f.formState.errors.roles as unknown as ({ message?: string } | undefined)[] & { message?: string };
 
   const update = (index: number, patch: Partial<RoleRow>) => {
     const next = rows.map((row, i) => (i === index ? { ...row, ...patch } : row));
     f.setValue("roles", next, { shouldDirty: true, shouldValidate: f.formState.isSubmitted });
+  };
+  const toggleGroup = (index: number, group: FunctionGroup, checked: boolean) => {
+    const current = rows[index].functionGroups;
+    update(index, { functionGroups: checked ? [...current, group] : current.filter((g) => g !== group) });
   };
 
   return (
@@ -50,67 +53,64 @@ function RolesEditor<T extends FieldValues>({ form }: { form: UseFormReturn<T> }
       <Label>
         Vai trò<span className="text-destructive ml-0.5">*</span>
       </Label>
-      {rows.map((row, index) => {
-        const scope = row.role ? ROLE_SCOPE[row.role] : "SCHOOL";
-        return (
-          <div key={index} className="space-y-1" data-testid={`role-row-${index}`}>
-            <div className="flex gap-2">
-              <Select
-                value={row.role}
-                onValueChange={(value) =>
-                  update(index, { role: value as RoleCode, schoolId: ROLE_SCOPE[value as RoleCode] === "CHAIN" ? "" : row.schoolId })
-                }
-              >
-                <SelectTrigger className="min-h-11 flex-1" aria-label={`Vai trò ${index + 1}`}>
-                  <SelectValue placeholder="Chọn vai trò" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleOptions.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {ROLE_LABELS[r]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={row.schoolId || (scope === "SCHOOL" ? "" : CHAIN)}
-                onValueChange={(value) => update(index, { schoolId: value === CHAIN ? "" : value })}
-                disabled={scope === "CHAIN"}
-              >
-                <SelectTrigger className="min-h-11 flex-1" aria-label={`Cơ sở ${index + 1}`}>
-                  <SelectValue placeholder="Chọn cơ sở" />
-                </SelectTrigger>
-                <SelectContent>
-                  {scope !== "SCHOOL" && <SelectItem value={CHAIN}>Toàn chuỗi</SelectItem>}
-                  {schools.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-11 w-11 shrink-0"
-                onClick={() => f.setValue("roles", rows.filter((_, i) => i !== index), { shouldDirty: true })}
-                disabled={rows.length === 1}
-                aria-label={`Bỏ vai trò ${index + 1}`}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-            {errors?.[index]?.message && <p className="text-sm font-medium text-destructive">{errors[index]!.message}</p>}
+      {rows.map((row, index) => (
+        <div key={index} className="space-y-2" data-testid={`role-row-${index}`}>
+          <div className="flex gap-2">
+            <Select value={row.role} onValueChange={(value) => update(index, { role: value as RoleCode })}>
+              <SelectTrigger className="min-h-11 flex-1" aria-label={`Vai trò ${index + 1}`}>
+                <SelectValue placeholder="Chọn vai trò" />
+              </SelectTrigger>
+              <SelectContent>
+                {ASSIGNABLE_ROLES.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {ROLE_LABELS[r]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={row.schoolId} onValueChange={(value) => update(index, { schoolId: value })}>
+              <SelectTrigger className="min-h-11 flex-1" aria-label={`Trường ${index + 1}`}>
+                <SelectValue placeholder="Chọn trường" />
+              </SelectTrigger>
+              <SelectContent>
+                {managed.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11 shrink-0"
+              onClick={() => f.setValue("roles", rows.filter((_, i) => i !== index), { shouldDirty: true })}
+              disabled={rows.length === 1}
+              aria-label={`Bỏ vai trò ${index + 1}`}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
-        );
-      })}
+          {row.role === "VICE_PRINCIPAL" && (
+            <fieldset className="grid grid-cols-2 gap-x-3 rounded-md border px-3 py-1" aria-label={`Nhóm chức năng ${index + 1}`}>
+              {(Object.keys(FUNCTION_GROUP_LABELS) as FunctionGroup[]).map((g) => (
+                <label key={g} className="flex min-h-11 items-center gap-2 text-sm">
+                  <Checkbox checked={row.functionGroups.includes(g)} onCheckedChange={(v) => toggleGroup(index, g, v === true)} />
+                  {FUNCTION_GROUP_LABELS[g]}
+                </label>
+              ))}
+            </fieldset>
+          )}
+          {errors?.[index]?.message && <p className="text-sm font-medium text-destructive">{errors[index]!.message}</p>}
+        </div>
+      ))}
       {errors?.message && <p className="text-sm font-medium text-destructive">{errors.message}</p>}
       <Button
         type="button"
         variant="outline"
         className="min-h-11"
-        onClick={() => f.setValue("roles", [...rows, { role: "", schoolId: "" }], { shouldDirty: true })}
+        onClick={() => f.setValue("roles", [...rows, emptyRoleRow()], { shouldDirty: true })}
       >
         <Plus className="w-4 h-4 mr-2" /> Thêm vai trò
       </Button>
@@ -181,7 +181,7 @@ const createSchema = z
   .refine((v) => !!v.staff || v.fullName !== "", { path: ["fullName"], message: "Nhập họ tên hoặc gắn hồ sơ nhân viên" });
 type CreateValues = z.infer<typeof createSchema>;
 
-const emptyCreate = (): CreateValues => ({ email: "", phone: "", fullName: "", staff: null, roles: [{ role: "", schoolId: "" }] });
+const emptyCreate = (): CreateValues => ({ email: "", phone: "", fullName: "", staff: null, roles: [emptyRoleRow()] });
 
 export function CreateAccountSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const queryClient = useQueryClient();
@@ -237,7 +237,9 @@ type RolesValues = z.infer<typeof rolesSchema>;
 export function EditRolesSheet({ account, onClose }: { account: AccountItem | null; onClose: () => void }) {
   const queryClient = useQueryClient();
   const initial = (): RolesValues => ({
-    roles: (account?.roles ?? []).map((r) => ({ role: r.role, schoolId: r.schoolId ?? "" })),
+    roles: (account?.roles ?? [])
+      .filter((r) => r.editable)
+      .map((r) => ({ role: r.role, schoolId: r.schoolId, functionGroups: [...r.functionGroups] })),
   });
   const form = useForm<RolesValues>({ resolver: zodResolver(rolesSchema), defaultValues: initial() });
   useEffect(() => {
@@ -258,6 +260,15 @@ export function EditRolesSheet({ account, onClose }: { account: AccountItem | nu
         await queryClient.invalidateQueries({ queryKey: ["accounts"] });
       }}
     >
+      {account?.roles.some((r) => !r.editable) && (
+        <p className="text-sm text-muted-foreground">
+          Vai trò ở trường khác giữ nguyên:{" "}
+          {account.roles
+            .filter((r) => !r.editable)
+            .map((r) => `${ROLE_LABELS[r.role]} · ${r.schoolName ?? ""}`)
+            .join("; ")}
+        </p>
+      )}
       <RolesEditor form={form} />
     </FormSheet>
   );

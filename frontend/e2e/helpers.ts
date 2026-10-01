@@ -14,7 +14,7 @@ export async function login(page: Page, identifier: string, path = "/login") {
   await page.getByLabel("Email hoặc số điện thoại").fill(identifier);
   await page.getByLabel("Mật khẩu", { exact: true }).fill(SEED_PASSWORD);
   await page.getByRole("button", { name: "Đăng nhập" }).click();
-  await expect(page.getByLabel("Chọn cơ sở")).toBeVisible();
+  await expect(page.getByLabel("Chọn trường")).toBeVisible();
 }
 
 export const SCHOOL_A = "00000000-0000-0000-0000-00000000000a";
@@ -53,7 +53,7 @@ export async function createStaffA(request: APIRequestContext, fullName: string)
 
 /** Từ chối mọi đề xuất cập nhật đang chờ (dọn dữ liệu của lần chạy trước bị dừng giữa chừng). */
 export async function clearPendingChangeRequests(request: APIRequestContext) {
-  const admin = await apiAs(request, "admin@preschool.local");
+  const admin = await apiAs(request, ACCOUNTS.owner);
   const page = await admin.get<{ items: { id: string }[] }>("/api/v1/staff/change-requests?status=PENDING&size=100");
   for (const item of page.items) {
     await admin.post(`/api/v1/staff/change-requests/${item.id}/reject`, { note: "Dọn dữ liệu e2e" });

@@ -22,6 +22,7 @@ export * from "./library";
 export * from "./me";
 export * from "./reports";
 export * from "./school";
+export * from "./schools";
 export * from "./staff";
 export * from "./tasks";
 

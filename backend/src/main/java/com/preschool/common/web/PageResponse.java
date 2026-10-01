@@ -6,6 +6,9 @@ import java.util.function.Function;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Response chuẩn của API danh sách. Tham số vào: {@code page} (bắt đầu từ 0), {@code size} (mặc định 20, tối đa
@@ -32,6 +35,15 @@ public record PageResponse<T>(
 	/** Chuyển entity sang DTO khi đóng gói trang. */
 	public static <E, T> PageResponse<T> of(Page<E> page, Function<E, T> mapper) {
 		return of(page.map(mapper));
+	}
+
+	/** Phân trang một danh sách đã lọc, xếp trong bộ nhớ (size tối đa 100; không phân trang = trả hết). */
+	public static <T> PageResponse<T> slice(List<T> rows, Pageable pageable) {
+		int size = pageable.isPaged() ? Math.min(pageable.getPageSize(), 100) : Math.max(rows.size(), 1);
+		int page = pageable.isPaged() ? pageable.getPageNumber() : 0;
+		int from = Math.min(page * size, rows.size());
+		return of(new PageImpl<>(rows.subList(from, Math.min(from + size, rows.size())), PageRequest.of(page, size),
+				rows.size()));
 	}
 
 }

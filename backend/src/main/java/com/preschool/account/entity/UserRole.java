@@ -1,8 +1,14 @@
 package com.preschool.account.entity;
 
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.UUID;
 
 import com.preschool.common.jpa.BaseEntity;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,7 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-/** Một vai trò của người dùng kèm phạm vi: {@code schoolId} rỗng = toàn chuỗi. */
+/** Một vai trò của người dùng ở một trường; phó hiệu trưởng có thêm nhóm chức năng được giao. */
 @Entity
 @Table(name = "user_roles")
 public class UserRole extends BaseEntity {
@@ -26,16 +32,26 @@ public class UserRole extends BaseEntity {
 	@Column(name = "role_code", nullable = false)
 	private RoleCode roleCode;
 
-	@Column(name = "school_id")
+	@Column(name = "school_id", nullable = false)
 	private UUID schoolId;
+
+	@JdbcTypeCode(SqlTypes.ARRAY)
+	@Column(name = "function_groups", columnDefinition = "varchar(20)[]")
+	private String[] functionGroups;
 
 	protected UserRole() {
 	}
 
-	UserRole(User user, RoleCode roleCode, UUID schoolId) {
+	UserRole(User user, RoleAssignment assignment) {
 		this.user = user;
-		this.roleCode = roleCode;
-		this.schoolId = schoolId;
+		this.roleCode = assignment.role();
+		this.schoolId = assignment.schoolId();
+		setGroups(assignment.groups());
+	}
+
+	void setGroups(Set<FunctionGroup> groups) {
+		this.functionGroups = roleCode == RoleCode.VICE_PRINCIPAL
+				? groups.stream().map(Enum::name).sorted().toArray(String[]::new) : null;
 	}
 
 	public User getUser() {
@@ -50,8 +66,15 @@ public class UserRole extends BaseEntity {
 		return schoolId;
 	}
 
-	public boolean isChainWide() {
-		return schoolId == null;
+	public Set<FunctionGroup> getFunctionGroups() {
+		if (functionGroups == null || functionGroups.length == 0) {
+			return Set.of();
+		}
+		return EnumSet.copyOf(Arrays.stream(functionGroups).map(FunctionGroup::valueOf).toList());
+	}
+
+	public RoleAssignment toAssignment() {
+		return new RoleAssignment(roleCode, schoolId, getFunctionGroups());
 	}
 
 }

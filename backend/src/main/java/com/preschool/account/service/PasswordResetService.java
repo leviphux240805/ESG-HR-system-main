@@ -86,7 +86,7 @@ public class PasswordResetService {
 	}
 
 	/**
-	 * Tài khoản mới do văn phòng điều hành tạo: gửi email mời tự đặt mật khẩu (link {@link #INVITE_TTL}, dùng một
+	 * Tài khoản mới do hiệu trưởng tạo: gửi email mời tự đặt mật khẩu (link {@link #INVITE_TTL}, dùng một
 	 * lần). Người tạo không bao giờ biết mật khẩu của nhân viên.
 	 */
 	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
@@ -95,14 +95,14 @@ public class PasswordResetService {
 		String text = """
 				Xin chào %s,
 
-				Văn phòng điều hành đã tạo tài khoản Preschool Management cho bạn (đăng nhập bằng email %s).
+				Nhà trường đã tạo tài khoản Preschool Management cho bạn (đăng nhập bằng email %s).
 				Mở link sau để tự đặt mật khẩu (hiệu lực %d ngày, dùng một lần):
 
 				%s
 				""".formatted(user.getFullName(), user.getEmail(), INVITE_TTL.toDays(), link);
 		String html = """
 				<p>Xin chào %s,</p>
-				<p>Văn phòng điều hành đã tạo tài khoản Preschool Management cho bạn (đăng nhập bằng email <b>%s</b>).</p>
+				<p>Nhà trường đã tạo tài khoản Preschool Management cho bạn (đăng nhập bằng email <b>%s</b>).</p>
 				<p><a href="%s" style="display:inline-block;padding:10px 18px;background:#166534;color:#fff;\
 				text-decoration:none;border-radius:6px">Đặt mật khẩu</a></p>
 				<p>Link có hiệu lực %d ngày và chỉ dùng được một lần.</p>

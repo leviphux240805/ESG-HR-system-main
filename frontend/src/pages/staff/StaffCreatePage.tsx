@@ -17,6 +17,7 @@ import { applyApiErrors } from "@/api";
 import { uploadFile } from "@/api";
 import type { components } from "@/api/schema";
 import { useAuth } from "@/contexts/AuthContext";
+import { isPrincipal } from "@/lib/permissions";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { ROLE_LABELS } from "@/lib/navigation";
 import { addStaffDocument, useDocumentTypes } from "@/api";
@@ -26,7 +27,7 @@ import { emptyStaffForm, staffFormSchema, type StaffFormValues, SUGGESTED_ROLE, 
 
 type RoleCode = components["schemas"]["RoleAssignment"]["role"];
 
-/** Vai trò gán nhanh khi tạo nhân viên (cấp cơ sở + kế toán); vai trò cấp chuỗi gán ở trang Tài khoản. */
+/** Vai trò gán nhanh khi tạo nhân viên (cấp cơ sở + kế toán); hiệu trưởng gán ở trang Tài khoản. */
 const ACCOUNT_ROLES: RoleCode[] = ["PRINCIPAL", "TEACHER", "NURSE", "KITCHEN", "ACCOUNTANT", "STAFF"];
 
 export default function StaffCreatePage() {
@@ -44,7 +45,7 @@ export default function StaffCreatePage() {
   const [createAccount, setCreateAccount] = useState(false);
   const [accountRole, setAccountRole] = useState<RoleCode | undefined>(undefined);
 
-  const canCreateAccounts = !!me?.roles.some((r) => !r.schoolId && (r.role === "OWNER" || r.role === "CHAIN_ADMIN"));
+  const canCreateAccounts = isPrincipal(me?.roles ?? []);
   const position = form.watch("position");
   const role = accountRole ?? (position ? SUGGESTED_ROLE[position] : undefined);
 

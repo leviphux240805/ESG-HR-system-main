@@ -27,11 +27,10 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 	@EntityGraph(attributePaths = "roles")
 	Optional<User> findByStaffId(UUID staffId);
 
-	/** Tài khoản đang hoạt động có vai trò: `schoolId` rỗng = vai trò toàn chuỗi, có giá trị = đúng cơ sở đó. */
+	/** Tài khoản đang hoạt động có vai trò {@code role} ở trường {@code schoolId}. */
 	@Query("""
 			select distinct u from User u join u.roles r
-			where u.active = true and r.roleCode = :role
-			  and ((:schoolId is null and r.schoolId is null) or r.schoolId = :schoolId)""")
+			where u.active = true and r.roleCode = :role and r.schoolId = :schoolId""")
 	List<User> findActiveByRole(@Param("role") RoleCode role, @Param("schoolId") UUID schoolId);
 
 	boolean existsByEmail(String email);

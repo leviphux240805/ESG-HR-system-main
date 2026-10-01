@@ -94,7 +94,7 @@ class PasswordResetTests extends ApiTestSupport {
 
 	@Test
 	void repeatedRequestsAreThrottled() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 
 		forgot(user.getEmail()).andExpect(status().isNoContent());
 		forgot(user.getEmail()).andExpect(status().isNoContent());
@@ -105,7 +105,7 @@ class PasswordResetTests extends ApiTestSupport {
 
 	@Test
 	void expiredOrBogusTokenIsRejected() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		forgot(user.getEmail()).andExpect(status().isNoContent());
 		String token = tokenFrom(captureEmail());
 		jdbc.update("UPDATE password_reset_tokens SET expires_at = now() - interval '1 second' WHERE user_id = ?",

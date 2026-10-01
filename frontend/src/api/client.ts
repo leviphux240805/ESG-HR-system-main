@@ -25,7 +25,7 @@ export function hasAccessToken() {
   return accessToken !== null;
 }
 
-/** Cơ sở đang chọn trên header; null = "Tất cả cơ sở". */
+/** Trường đang chọn trên header; null = "Tất cả trường". */
 export function setSelectedSchoolId(schoolId: string | null) {
   selectedSchoolId = schoolId;
 }

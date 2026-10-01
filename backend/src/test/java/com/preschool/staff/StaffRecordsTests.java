@@ -90,7 +90,7 @@ class StaffRecordsTests extends ApiTestSupport {
 
 	@Test
 	void cannotAttachFileUploadedBySomeoneElseOrUnrelatedFile() throws Exception {
-		User admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		User admin = data.principal(schoolA, schoolB);
 		String principalsFile = uploadPdf(principalA, "cua-hieu-truong.pdf");
 
 		as(admin, post("/api/v1/staff/" + staffA.getId() + "/contracts").contentType(MediaType.APPLICATION_JSON)

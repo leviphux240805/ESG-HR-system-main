@@ -36,7 +36,7 @@ class SchemaTests {
 
 	@Test
 	void auditColumnsAreFilledAutomatically() {
-		School school = schools.save(new School("SCHEMA-" + UUID.randomUUID().toString().substring(0, 8), "Cơ sở thử"));
+		School school = schools.save(new School(TestData.DEFAULT_ORG, "SCHEMA-" + UUID.randomUUID().toString().substring(0, 8), "Trường thử"));
 
 		assertThat(school.getId()).isNotNull();
 		assertThat(school.getCreatedAt()).isNotNull();
@@ -45,20 +45,25 @@ class SchemaTests {
 
 	@Test
 	void roleScopeIsEnforcedByDatabase() {
-		School school = schools.save(new School("SCOPE-" + UUID.randomUUID().toString().substring(0, 8), "Cơ sở thử"));
-		User user = users.save(new User(UUID.randomUUID() + "@test.local", null, "Người thử", "x"));
+		School school = schools.save(new School(TestData.DEFAULT_ORG, "SCOPE-" + UUID.randomUUID().toString().substring(0, 8), "Trường thử"));
+		User user = users.save(new User(TestData.DEFAULT_ORG, UUID.randomUUID() + "@test.local", null, "Người thử", "x"));
 
-		// OWNER chỉ được gán toàn chuỗi
-		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.OWNER, school.getId()))
+		// Mọi vai trò bắt buộc gắn một trường
+		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.ACCOUNTANT, null, null))
 			.isInstanceOf(DataIntegrityViolationException.class);
-		// TEACHER bắt buộc gắn một cơ sở
-		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.TEACHER, null))
+		// Vai trò cũ cấp chuỗi không còn
+		assertThatThrownBy(() -> jdbc.update("INSERT INTO user_roles (user_id, role_code, school_id) VALUES (?, 'OWNER', ?)",
+				user.getId(), school.getId()))
 			.isInstanceOf(DataIntegrityViolationException.class);
-		// ACCOUNTANT được cả hai kiểu
-		insertRole(user.getId(), RoleCode.ACCOUNTANT, null);
-		insertRole(user.getId(), RoleCode.ACCOUNTANT, school.getId());
-		// Trùng vai trò toàn chuỗi (school_id rỗng) vẫn bị chặn nhờ NULLS NOT DISTINCT
-		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.ACCOUNTANT, null))
+		// Nhóm chức năng: bắt buộc với phó hiệu trưởng, cấm với vai trò khác
+		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.VICE_PRINCIPAL, school.getId(), null))
+			.isInstanceOf(DataIntegrityViolationException.class);
+		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.TEACHER, school.getId(), "{HR}"))
+			.isInstanceOf(DataIntegrityViolationException.class);
+		insertRole(user.getId(), RoleCode.VICE_PRINCIPAL, school.getId(), "{HR,REPORTS}");
+		insertRole(user.getId(), RoleCode.ACCOUNTANT, school.getId(), null);
+		// Trùng vai trò ở cùng trường bị chặn
+		assertThatThrownBy(() -> insertRole(user.getId(), RoleCode.ACCOUNTANT, school.getId(), null))
 			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
@@ -72,7 +77,8 @@ class SchemaTests {
 			.load()
 			.migrate();
 
-		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.schools", Integer.class)).isEqualTo(2);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.schools", Integer.class)).isEqualTo(4);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.organizations", Integer.class)).isEqualTo(2);
 		assertThat(jdbc.queryForObject("SELECT count(DISTINCT role_code) FROM dev_seed_check.user_roles", Integer.class))
 			.isEqualTo(RoleCode.values().length);
 		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.staff", Integer.class)).isEqualTo(12);
@@ -82,9 +88,9 @@ class SchemaTests {
 			.isEqualTo(12);
 	}
 
-	private void insertRole(UUID userId, RoleCode role, UUID schoolId) {
-		jdbc.update("INSERT INTO user_roles (user_id, role_code, school_id) VALUES (?, ?, ?)", userId, role.name(),
-				schoolId);
+	private void insertRole(UUID userId, RoleCode role, UUID schoolId, String functionGroups) {
+		jdbc.update("INSERT INTO user_roles (user_id, role_code, school_id, function_groups) VALUES (?, ?, ?, ?::varchar(20)[])",
+				userId, role.name(), schoolId, functionGroups);
 	}
 
 }

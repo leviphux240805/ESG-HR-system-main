@@ -1,7 +1,6 @@
 import type { ApprovalItem, ChildDetail, ChildFields, ChildItem, ChildMark, ClassItem, RollCall, TodaySummary } from "@/api/contracts";
 import { db, type ChildRec, type ClassRec } from "../db";
 import { addDays, isSchoolDay, lastSchoolDay } from "../dates";
-import { nutritionStatus } from "../growth";
 import { ageMonths } from "../dates";
 import { type Ctx, MockError, matches, newId, notFound, on, paginate, requireBgh } from "../router";
 import {
@@ -53,7 +52,10 @@ on("GET", "/today", (ctx) => {
   const date = today();
   const schoolDay = lastSchoolDay(date);
   const marks = db().childAttendance[schoolDay] ?? {};
-  const classes = db().classes.filter((c) => c.schoolId === ctx.schoolId);
+  const inScope = (schoolId: string) => ctx.schoolIds.includes(schoolId);
+  const multi = ctx.schoolIds.length > 1;
+  const schoolName = (id: string) => db().schools.find((s) => s.id === id)?.name ?? "";
+  const classes = db().classes.filter((c) => inScope(c.schoolId));
   const classSummaries = classes.map((cls) => {
     const kids = childrenOf(cls.id, schoolDay);
     const count = (m: ChildMark) => kids.filter((k) => marks[k.id] === m).length;
@@ -64,7 +66,7 @@ on("GET", "/today", (ctx) => {
     });
     return {
       id: cls.id,
-      name: cls.name,
+      name: multi ? `${cls.name} · ${schoolName(cls.schoolId)}` : cls.name,
       ageGroup: cls.ageGroup,
       enrolled: kids.length,
       present: count("P"),
@@ -75,8 +77,8 @@ on("GET", "/today", (ctx) => {
       shortStaffed: teachers.some((t) => t.onLeave && !t.substituteName),
     };
   });
-  const className = new Map(classes.map((c) => [c.id, c.name]));
-  const staff = schoolStaff(ctx.schoolId);
+  const className = new Map(classSummaries.map((c) => [c.id, c.name]));
+  const staff = ctx.schoolIds.flatMap(schoolStaff);
   const onLeave = staff
     .map((s) => ({ s, leave: approvedLeaveOn(s.id, date) }))
     .filter((x) => x.leave)
@@ -94,21 +96,21 @@ on("GET", "/today", (ctx) => {
       };
     });
   const busy = new Set([...onLeave.map((l) => l.staffId), ...db().substitutions.filter((s) => s.date === date).map((s) => s.staffId)]);
-  const tasks = db().tasks.filter((t) => t.schoolId === ctx.schoolId && t.status !== "DONE");
+  const tasks = db().tasks.filter((t) => inScope(t.schoolId) && t.status !== "DONE");
   const summary: TodaySummary = {
     date,
     schoolDay,
     isSchoolDay: isSchoolDay(date),
     classes: classSummaries,
     absentChildren: db()
-      .children.filter((c) => c.schoolId === ctx.schoolId && marks[c.id] && marks[c.id] !== "P")
+      .children.filter((c) => inScope(c.schoolId) && marks[c.id] && marks[c.id] !== "P")
       .map((c) => ({ id: c.id, fullName: c.fullName, className: className.get(c.classId) ?? "", mark: marks[c.id] as "E" | "A" })),
     staffOnLeave: onLeave,
     availableStaff: staff
       .filter((s) => !busy.has(s.id) && !["COOK", "SECURITY"].includes(s.position))
       .map((s) => ({ id: s.id, fullName: s.fullName, position: classOfTeacher(s.id) ? `${positionLabel(s)} · ${classOfTeacher(s.id)!.name}` : positionLabel(s) })),
     pending: {
-      leaves: db().leaves.filter((l) => l.schoolId === ctx.schoolId && l.status === "PENDING" && l.staffId !== ctx.user.staff.id).length,
+      leaves: db().leaves.filter((l) => inScope(l.schoolId) && l.status === "PENDING" && l.staffId !== ctx.user.staff.id).length,
       tasks: tasks.filter((t) => t.status === "WAITING_APPROVAL").length,
     },
     tasksDueToday: tasks.filter((t) => t.dueDate === date).length,
@@ -132,8 +134,10 @@ on("POST", "/substitutions", (ctx) => {
 // ---- Hộp duyệt ----
 
 function approvalItems(ctx: Ctx): ApprovalItem[] {
+  const multi = ctx.schoolIds.length > 1;
+  const schoolName = (id: string) => db().schools.find((s) => s.id === id)?.name ?? "";
   const leaves: ApprovalItem[] = db()
-    .leaves.filter((l) => l.schoolId === ctx.schoolId && l.status === "PENDING" && l.staffId !== ctx.user.staff.id)
+    .leaves.filter((l) => ctx.schoolIds.includes(l.schoolId) && l.status === "PENDING" && l.staffId !== ctx.user.staff.id)
     .map((l) => {
       const staff = staffById(l.staffId);
       const cls = classOfTeacher(l.staffId);
@@ -143,13 +147,15 @@ function approvalItems(ctx: Ctx): ApprovalItem[] {
         { label: "Lý do", value: l.reason },
       ];
       if (cls) details.push({ label: "Lớp phụ trách", value: cls.name });
+      if (multi) details.push({ label: "Trường", value: schoolName(l.schoolId) });
       return { id: l.id, type: "LEAVE", title: leaveLabel(l.leaveCode, l.halfDay), requester: staff?.fullName ?? "—", requesterPosition: positionLabel(staff), createdAt: l.createdAt, details };
     });
   const tasks: ApprovalItem[] = db()
-    .tasks.filter((t) => t.schoolId === ctx.schoolId && t.status === "WAITING_APPROVAL")
+    .tasks.filter((t) => ctx.schoolIds.includes(t.schoolId) && t.status === "WAITING_APPROVAL")
     .map((t) => {
       const done = t.checklist.filter((c) => c.done).length;
       const details = [{ label: "Hạn", value: fmt(t.dueDate) }];
+      if (multi) details.push({ label: "Trường", value: schoolName(t.schoolId) });
       if (t.checklist.length) details.push({ label: "Checklist", value: `${done}/${t.checklist.length}` });
       const last = t.comments[t.comments.length - 1];
       if (last) details.push({ label: "Bình luận", value: `${last.author}: ${last.body}` });
@@ -168,13 +174,13 @@ function decide(ctx: Ctx, approve: boolean) {
   const { type, id } = ctx.params;
   const note: string | undefined = ctx.body?.note;
   if (type === "LEAVE") {
-    const leave = db().leaves.find((l) => l.id === id && l.schoolId === ctx.schoolId);
+    const leave = db().leaves.find((l) => l.id === id && ctx.schoolIds.includes(l.schoolId));
     if (!leave) notFound("đơn nghỉ");
     if (approve) approveLeave(leave, ctx, note);
     else rejectLeave(leave, ctx, note ?? "");
     return;
   }
-  const task = db().tasks.find((t) => t.id === id && t.schoolId === ctx.schoolId);
+  const task = db().tasks.find((t) => t.id === id && ctx.schoolIds.includes(t.schoolId));
   if (!task) notFound("công việc");
   if (task.status !== "WAITING_APPROVAL") throw new MockError(409, "Việc không còn ở trạng thái chờ duyệt.");
   if (!approve && !note?.trim()) throw new MockError(400, "Vui lòng nhập lý do trả lại.");
@@ -269,13 +275,11 @@ on("GET", "/children/{id}", (ctx) => {
     if (recent.length < 20) recent.push({ date, mark });
     totals[mark === "P" ? "present" : mark === "E" ? "excused" : "absent"] += 1;
   }
-  const latest = db().growth.filter((g) => g.childId === child.id).sort((a, b) => b.date.localeCompare(a.date))[0];
   const detail: ChildDetail = {
     ...child,
     className: db().classes.find((c) => c.id === child.classId)?.name ?? "",
     schoolName: db().schools.find((s) => s.id === child.schoolId)?.name ?? "",
     attendance: { ...totals, recent },
-    latestMeasurement: latest && { ...latest, status: nutritionStatus(child.gender, ageMonths(child.dob, latest.date), latest.heightCm, latest.weightKg) },
     balance: invoiceBalance(child.id),
   };
   return detail;

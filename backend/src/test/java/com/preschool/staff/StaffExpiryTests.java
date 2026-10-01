@@ -84,7 +84,7 @@ class StaffExpiryTests extends ApiTestSupport {
 	void dailyJobNotifiesRightPeopleOnce() throws Exception {
 		User principalA = data.user(RoleCode.PRINCIPAL, schoolA);
 		User principalB = data.user(RoleCode.PRINCIPAL, schoolB);
-		User admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		User admin = data.principal(schoolA, schoolB);
 
 		int first = notifier.run(today);
 		int second = notifier.run(today);

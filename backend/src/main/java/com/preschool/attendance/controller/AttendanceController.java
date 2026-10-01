@@ -113,7 +113,7 @@ public class AttendanceController {
 	}
 
 	@PostMapping("/attendance/months/{month}/unlock")
-	@Operation(summary = "Mở khóa công tháng (văn phòng điều hành, bắt buộc lý do)")
+	@Operation(summary = "Mở khóa công tháng (hiệu trưởng, bắt buộc lý do)")
 	public MonthSheet unlock(@Parameter(example = "2026-09") @PathVariable String month,
 			@Valid @RequestBody UnlockRequest request) {
 		return lockService.unlock(month, request.reason());

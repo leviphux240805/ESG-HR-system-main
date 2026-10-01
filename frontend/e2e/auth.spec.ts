@@ -21,19 +21,21 @@ test("sai mật khẩu hiện thông báo tiếng Việt", async ({ page }) => {
   await expect(page.getByText("Email/số điện thoại hoặc mật khẩu không đúng.")).toBeVisible();
 });
 
-test("chủ chuỗi đổi cơ sở trên header, đăng xuất", async ({ page }) => {
+test("hiệu trưởng 3 trường đổi trường trên header, đăng xuất", async ({ page }) => {
   await login(page, ACCOUNTS.owner);
-  await expect(page.getByText("Đang xem: Tất cả cơ sở")).toBeVisible();
+  const selector = page.getByLabel("Chọn trường");
+  await expect(selector).toContainText("Tất cả trường");
 
-  await page.getByLabel("Chọn cơ sở").click();
-  await page.getByRole("option", { name: "Cơ sở B – Hoa Mai" }).click();
-  await expect(page.getByText("Đang xem: Cơ sở B – Hoa Mai")).toBeVisible();
+  await selector.click();
+  await expect(page.getByRole("option")).toHaveCount(4);
+  await page.getByRole("option", { name: "Trường B – Hoa Mai" }).click();
+  await expect(selector).toContainText("Trường B – Hoa Mai");
 
   // Lựa chọn được nhớ sau khi tải lại trang
   await page.reload();
-  await expect(page.getByText("Đang xem: Cơ sở B – Hoa Mai")).toBeVisible();
+  await expect(page.getByLabel("Chọn trường")).toContainText("Trường B – Hoa Mai");
 
-  await page.getByRole("button", { name: /Chủ Chuỗi/ }).click();
+  await page.getByRole("button", { name: /Hiệu Trưởng Chuỗi Hoa/ }).click();
   await page.getByRole("menuitem", { name: "Đăng xuất" }).click();
   await expect(page).toHaveURL(/\/login$/);
 });

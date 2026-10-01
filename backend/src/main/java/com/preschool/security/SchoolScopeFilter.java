@@ -76,7 +76,7 @@ public class SchoolScopeFilter extends OncePerRequestFilter {
 
 	private static UUID selectedSchool(HttpServletRequest request, SchoolAccess access) {
 		String path = request.getRequestURI().substring(request.getContextPath().length());
-		if (SchoolScope.SCHOOL_AGNOSTIC_PREFIXES.stream().anyMatch(path::startsWith)) {
+		if (SchoolScope.isSchoolAgnostic(path)) {
 			return null;
 		}
 		String header = request.getHeader(SchoolScope.HEADER);

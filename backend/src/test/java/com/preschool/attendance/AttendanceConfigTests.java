@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.school.entity.School;
@@ -30,11 +31,12 @@ class AttendanceConfigTests extends ApiTestSupport {
 
 	School schoolB;
 
+	/** Hiệu trưởng của cả hai trường: sửa cấu hình mặc định và ngày lễ chung của tổ chức. */
 	User admin;
 
-	User principalA;
+	User viceA;
 
-	User principalB;
+	User viceB;
 
 	User teacherA;
 
@@ -42,9 +44,9 @@ class AttendanceConfigTests extends ApiTestSupport {
 	void setUp() {
 		schoolA = data.school();
 		schoolB = data.school();
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
-		principalA = data.user(RoleCode.PRINCIPAL, schoolA);
-		principalB = data.user(RoleCode.PRINCIPAL, schoolB);
+		admin = data.principal(schoolA, schoolB);
+		viceA = data.vicePrincipal(schoolA, FunctionGroup.HR);
+		viceB = data.vicePrincipal(schoolB, FunctionGroup.HR);
 		teacherA = data.user(RoleCode.TEACHER, schoolA);
 	}
 
@@ -59,29 +61,29 @@ class AttendanceConfigTests extends ApiTestSupport {
 	}
 
 	@Test
-	void principalManagesOwnSchoolConfigAndLatestEffectiveVersionApplies() throws Exception {
+	void viceManagesOwnSchoolConfigAndLatestEffectiveVersionApplies() throws Exception {
 		String today = LocalDate.now().toString();
-		createConfig(principalA, schoolA.getId(), "2020-01-01", "07:00", "[6]").andExpect(status().isCreated())
+		createConfig(viceA, schoolA.getId(), "2020-01-01", "07:00", "[6]").andExpect(status().isCreated())
 			.andExpect(jsonPath("$.shiftStart").value("07:00:00"))
 			.andExpect(jsonPath("$.halfDayWeekdays[0]").value(6));
-		createConfig(principalA, schoolA.getId(), today, "07:15", "[]").andExpect(status().isCreated());
-		createConfig(principalA, schoolA.getId(), LocalDate.now().plusDays(30).toString(), "08:00", "[]")
+		createConfig(viceA, schoolA.getId(), today, "07:15", "[]").andExpect(status().isCreated());
+		createConfig(viceA, schoolA.getId(), LocalDate.now().plusDays(30).toString(), "08:00", "[]")
 			.andExpect(status().isCreated());
 		// Trùng ngày hiệu lực
-		createConfig(principalA, schoolA.getId(), today, "07:15", "[]").andExpect(status().isConflict())
+		createConfig(viceA, schoolA.getId(), today, "07:15", "[]").andExpect(status().isConflict())
 			.andExpect(jsonPath("$.errors[0].field").value("effectiveFrom"));
 
-		as(principalA, get("/api/v1/attendance/configs?schoolId=" + schoolA.getId()), schoolA.getId())
+		as(viceA, get("/api/v1/attendance/configs?schoolId=" + schoolA.getId()), schoolA.getId())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.effective.shiftStart").value("07:15:00"))
 			.andExpect(jsonPath("$.canManage").value(true));
 
-		// Cơ sở khác, giáo viên, cấu hình toàn chuỗi
-		createConfig(principalB, schoolA.getId(), "2021-01-01", "07:00", "[]").andExpect(status().isForbidden());
-		as(principalB, get("/api/v1/attendance/configs?schoolId=" + schoolA.getId()), schoolB.getId())
+		// Trường khác, giáo viên, cấu hình chung của tổ chức
+		createConfig(viceB, schoolA.getId(), "2021-01-01", "07:00", "[]").andExpect(status().isForbidden());
+		as(viceB, get("/api/v1/attendance/configs?schoolId=" + schoolA.getId()), schoolB.getId())
 			.andExpect(status().isForbidden());
 		createConfig(teacherA, schoolA.getId(), "2021-01-01", "07:00", "[]").andExpect(status().isForbidden());
-		createConfig(principalA, null, "2021-01-01", "07:00", "[]").andExpect(status().isForbidden());
+		createConfig(viceA, null, "2021-01-01", "07:00", "[]").andExpect(status().isForbidden());
 	}
 
 	@Test
@@ -90,7 +92,7 @@ class AttendanceConfigTests extends ApiTestSupport {
 			.andExpect(jsonPath("$.errors[0].field").value("shiftEnd"));
 		createConfig(admin, schoolA.getId(), "2020-02-01", "07:00", "[7]").andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors[0].field").value("halfDayWeekdays"));
-		// Mặc định toàn chuỗi: chỉ văn phòng điều hành (ngày ngẫu nhiên để không đụng test khác)
+		// Mặc định của tổ chức: chỉ hiệu trưởng (ngày ngẫu nhiên để không đụng test khác)
 		LocalDate day = LocalDate.of(1990, 1, 1).plusDays(ThreadLocalRandom.current().nextInt(3000));
 		createConfig(admin, null, day.toString(), "07:30", "[6]").andExpect(status().isCreated())
 			.andExpect(jsonPath("$.schoolId").doesNotExist());
@@ -99,32 +101,32 @@ class AttendanceConfigTests extends ApiTestSupport {
 	@Test
 	void holidaysAreScopedToChainOrSchool() throws Exception {
 		int year = 2090 + ThreadLocalRandom.current().nextInt(9);
-		String body = as(principalA, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
+		String body = as(viceA, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
 				{"schoolId":"%s","fromDate":"%d-03-02","toDate":"%d-03-04","name":"Nghỉ bù hội thao"}"""
 			.formatted(schoolA.getId(), year, year)), schoolA.getId())
 			.andExpect(status().isCreated()).andExpect(jsonPath("$.length()").value(3))
 			.andReturn().getResponse().getContentAsString();
 		String schoolHoliday = JsonPath.read(body, "$[0].id");
 		// Thêm lại cùng khoảng → đã có hết
-		as(principalA, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
+		as(viceA, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
 				{"schoolId":"%s","fromDate":"%d-03-02","name":"Trùng"}""".formatted(schoolA.getId(), year)),
 				schoolA.getId())
 			.andExpect(status().isConflict());
 
-		as(principalA, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
+		as(viceA, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
 				{"fromDate":"%d-01-01","name":"Tết Dương lịch"}""".formatted(year)), schoolA.getId())
 			.andExpect(status().isForbidden());
 		as(admin, post("/api/v1/holidays").contentType(MediaType.APPLICATION_JSON).content("""
 				{"fromDate":"%d-01-01","name":"Tết Dương lịch"}""".formatted(year))).andExpect(status().isCreated());
 
-		as(principalB, get("/api/v1/holidays?year=" + year), schoolB.getId()).andExpect(status().isOk())
+		as(viceB, get("/api/v1/holidays?year=" + year), schoolB.getId()).andExpect(status().isOk())
 			.andExpect(jsonPath("$[*].id", not(hasItem(schoolHoliday))))
 			.andExpect(jsonPath("$[?(@.name == 'Tết Dương lịch')].canManage").value(false));
-		as(principalA, get("/api/v1/holidays?year=" + year), schoolA.getId())
+		as(viceA, get("/api/v1/holidays?year=" + year), schoolA.getId())
 			.andExpect(jsonPath("$[*].id", hasItem(schoolHoliday)));
-		as(principalB, delete("/api/v1/holidays/" + schoolHoliday), schoolB.getId()).andExpect(status().isNotFound());
+		as(viceB, delete("/api/v1/holidays/" + schoolHoliday), schoolB.getId()).andExpect(status().isNotFound());
 		as(teacherA, get("/api/v1/holidays?year=" + year), schoolA.getId()).andExpect(status().isForbidden());
-		as(principalA, delete("/api/v1/holidays/" + schoolHoliday), schoolA.getId()).andExpect(status().isNoContent());
+		as(viceA, delete("/api/v1/holidays/" + schoolHoliday), schoolA.getId()).andExpect(status().isNoContent());
 	}
 
 }

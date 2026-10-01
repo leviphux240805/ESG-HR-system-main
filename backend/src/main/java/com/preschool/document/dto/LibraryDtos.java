@@ -23,7 +23,7 @@ public final class LibraryDtos {
 
 	public record FolderDto(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-			@Schema(description = "Rỗng = thư mục dùng chung toàn chuỗi") UUID schoolId,
+			@Schema(description = "Rỗng = thư mục dùng chung trong tổ chức") UUID schoolId,
 			UUID parentId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String name,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
@@ -32,7 +32,7 @@ public final class LibraryDtos {
 
 	public record CreateFolderRequest(@NotBlank @Size(max = 200) String name,
 			@Schema(description = "Thư mục cha; thư mục con cùng cơ sở với cha") UUID parentId,
-			@Schema(description = "Bỏ trống = toàn chuỗi (chỉ cấp chuỗi); bỏ qua khi có parentId") UUID schoolId) {
+			@Schema(description = "Bỏ trống = cả tổ chức (chỉ hiệu trưởng); bỏ qua khi có parentId") UUID schoolId) {
 	}
 
 	public record RenameFolderRequest(@NotBlank @Size(max = 200) String name) {
@@ -55,8 +55,8 @@ public final class LibraryDtos {
 	public record DocumentItem(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
 			UUID folderId,
-			@Schema(description = "Rỗng = toàn chuỗi") UUID schoolId,
-			@Schema(description = "Rỗng = toàn chuỗi") String schoolName,
+			@Schema(description = "Rỗng = cả tổ chức") UUID schoolId,
+			@Schema(description = "Rỗng = cả tổ chức") String schoolName,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String title,
 			String docNumber, LocalDate issuedDate, LocalDate effectiveTo,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Rỗng = mọi vai trò") List<RoleCode> visibleRoles,
@@ -87,7 +87,7 @@ public final class LibraryDtos {
 
 	public record CreateDocumentRequest(
 			UUID folderId,
-			@Schema(description = "Bỏ trống = toàn chuỗi (chỉ cấp chuỗi)") UUID schoolId,
+			@Schema(description = "Bỏ trống = cả tổ chức (chỉ hiệu trưởng)") UUID schoolId,
 			@NotBlank @Size(max = 300) String title,
 			@Size(max = 50) String docNumber, LocalDate issuedDate, LocalDate effectiveTo,
 			@Schema(description = "Bỏ trống = mọi vai trò") List<RoleCode> visibleRoles,

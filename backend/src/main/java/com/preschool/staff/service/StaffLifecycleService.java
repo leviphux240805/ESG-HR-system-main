@@ -29,7 +29,6 @@ import com.preschool.document.repository.DocumentTypeRepository;
 import com.preschool.document.repository.StaffDocumentRepository;
 import com.preschool.school.entity.School;
 import com.preschool.school.repository.SchoolRepository;
-import com.preschool.security.SchoolScope;
 import com.preschool.staff.dto.StaffActionDtos;
 import com.preschool.staff.dto.StaffActionDtos.AssignmentDto;
 import com.preschool.staff.dto.StaffActionDtos.BankRequest;
@@ -187,21 +186,20 @@ public class StaffLifecycleService {
 	public StaffDetail transfer(UUID staffId, TransferRequest request) {
 		Staff staff = staffService.find(staffId);
 		if (!access.canTransfer(staff)) {
-			throw ApiException.forbidden("TRANSFER_FORBIDDEN",
-					"Chỉ văn phòng điều hành hoặc chủ chuỗi được điều chuyển nhân viên.");
+			throw ApiException.forbidden("TRANSFER_FORBIDDEN", "Chỉ hiệu trưởng được điều chuyển nhân viên.");
 		}
 		if (!staff.isActive()) {
 			throw ApiException.conflict("STAFF_TERMINATED", "Nhân viên đã nghỉ việc, không điều chuyển được.");
 		}
-		if (!SchoolScope.require().access().canAccess(request.schoolId())) {
-			throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn không có quyền truy cập cơ sở này.");
+		if (!access.canReceiveTransfer(request.schoolId())) {
+			throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Chỉ điều chuyển được sang trường bạn làm hiệu trưởng.");
 		}
 		List<StaffSchoolAssignment> history = assignments.findByStaffIdOrderByFromDateAsc(staffId);
 		StaffSchoolAssignment current = history.stream().filter(a -> a.getToDate() == null).reduce((a, b) -> b)
 			.orElse(null);
 		UUID currentSchool = current != null ? current.getSchoolId() : staff.getSchoolId();
 		if (request.schoolId().equals(currentSchool)) {
-			throw fieldError("schoolId", "Nhân viên đang thuộc cơ sở này");
+			throw fieldError("schoolId", "Nhân viên đang thuộc trường này");
 		}
 		LocalDate last = history.isEmpty() ? staff.getStartDate() : history.getLast().getFromDate();
 		if (!request.effectiveDate().isAfter(last)) {

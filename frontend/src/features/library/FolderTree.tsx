@@ -67,7 +67,7 @@ interface Props {
   schools: { id: string; name: string }[];
 }
 
-/** Cây thư mục: "Tất cả văn bản", "Chưa xếp thư mục", rồi các nhóm toàn chuỗi/cơ sở. */
+/** Cây thư mục: "Tất cả văn bản", "Chưa xếp thư mục", rồi các nhóm cả tổ chức/cơ sở. */
 export function FolderTree({ selected, onSelect, scopes, schools }: Props) {
   const queryClient = useQueryClient();
   const folders = useFolders();

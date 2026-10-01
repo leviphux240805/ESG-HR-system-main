@@ -15,8 +15,10 @@ export interface Ctx {
   params: Record<string, string>;
   query: URLSearchParams;
   body: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  /** Cơ sở trên header X-School-Id (đã kiểm tra thuộc phạm vi người dùng). */
+  /** Trường trên header X-School-Id (đã kiểm tra thuộc phạm vi người dùng); không chọn thì là trường đầu tiên. */
   schoolId: string;
+  /** Các trường đang xem: trường trên header, hoặc mọi trường được gán khi chọn "Tất cả trường". */
+  schoolIds: string[];
   user: DemoUser;
 }
 
@@ -81,7 +83,7 @@ export function currentUser(): DemoUser | null {
   if (!role) return null;
   const user = db().users[role];
   const staff = db().staff.find((s) => s.id === user.staffId)!;
-  return { role, staff, schoolIds: user.grants.map((g) => g.schoolId), isBgh: role !== "teacher" };
+  return { role, staff, schoolIds: [...new Set(user.grants.map((g) => g.schoolId))], isBgh: role !== "teacher" };
 }
 
 export const DELAY_MS = 300;
@@ -125,6 +127,7 @@ export async function mockFetch(input: RequestInfo | URL, init?: RequestInit): P
       query: url.searchParams,
       body: text ? JSON.parse(text) : undefined,
       schoolId: header ?? user.schoolIds[0],
+      schoolIds: header ? [header] : user.schoolIds,
       user,
     });
     if (request.method !== "GET") saveDb();

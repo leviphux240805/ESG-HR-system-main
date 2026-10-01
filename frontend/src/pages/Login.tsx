@@ -154,7 +154,7 @@ function PasswordLogin() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Chưa có tài khoản? Tài khoản do văn phòng điều hành cấp.
+        Chưa có tài khoản? Tài khoản do hiệu trưởng cấp.
       </p>
     </AuthLayout>
   );

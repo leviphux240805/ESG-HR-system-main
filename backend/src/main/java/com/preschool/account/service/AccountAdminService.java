@@ -2,19 +2,22 @@ package com.preschool.account.service;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.preschool.account.dto.AccountDtos.AccountItem;
 import com.preschool.account.dto.AccountDtos.AccountRole;
 import com.preschool.account.dto.AccountDtos.AccountRoleView;
 import com.preschool.account.dto.AccountDtos.CreateAccountRequest;
+import com.preschool.account.entity.RoleAssignment;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
-import com.preschool.account.entity.UserRole;
 import com.preschool.account.repository.RefreshTokenRepository;
 import com.preschool.account.repository.UserRepository;
 import com.preschool.common.audit.AuditLog.Action;
@@ -39,8 +42,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Quản lý tài khoản đăng nhập: chỉ chủ chuỗi và văn phòng điều hành (vai trò toàn chuỗi). Chặn tự khóa mình, khóa
- * hoặc gỡ vai trò của chủ chuỗi cuối cùng; chỉ chủ chuỗi được gán/gỡ vai trò chủ chuỗi và khóa tài khoản chủ chuỗi.
+ * Quản lý tài khoản đăng nhập: hiệu trưởng, trong các trường mình làm hiệu trưởng. Thấy tài khoản có vai trò ở các
+ * trường đó; gán, gỡ vai trò (trừ hiệu trưởng) chỉ ở các trường đó, vai trò ở trường khác giữ nguyên. Tài khoản hiệu
+ * trưởng do bên vận hành quản lý: không sửa vai trò, không khóa. Chặn tự khóa mình.
  */
 @Service
 public class AccountAdminService {
@@ -79,7 +83,7 @@ public class AccountAdminService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<AccountItem> list(String q, RoleCode role, UUID schoolId, Boolean active, Pageable pageable) {
-		requireManager();
+		Set<UUID> managed = managedSchools();
 		Specification<User> spec = (root, query, cb) -> {
 			List<Predicate> predicates = new ArrayList<>();
 			if (q != null && !q.isBlank()) {
@@ -90,27 +94,23 @@ public class AccountAdminService {
 			if (active != null) {
 				predicates.add(cb.equal(root.get("active"), active));
 			}
-			if (role != null || schoolId != null) {
-				var roles = root.join("roles", JoinType.INNER);
-				if (role != null) {
-					predicates.add(cb.equal(roles.get("roleCode"), role));
-				}
-				if (schoolId != null) {
-					predicates.add(cb.equal(roles.get("schoolId"), schoolId));
-				}
-				query.distinct(true);
+			var roles = root.join("roles", JoinType.INNER);
+			predicates.add(roles.get("schoolId").in(schoolId != null ? Set.of(schoolId) : managed));
+			if (role != null) {
+				predicates.add(cb.equal(roles.get("roleCode"), role));
 			}
+			query.distinct(true);
 			return cb.and(predicates.toArray(Predicate[]::new));
 		};
 		Page<User> page = users.findAll(spec, sanitize(pageable));
-		return PageResponse.of(page.map(this::toItem));
+		Map<UUID, String> names = schoolNames();
+		return PageResponse.of(page.map(u -> toItem(u, managed, names)));
 	}
 
 	@Transactional
 	public AccountItem create(CreateAccountRequest request) {
-		requireManager();
-		List<AccountService.Grant> grants = toGrants(request.roles());
-		requireOwnerForOwnerRole(grants, List.of());
+		Set<UUID> managed = managedSchools();
+		List<RoleAssignment> grants = toGrants(request.roles());
 		String fullName = request.fullName();
 		if (request.staffId() != null) {
 			Map<String, Object> staff = staffRow(request.staffId());
@@ -131,65 +131,57 @@ public class AccountAdminService {
 		User user = accountService.create(request.email().trim().toLowerCase(java.util.Locale.ROOT),
 				normalizePhone(request.phone()), fullName.trim(), request.staffId(), grants);
 		audit.record("account", user.getId(), Action.CREATE, null, snapshot(user));
-		return toItem(user);
+		return toItem(user, managed, schoolNames());
 	}
 
+	/** Thay vai trò ở các trường người gán quản lý; vai trò ở trường khác giữ nguyên. */
 	@Transactional
 	public AccountItem updateRoles(UUID id, List<AccountRole> roles) {
-		requireManager();
-		User user = find(id);
-		List<AccountService.Grant> grants = toGrants(roles);
-		requireOwnerForOwnerRole(grants, user.getRoles());
-		boolean losesOwner = hasOwner(user.getRoles()) && grants.stream().noneMatch(g -> g.role() == RoleCode.OWNER);
-		if (losesOwner && user.isActive() && activeOwnerCount() <= 1) {
-			throw ApiException.conflict("LAST_OWNER", "Không gỡ được vai trò của chủ chuỗi cuối cùng.");
-		}
+		Set<UUID> managed = managedSchools();
+		User user = findManaged(id, managed);
+		requireNotPrincipal(user, "Vai trò của tài khoản hiệu trưởng do bên vận hành quản lý.");
+		List<RoleAssignment> wanted = toGrants(roles);
 		Map<String, Object> before = snapshot(user);
-		user.replaceRoles(grants.stream()
-			.map(g -> Map.entry(g.role(), g.schoolId() == null ? User.NO_SCHOOL : g.schoolId()))
+		user.replaceRoles(Stream.concat(
+				user.getRoles().stream().filter(r -> !managed.contains(r.getSchoolId())).map(r -> r.toAssignment()),
+				wanted.stream())
 			.toList());
 		users.saveAndFlush(user);
 		audit.record("account", id, Action.UPDATE, before, snapshot(user));
-		return toItem(user);
+		return toItem(user, managed, schoolNames());
 	}
 
 	@Transactional
 	public AccountItem lock(UUID id) {
-		requireManager();
-		User user = find(id);
+		Set<UUID> managed = managedSchools();
+		User user = findManaged(id, managed);
 		if (user.getId().equals(SchoolScope.require().userId())) {
 			throw ApiException.conflict("SELF_LOCK", "Không tự khóa tài khoản của chính mình.");
 		}
-		if (hasOwner(user.getRoles())) {
-			requireOwner("Chỉ chủ chuỗi được khóa tài khoản chủ chuỗi.");
-			if (user.isActive() && activeOwnerCount() <= 1) {
-				throw ApiException.conflict("LAST_OWNER", "Không khóa được chủ chuỗi cuối cùng.");
-			}
-		}
+		requireNotPrincipal(user, "Tài khoản hiệu trưởng do bên vận hành quản lý.");
 		if (user.isActive()) {
 			user.setActive(false);
 			refreshTokens.revokeAllForUser(user.getId(), clock.instant());
 			audit.record("account", id, Action.UPDATE, Map.of("active", true), Map.of("active", false));
 		}
-		return toItem(user);
+		return toItem(user, managed, schoolNames());
 	}
 
 	@Transactional
 	public AccountItem unlock(UUID id) {
-		requireManager();
-		User user = find(id);
+		Set<UUID> managed = managedSchools();
+		User user = findManaged(id, managed);
 		if (!user.isActive()) {
 			user.setActive(true);
 			audit.record("account", id, Action.UPDATE, Map.of("active", false), Map.of("active", true));
 		}
-		return toItem(user);
+		return toItem(user, managed, schoolNames());
 	}
 
 	/** Gửi email đặt lại mật khẩu (như "Quên mật khẩu"); tài khoản bị khóa thì không gửi. */
 	@Transactional
 	public void sendReset(UUID id) {
-		requireManager();
-		User user = find(id);
+		User user = findManaged(id, managedSchools());
 		if (!user.isActive()) {
 			throw ApiException.conflict("ACCOUNT_LOCKED", "Tài khoản đang bị khóa, mở khóa trước khi gửi email đặt lại mật khẩu.");
 		}
@@ -198,73 +190,79 @@ public class AccountAdminService {
 
 	// ------------------------------------------------------------ hỗ trợ
 
-	private static void requireManager() {
-		boolean chainManager = SchoolScope.require().access().grants().stream()
-			.anyMatch(g -> g.schoolId() == null && (g.role() == RoleCode.OWNER || g.role() == RoleCode.CHAIN_ADMIN));
-		if (!chainManager) {
-			throw ApiException.forbidden("ACCOUNT_FORBIDDEN",
-					"Chỉ chủ chuỗi hoặc văn phòng điều hành được quản lý tài khoản.");
+	/** Các trường (trong phạm vi đang chọn) người dùng làm hiệu trưởng; rỗng thì không có quyền quản lý tài khoản. */
+	private static Set<UUID> managedSchools() {
+		SchoolScope scope = SchoolScope.require();
+		Set<UUID> managed = scope.effectiveSchoolIds()
+			.stream()
+			.filter(id -> AccountService.isPrincipalAt(scope, id))
+			.collect(Collectors.toSet());
+		if (managed.isEmpty()) {
+			throw ApiException.forbidden("ACCOUNT_FORBIDDEN", "Chỉ hiệu trưởng được quản lý tài khoản.");
+		}
+		return managed;
+	}
+
+	private User findManaged(UUID id, Set<UUID> managed) {
+		return users.findById(id)
+			.filter(u -> u.getRoles().stream().anyMatch(r -> managed.contains(r.getSchoolId())))
+			.orElseThrow(() -> ApiException.notFound("Không tìm thấy tài khoản."));
+	}
+
+	private static void requireNotPrincipal(User user, String message) {
+		if (isPrincipal(user)) {
+			throw ApiException.forbidden("PRINCIPAL_ACCOUNT", message);
 		}
 	}
 
-	private static void requireOwner(String message) {
-		if (!SchoolScope.require().access().hasRoleAnywhere(RoleCode.OWNER)) {
-			throw ApiException.forbidden("OWNER_REQUIRED", message);
-		}
+	private static boolean isPrincipal(User user) {
+		return user.getRoles().stream().anyMatch(r -> r.getRoleCode() == RoleCode.PRINCIPAL);
 	}
 
-	/** TODO(assumption): chỉ chủ chuỗi gán hoặc gỡ vai trò chủ chuỗi (tránh văn phòng điều hành tự nâng quyền). */
-	private static void requireOwnerForOwnerRole(List<AccountService.Grant> wanted, List<UserRole> current) {
-		boolean wantsOwner = wanted.stream().anyMatch(g -> g.role() == RoleCode.OWNER);
-		if (wantsOwner != hasOwner(current)) {
-			requireOwner("Chỉ chủ chuỗi được gán hoặc gỡ vai trò chủ chuỗi.");
-		}
-	}
-
-	private static boolean hasOwner(List<UserRole> roles) {
-		return roles.stream().anyMatch(r -> r.getRoleCode() == RoleCode.OWNER);
-	}
-
-	private long activeOwnerCount() {
-		return users.findActiveByRole(RoleCode.OWNER, null).size();
-	}
-
-	private List<AccountService.Grant> toGrants(List<AccountRole> roles) {
-		List<AccountService.Grant> grants = roles.stream().map(r -> new AccountService.Grant(r.role(), r.schoolId()))
-			.distinct().toList();
+	private List<RoleAssignment> toGrants(List<AccountRole> roles) {
+		List<RoleAssignment> grants = roles.stream()
+			.map(r -> new RoleAssignment(r.role(), r.schoolId(), r.functionGroups()))
+			.distinct()
+			.toList();
 		accountService.validateGrants(grants);
 		return grants;
 	}
 
-	private User find(UUID id) {
-		return users.findById(id).orElseThrow(() -> ApiException.notFound("Không tìm thấy tài khoản."));
+	private Map<UUID, String> schoolNames() {
+		return schools.findAll().stream().collect(Collectors.toMap(School::getId, School::getName));
 	}
 
-	private AccountItem toItem(User user) {
-		Map<UUID, String> schoolNames = schools.findAll().stream().collect(Collectors.toMap(School::getId, School::getName));
+	private AccountItem toItem(User user, Set<UUID> managed, Map<UUID, String> schoolNames) {
 		Map<String, Object> staff = user.getStaffId() == null ? null : staffRow(user.getStaffId());
-		List<AccountRoleView> roles = user.getRoles().stream()
-			.map(r -> new AccountRoleView(r.getRoleCode(), r.getSchoolId(), schoolNames.get(r.getSchoolId())))
-			.sorted(java.util.Comparator.comparing(AccountRoleView::role))
+		boolean principal = isPrincipal(user);
+		List<AccountRoleView> roles = user.getRoles()
+			.stream()
+			.map(r -> new AccountRoleView(r.getRoleCode(), r.getSchoolId(), schoolNames.get(r.getSchoolId()),
+					r.getFunctionGroups(), !principal && managed.contains(r.getSchoolId())))
+			.sorted(Comparator.comparing(AccountRoleView::role).thenComparing(v -> Objects.toString(v.schoolName(), "")))
 			.toList();
 		return new AccountItem(user.getId(), user.getEmail(), user.getPhone(), user.getFullName(), user.isActive(),
 				user.getLastLoginAt(), roles, user.getStaffId(), staff == null ? null : (String) staff.get("staff_code"),
 				staff == null ? null : (String) staff.get("full_name"),
-				user.getId().equals(SchoolScope.require().userId()));
+				user.getId().equals(SchoolScope.require().userId()), principal);
 	}
 
-	/** Mã và tên nhân viên, không qua filter cơ sở (tài khoản là dữ liệu toàn chuỗi). */
+	/** Mã và tên nhân viên, không qua filter trường (tài khoản có thể có vai trò ở nhiều trường). */
 	private Map<String, Object> staffRow(UUID staffId) {
-		List<Map<String, Object>> rows = jdbc.queryForList(
-				"SELECT staff_code, full_name FROM staff WHERE id = :id AND deleted_at IS NULL",
-				new MapSqlParameterSource("id", staffId));
+		List<Map<String, Object>> rows = jdbc.queryForList("""
+				SELECT s.staff_code, s.full_name FROM staff s JOIN schools sc ON sc.id = s.school_id
+				WHERE s.id = :id AND s.deleted_at IS NULL AND sc.organization_id = :org""",
+				new MapSqlParameterSource("id", staffId).addValue("org", SchoolScope.require().organizationId()));
 		return rows.isEmpty() ? null : rows.getFirst();
 	}
 
 	private static Map<String, Object> snapshot(User user) {
-		return Map.of("email", user.getEmail(), "active", user.isActive(), "roles", user.getRoles().stream()
-			.map(r -> r.getRoleCode() + (r.getSchoolId() == null ? "" : "@" + r.getSchoolId()))
-			.sorted().toList(), "staffId", Objects.toString(user.getStaffId(), ""));
+		return Map.of("email", user.getEmail(), "active", user.isActive(), "roles", user.getRoles()
+			.stream()
+			.map(r -> r.getRoleCode() + "@" + r.getSchoolId()
+					+ (r.getFunctionGroups().isEmpty() ? "" : r.getFunctionGroups().toString()))
+			.sorted()
+			.toList(), "staffId", Objects.toString(user.getStaffId(), ""));
 	}
 
 	private static Pageable sanitize(Pageable pageable) {

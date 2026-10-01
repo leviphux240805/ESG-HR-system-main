@@ -215,32 +215,32 @@ public class FileService {
 	}
 
 	/**
-	 * Cơ sở sở hữu file: theo yêu cầu, không có thì theo cơ sở đang chọn; vai trò cấp chuỗi chọn "Tất cả cơ sở"
-	 * thì file dùng chung toàn chuỗi (school_id rỗng).
+	 * Cơ sở sở hữu file: theo yêu cầu, không có thì theo cơ sở đang chọn; hiệu trưởng chọn "Tất cả cơ sở"
+	 * thì file dùng chung trong tổ chức (school_id rỗng).
 	 */
 	private static UUID owningSchool(SchoolScope scope, UUID requested) {
 		if (requested != null) {
 			if (!scope.canAccessSchool(requested)) {
-				throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn không có quyền truy cập cơ sở này.");
+				throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn không có quyền truy cập trường này.");
 			}
 			return requested;
 		}
 		if (scope.selectedSchoolId() != null) {
 			return scope.selectedSchoolId();
 		}
-		if (scope.access().chainWide()) {
+		if (scope.isPrincipal()) {
 			return null;
 		}
 		Set<UUID> schools = scope.effectiveSchoolIds();
 		if (schools.size() == 1) {
 			return schools.iterator().next();
 		}
-		throw ApiException.badRequest("SCHOOL_REQUIRED", "Vui lòng chọn cơ sở cho file.");
+		throw ApiException.badRequest("SCHOOL_REQUIRED", "Vui lòng chọn trường cho file.");
 	}
 
 	private String storageKey(UUID schoolId) {
 		LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
-		String prefix = schoolId == null ? "chain" : schoolId.toString();
+		String prefix = schoolId == null ? "org" : schoolId.toString();
 		return "%s/%d/%02d/%s".formatted(prefix, today.getYear(), today.getMonthValue(), UUID.randomUUID());
 	}
 

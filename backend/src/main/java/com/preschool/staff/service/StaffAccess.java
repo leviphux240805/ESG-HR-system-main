@@ -1,5 +1,8 @@
 package com.preschool.staff.service;
 
+import java.util.UUID;
+
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.common.error.ApiException;
 import com.preschool.security.SchoolScope;
@@ -9,16 +12,18 @@ import com.preschool.staff.entity.Staff;
 import org.springframework.stereotype.Component;
 
 /**
- * Quy tắc quyền của module nhân sự (docs/thiet-ke.md: ma trận quyền + quyết định chi tiết giai đoạn 2).
- * Hồ sơ ngoài phạm vi cơ sở đã bị Hibernate filter loại (404); ở đây kiểm tra quyền theo vai trò trên hồ sơ cụ thể.
+ * Quy tắc quyền của module nhân sự (docs/thiet-ke.md: ma trận quyền + quyết định chi tiết giai đoạn 2). Hiệu trưởng
+ * toàn quyền ở trường được gán (cả lương, điều chuyển, tạo tài khoản); phó hiệu trưởng nhóm Nhân sự sửa hồ sơ, cho
+ * nghỉ việc; nhóm Tài chính xem và sửa lương; kế toán xem hồ sơ, lương. Hồ sơ ngoài phạm vi đã bị Hibernate filter
+ * loại (404); ở đây kiểm tra quyền theo vai trò trên hồ sơ cụ thể.
  */
 @Component("staffAccess")
 public class StaffAccess {
 
-	/** Xem danh sách nhân sự: cấp chuỗi, kế toán, hiệu trưởng (theo cơ sở đang chọn). */
+	/** Xem danh sách nhân sự của trường đang chọn. */
 	public boolean canList() {
-		return scope().hasRole(RoleCode.OWNER) || scope().hasRole(RoleCode.CHAIN_ADMIN)
-				|| scope().hasRole(RoleCode.ACCOUNTANT) || scope().hasRole(RoleCode.PRINCIPAL);
+		return scope().hasRole(RoleCode.ACCOUNTANT) || scope().managesAny(FunctionGroup.HR)
+				|| scope().managesAny(FunctionGroup.FINANCE);
 	}
 
 	public boolean isSelf(Staff staff) {
@@ -26,44 +31,48 @@ public class StaffAccess {
 	}
 
 	public boolean canView(Staff staff) {
-		return isSelf(staff) || hasAt(staff, RoleCode.OWNER, RoleCode.CHAIN_ADMIN, RoleCode.ACCOUNTANT,
-				RoleCode.PRINCIPAL);
+		return isSelf(staff) || canViewSalary(staff) || canEdit(staff);
 	}
 
-	/** Sửa hồ sơ, hợp đồng, giấy tờ, chứng chỉ: cấp chuỗi hoặc hiệu trưởng của đúng cơ sở. */
+	/** Sửa hồ sơ, hợp đồng, giấy tờ, chứng chỉ. */
 	public boolean canEdit(Staff staff) {
-		return hasAt(staff, RoleCode.OWNER, RoleCode.CHAIN_ADMIN, RoleCode.PRINCIPAL);
+		return scope().manages(staff.getSchoolId(), FunctionGroup.HR);
 	}
 
-	/** Xem lương và ngân hàng: cấp chuỗi, kế toán, chính chủ. Hiệu trưởng không xem. */
+	/** Xem lương và ngân hàng: chính chủ, kế toán, hiệu trưởng, phó hiệu trưởng nhóm Tài chính. */
 	public boolean canViewSalary(Staff staff) {
-		return isSelf(staff) || hasAt(staff, RoleCode.OWNER, RoleCode.CHAIN_ADMIN, RoleCode.ACCOUNTANT);
+		return isSelf(staff) || scope().hasRoleAt(RoleCode.ACCOUNTANT, staff.getSchoolId()) || canManageSalary(staff);
 	}
 
-	/** Điều chỉnh lương, ngân hàng, điều chuyển, tạo tài khoản: chỉ cấp chuỗi. */
+	/** Điều chỉnh lương, ngân hàng. */
 	public boolean canManageSalary(Staff staff) {
-		return hasAt(staff, RoleCode.OWNER, RoleCode.CHAIN_ADMIN);
+		return scope().manages(staff.getSchoolId(), FunctionGroup.FINANCE);
 	}
 
+	/** Điều chuyển sang trường khác: hiệu trưởng của trường hiện tại (trường đích kiểm tra khi điều chuyển). */
 	public boolean canTransfer(Staff staff) {
-		return canManageSalary(staff);
+		return scope().hasRoleAt(RoleCode.PRINCIPAL, staff.getSchoolId());
 	}
 
-	/** Cho nghỉ việc: cấp chuỗi hoặc hiệu trưởng của đúng cơ sở (chủ dự án chốt 2026-09-30). */
+	/** Cho nghỉ việc. */
 	public boolean canTerminate(Staff staff) {
-		return hasAt(staff, RoleCode.OWNER, RoleCode.CHAIN_ADMIN, RoleCode.PRINCIPAL);
+		return canEdit(staff);
 	}
 
-	/** Tạo tài khoản đăng nhập kèm hồ sơ: chỉ cấp chuỗi. */
+	/** Tạo tài khoản đăng nhập kèm hồ sơ: hiệu trưởng. */
 	public boolean canCreateAccounts() {
-		return scope().access().grants().stream()
-			.anyMatch(g -> g.schoolId() == null && (g.role() == RoleCode.OWNER || g.role() == RoleCode.CHAIN_ADMIN));
+		return scope().isPrincipal();
 	}
 
-	/** Thêm nhân viên vào cơ sở: cấp chuỗi hoặc hiệu trưởng của cơ sở đó. */
-	public boolean canCreateIn(java.util.UUID schoolId) {
-		return scope().canAccessSchool(schoolId) && (scope().hasRoleAt(RoleCode.OWNER, schoolId)
-				|| scope().hasRoleAt(RoleCode.CHAIN_ADMIN, schoolId) || scope().hasRoleAt(RoleCode.PRINCIPAL, schoolId));
+	/** Thêm nhân viên vào trường. */
+	public boolean canCreateIn(UUID schoolId) {
+		return scope().manages(schoolId, FunctionGroup.HR);
+	}
+
+	/** Trường đích của điều chuyển: hiệu trưởng cũng phải quản lý trường đó. */
+	public boolean canReceiveTransfer(UUID schoolId) {
+		return SchoolScope.require().access().hasRole(RoleCode.PRINCIPAL, schoolId)
+				&& SchoolScope.require().access().canAccess(schoolId);
 	}
 
 	public StaffPermissions permissionsOn(Staff staff) {
@@ -93,17 +102,8 @@ public class StaffAccess {
 
 	public void requireManageSalary(Staff staff) {
 		if (!canManageSalary(staff)) {
-			throw ApiException.forbidden("SALARY_FORBIDDEN", "Chỉ văn phòng điều hành hoặc chủ chuỗi được thực hiện thao tác này.");
+			throw ApiException.forbidden("SALARY_FORBIDDEN", "Bạn không có quyền sửa lương của nhân viên này.");
 		}
-	}
-
-	private boolean hasAt(Staff staff, RoleCode... roles) {
-		for (RoleCode role : roles) {
-			if (scope().hasRoleAt(role, staff.getSchoolId())) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static SchoolScope scope() {

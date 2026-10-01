@@ -32,8 +32,8 @@ class ClassroomSchemaTests {
 
 	private UUID schoolYear() {
 		return jdbc.queryForObject("""
-				INSERT INTO school_years (name, start_date, end_date) VALUES (?, '2026-08-15', '2027-05-31')
-				RETURNING id""", UUID.class, "NH" + TestData.randomDigits(6));
+				INSERT INTO school_years (organization_id, name, start_date, end_date) VALUES (?, ?, '2026-08-15', '2027-05-31')
+				RETURNING id""", UUID.class, TestData.DEFAULT_ORG, "NH" + TestData.randomDigits(6));
 	}
 
 	private UUID newClass(School school, UUID yearId, String name) {

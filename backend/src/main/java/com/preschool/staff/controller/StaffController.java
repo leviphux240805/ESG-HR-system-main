@@ -93,7 +93,7 @@ public class StaffController {
 	}
 
 	@PostMapping("/check-duplicates")
-	@Operation(summary = "Kiểm tra trùng CCCD/SĐT/email toàn chuỗi")
+	@Operation(summary = "Kiểm tra trùng CCCD/SĐT/email trong tổ chức")
 	public DuplicateCheckResponse checkDuplicates(@RequestBody DuplicateCheckRequest request) {
 		return new DuplicateCheckResponse(staffService.checkDuplicates(request));
 	}

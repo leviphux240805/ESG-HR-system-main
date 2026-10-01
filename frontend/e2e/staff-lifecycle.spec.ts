@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import QRCode from "qrcode";
-import { createStaffA, login, randomDigits } from "./helpers";
+import { ACCOUNTS, createStaffA, login, randomDigits } from "./helpers";
 
 const pdf = (name: string) => ({ name, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%e2e\n") });
 
@@ -12,9 +12,9 @@ test("luồng nhân sự: quét CCCD, tải hợp đồng, điều chuyển sang
   const name = `Võ Thị Điều Chuyển ${suffix}`;
   const qr = await QRCode.toBuffer(`${citizenId}||${upperName}|12071995|Nữ|Số 3, Phường Cũ, Hà Nội|01022023`, { width: 480 });
 
-  await login(page, "admin@preschool.local"); // văn phòng điều hành
-  await page.getByLabel("Chọn cơ sở").click();
-  await page.getByRole("option", { name: "Cơ sở A – Hoa Sen" }).click();
+  await login(page, ACCOUNTS.owner); // hiệu trưởng
+  await page.getByLabel("Chọn trường").click();
+  await page.getByRole("option", { name: "Trường A – Hoa Sen" }).click();
 
   await page.goto("/nhan-su/moi");
   await page.getByRole("button", { name: "Quét CCCD" }).click();
@@ -47,25 +47,25 @@ test("luồng nhân sự: quét CCCD, tải hợp đồng, điều chuyển sang
   await page.getByRole("button", { name: "Điều chuyển" }).click();
   sheet = page.getByRole("dialog");
   await sheet.getByLabel("Cơ sở mới").click();
-  await page.getByRole("option", { name: "Cơ sở B – Hoa Mai" }).click();
+  await page.getByRole("option", { name: "Trường B – Hoa Mai" }).click();
   await sheet.getByTestId("file-input").setInputFiles(pdf("qd-dieu-chuyen.pdf"));
   await expect(sheet.getByText("qd-dieu-chuyen.pdf")).toBeVisible();
   await sheet.getByRole("button", { name: "Điều chuyển" }).click();
-  await expect(page.getByText(`${name} đã chuyển sang Cơ sở B – Hoa Mai.`)).toBeVisible();
+  await expect(page.getByText(`${name} đã chuyển sang Trường B – Hoa Mai.`)).toBeVisible();
   // Đang xem Cơ sở A nên tự chuyển sang Cơ sở B để vẫn thấy hồ sơ
-  await expect(page.getByLabel("Chọn cơ sở")).toContainText("Cơ sở B – Hoa Mai");
-  await expect(page.getByText(/· Cơ sở B – Hoa Mai$/)).toBeVisible();
+  await expect(page.getByLabel("Chọn trường")).toContainText("Trường B – Hoa Mai");
+  await expect(page.getByText(/· Trường B – Hoa Mai$/)).toBeVisible();
 
   // Lịch sử: giữ giai đoạn ở Cơ sở A, giai đoạn hiện tại ở Cơ sở B
   await page.getByRole("tab", { name: "Lịch sử" }).click();
   const timeline = page.getByRole("list", { name: "Quá trình công tác" });
   await expect(timeline.getByRole("listitem")).toHaveCount(2);
-  await expect(timeline.getByRole("listitem").filter({ hasText: "Cơ sở A – Hoa Sen" })).not.toContainText("Hiện tại");
-  await expect(timeline.getByRole("listitem").filter({ hasText: "Cơ sở B – Hoa Mai" })).toContainText("Hiện tại");
+  await expect(timeline.getByRole("listitem").filter({ hasText: "Trường A – Hoa Sen" })).not.toContainText("Hiện tại");
+  await expect(timeline.getByRole("listitem").filter({ hasText: "Trường B – Hoa Mai" })).toContainText("Hiện tại");
   await expect(timeline).toContainText("qd-dieu-chuyen.pdf");
   const log = page.getByRole("list", { name: "Nhật ký thay đổi" });
   await expect(log).toContainText("Điều chuyển cơ sở");
-  await expect(log).toContainText("Từ Cơ sở A – Hoa Sen sang Cơ sở B – Hoa Mai");
+  await expect(log).toContainText("Từ Trường A – Hoa Sen sang Trường B – Hoa Mai");
   await expect(log).toContainText("Thêm hợp đồng");
   await expect(log).toContainText("Tạo hồ sơ");
 
@@ -104,7 +104,7 @@ test("văn phòng điều hành điều chỉnh lương; kế toán chỉ xem", 
   const name = `Bùi Thị Lương ${randomDigits(4)}`;
   const staff = await createStaffA(request, name);
 
-  await login(page, "admin@preschool.local");
+  await login(page, ACCOUNTS.owner);
   await page.goto(`/nhan-su/${staff.id}?tab=salary`);
   await expect(page.getByText("Chưa có cấu hình lương")).toBeVisible();
   await page.getByRole("button", { name: "Điều chỉnh lương" }).click();

@@ -4,7 +4,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
 import com.preschool.common.jpa.SchoolFilter;
 
 import jakarta.persistence.Column;
@@ -21,8 +22,9 @@ import org.hibernate.annotations.Filter;
  */
 @Entity
 @Table(name = "tasks")
+@Filter(name = OrganizationFilter.NAME)
 @Filter(name = SchoolFilter.NAME)
-public class Task extends BaseEntity {
+public class Task extends OrganizationEntity {
 
 	public enum Priority {
 		LOW, MEDIUM, HIGH, URGENT

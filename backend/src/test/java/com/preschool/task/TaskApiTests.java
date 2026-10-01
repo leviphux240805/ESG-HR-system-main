@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.notification.repository.NotificationRepository;
@@ -63,7 +64,7 @@ class TaskApiTests extends ApiTestSupport {
 		cook = data.userForStaff(RoleCode.KITCHEN, schoolA, cookStaff);
 		principalA = data.user(RoleCode.PRINCIPAL, schoolA);
 		principalB = data.user(RoleCode.PRINCIPAL, schoolB);
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		admin = data.principal(schoolA, schoolB);
 	}
 
 	private ResultActions create(User user, School school, String title, Staff assignee) throws Exception {
@@ -152,8 +153,9 @@ class TaskApiTests extends ApiTestSupport {
 		create(teacher, schoolA, "Tự giao việc", teacherStaff).andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.code").value("TASK_FORBIDDEN"));
 
-		// Hiệu trưởng thấy cả hai việc của cơ sở mình
-		as(principalA, get("/api/v1/tasks"), schoolA.getId()).andExpect(jsonPath("$.totalElements").value(2));
+		// Hiệu trưởng thấy cả hai việc của trường mình
+		as(principalA, get("/api/v1/tasks").param("schoolId", schoolA.getId().toString()), schoolA.getId())
+			.andExpect(jsonPath("$.totalElements").value(2));
 	}
 
 	@Test
@@ -177,15 +179,15 @@ class TaskApiTests extends ApiTestSupport {
 	}
 
 	@Test
-	void chainTaskIsForChainAdminOnly() throws Exception {
-		// Hiệu trưởng không giao được việc toàn chuỗi
-		create(principalA, null, "Việc toàn chuỗi", teacherStaff).andExpect(status().isForbidden());
+	void organizationTaskIsForPrincipalOnly() throws Exception {
+		// Phó hiệu trưởng không giao được việc chung của tổ chức
+		create(data.vicePrincipal(schoolA, FunctionGroup.HR), null, "Việc chung", teacherStaff).andExpect(status().isForbidden());
 
 		String id = JsonPath.read(create(admin, null, "Rà soát hồ sơ toàn chuỗi", teacherStaff).andExpect(status().isCreated())
 			.andExpect(jsonPath("$.schoolId").doesNotExist())
 			.andReturn().getResponse().getContentAsString(), "$.id");
 
-		// Người nhận vẫn thấy việc toàn chuỗi của mình
+		// Người nhận vẫn thấy việc chung của mình
 		as(teacher, get("/api/v1/me/tasks")).andExpect(jsonPath("$[0].id").value(id));
 		// Nhưng cấp dưỡng cùng cơ sở thì không
 		as(cook, get("/api/v1/tasks/" + id), schoolA.getId()).andExpect(status().isNotFound());

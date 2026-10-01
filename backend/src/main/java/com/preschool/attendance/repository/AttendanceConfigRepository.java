@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface AttendanceConfigRepository extends JpaRepository<AttendanceConfig, UUID> {
 
-	/** Các bản cấu hình của cơ sở và mặc định toàn chuỗi, mới nhất trước. */
+	/** Các bản cấu hình của cơ sở và mặc định của tổ chức, mới nhất trước. */
 	@Query("""
 			select c from AttendanceConfig c where c.schoolId = :schoolId or c.schoolId is null
 			order by c.effectiveFrom desc""")

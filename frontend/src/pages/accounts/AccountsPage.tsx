@@ -18,6 +18,7 @@ import { formatDateTime } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/navigation";
 import { ACCOUNT_FILTER_KEYS, type AccountItem, useAccounts } from "@/api";
 import { CreateAccountSheet, EditRolesSheet } from "@/features/accounts/AccountSheets";
+import { FUNCTION_GROUP_LABELS } from "@/features/accounts/roles";
 
 type Confirm = { kind: "lock" | "unlock" | "reset"; account: AccountItem };
 
@@ -35,7 +36,7 @@ const CONFIRM_TEXT: Record<Confirm["kind"], { title: string; description: (a: Ac
   },
 };
 
-/** Quản lý tài khoản đăng nhập (chủ chuỗi, văn phòng điều hành). */
+/** Quản lý tài khoản đăng nhập (hiệu trưởng). */
 export default function AccountsPage() {
   const params = useListParams({ filterKeys: ACCOUNT_FILTER_KEYS });
   const query = useAccounts(params);
@@ -48,7 +49,7 @@ export default function AccountsPage() {
   const filters = useMemo<FilterDef[]>(
     () => [
       { type: "select", key: "role", label: "Vai trò", options: Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label })) },
-      { type: "select", key: "schoolId", label: "Cơ sở", options: schools.map((s) => ({ value: s.id, label: s.name })) },
+      { type: "select", key: "schoolId", label: "Trường", options: schools.map((s) => ({ value: s.id, label: s.name })) },
       { type: "select", key: "active", label: "Trạng thái", options: [{ value: "true", label: "Đang hoạt động" }, { value: "false", label: "Đã khóa" }] },
     ],
     [schools],
@@ -82,8 +83,11 @@ export default function AccountsPage() {
         cell: ({ row }) => (
           <ul className="text-sm space-y-0.5 min-w-[12rem]">
             {row.original.roles.map((r) => (
-              <li key={`${r.role}-${r.schoolId ?? ""}`}>
-                {ROLE_LABELS[r.role]} <span className="text-muted-foreground">· {r.schoolName ?? "Toàn chuỗi"}</span>
+              <li key={`${r.role}-${r.schoolId}`}>
+                {ROLE_LABELS[r.role]} <span className="text-muted-foreground">· {r.schoolName}</span>
+                {r.functionGroups.length > 0 && (
+                  <span className="block text-xs text-muted-foreground">{r.functionGroups.map((g) => FUNCTION_GROUP_LABELS[g]).join(", ")}</span>
+                )}
               </li>
             ))}
           </ul>
@@ -120,6 +124,7 @@ export default function AccountsPage() {
         enableHiding: false,
         cell: ({ row }) => {
           const a = row.original;
+          if (a.principal && !a.active) return null;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -128,9 +133,9 @@ export default function AccountsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => setEditing(a)}>Sửa vai trò</DropdownMenuItem>
+                {!a.principal && <DropdownMenuItem onSelect={() => setEditing(a)}>Sửa vai trò</DropdownMenuItem>}
                 {a.active && <DropdownMenuItem onSelect={() => setConfirm({ kind: "reset", account: a })}>Gửi email đặt lại mật khẩu</DropdownMenuItem>}
-                {a.active && !a.self && (
+                {a.active && !a.self && !a.principal && (
                   <DropdownMenuItem className="text-destructive" onSelect={() => setConfirm({ kind: "lock", account: a })}>
                     Khóa tài khoản
                   </DropdownMenuItem>
@@ -151,7 +156,7 @@ export default function AccountsPage() {
     <div>
       <PageHeader
         title="Tài khoản"
-        description="Tài khoản đăng nhập và vai trò theo cơ sở. Nhân viên mới thường được tạo tài khoản ngay ở trang Thêm nhân viên."
+        description="Tài khoản và vai trò ở các trường bạn làm hiệu trưởng; phó hiệu trưởng được giao nhóm chức năng theo từng trường. Tài khoản hiệu trưởng do bên vận hành quản lý."
         actions={
           <Button className="min-h-11" onClick={() => setCreating(true)}>
             <Plus className="w-4 h-4 mr-2" /> Tạo tài khoản

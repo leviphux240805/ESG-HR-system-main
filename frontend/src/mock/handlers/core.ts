@@ -9,8 +9,8 @@ on("GET", "/me", ({ user }) => {
     email: user.staff.email,
     phone: user.staff.phone,
     staffId: user.staff.id,
-    chainWide: false,
-    roles: record.grants,
+    organization: { id: "demo-org", name: "Mầm Non Việt" },
+    roles: record.grants.map((g) => ({ ...g, functionGroups: g.functionGroups ?? [] })),
     schools: db()
       .schools.filter((s) => user.schoolIds.includes(s.id))
       .map(({ id, code, name }) => ({ id, code, name })),

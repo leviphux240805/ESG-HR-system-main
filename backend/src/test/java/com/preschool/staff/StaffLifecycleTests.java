@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.school.entity.School;
@@ -47,20 +48,21 @@ class StaffLifecycleTests extends ApiTestSupport {
 		schoolA = data.school();
 		schoolB = data.school();
 		staffA = data.staff(schoolA, Position.TEACHER);
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		admin = data.principal(schoolA, schoolB);
 		principalA = data.user(RoleCode.PRINCIPAL, schoolA);
 	}
 
 	@Test
-	void principalCannotReadSalaryEvenInHistory() throws Exception {
+	void hrVicePrincipalCannotReadSalaryEvenInHistory() throws Exception {
+		User viceHr = data.vicePrincipal(schoolA, FunctionGroup.HR);
 		addSalary(admin, "2026-01-01", 8_500_000).andExpect(status().isCreated());
 
-		as(principalA, get(salaryUrl())).andExpect(status().isForbidden())
+		as(viceHr, get(salaryUrl())).andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.code").value("SALARY_FORBIDDEN"));
-		as(principalA, get("/api/v1/staff/" + staffA.getId() + "/history")).andExpect(status().isOk())
+		as(viceHr, get("/api/v1/staff/" + staffA.getId() + "/history")).andExpect(status().isOk())
 			.andExpect(jsonPath("$.salaryConfigs").doesNotExist())
 			.andExpect(jsonPath("$.events[*].entity", not(hasItem("staff.salary"))));
-		addSalary(principalA, "2026-06-01", 9_000_000).andExpect(status().isForbidden());
+		addSalary(viceHr, "2026-06-01", 9_000_000).andExpect(status().isForbidden());
 	}
 
 	@Test
@@ -144,7 +146,7 @@ class StaffLifecycleTests extends ApiTestSupport {
 	@Test
 	void exportRespectsScope() throws Exception {
 		data.staff(schoolB, Position.COOK);
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(schoolA, schoolB);
 
 		byte[] mine = as(principalA, get("/api/v1/staff/export")).andExpect(status().isOk())
 			.andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))

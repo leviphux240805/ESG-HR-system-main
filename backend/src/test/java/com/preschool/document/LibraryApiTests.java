@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.notification.repository.NotificationRepository;
@@ -38,7 +39,7 @@ class LibraryApiTests extends ApiTestSupport {
 
 	User admin;
 
-	User principalA;
+	User viceA;
 
 	User teacherA;
 
@@ -52,8 +53,8 @@ class LibraryApiTests extends ApiTestSupport {
 	void setUp() {
 		schoolA = data.school();
 		schoolB = data.school();
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
-		principalA = data.userForStaff(RoleCode.PRINCIPAL, schoolA, data.staff(schoolA, Position.MANAGER));
+		admin = data.principal(schoolA, schoolB);
+		viceA = data.link(data.vicePrincipal(schoolA, FunctionGroup.HR), data.staff(schoolA, Position.MANAGER));
 		teacherA = data.userForStaff(RoleCode.TEACHER, schoolA, data.staff(schoolA, Position.TEACHER));
 		teacherA2 = data.userForStaff(RoleCode.TEACHER, schoolA, data.staff(schoolA, Position.TEACHER));
 		nurseA = data.userForStaff(RoleCode.NURSE, schoolA, data.staff(schoolA, Position.NURSE));
@@ -62,7 +63,7 @@ class LibraryApiTests extends ApiTestSupport {
 
 	@Test
 	void schoolDocumentIsInvisibleToOtherSchools() throws Exception {
-		String id = publish(principalA, schoolA.getId(), "Nội quy Cơ sở A", "[]", false);
+		String id = publish(viceA, schoolA.getId(), "Nội quy Cơ sở A", "[]", false);
 
 		as(teacherA, get(doc(id)), schoolA.getId()).andExpect(status().isOk())
 			.andExpect(jsonPath("$.document.title").value("Nội quy Cơ sở A"))
@@ -78,7 +79,7 @@ class LibraryApiTests extends ApiTestSupport {
 
 	@Test
 	void visibleRolesLimitWhoSeesTheDocument() throws Exception {
-		String id = publish(principalA, schoolA.getId(), "Quy trình chăm sóc trẻ", "[\"TEACHER\"]", false);
+		String id = publish(viceA, schoolA.getId(), "Quy trình chăm sóc trẻ", "[\"TEACHER\"]", false);
 
 		as(teacherA, get(doc(id)), schoolA.getId()).andExpect(status().isOk());
 		as(nurseA, get(doc(id)), schoolA.getId()).andExpect(status().isNotFound());
@@ -87,18 +88,18 @@ class LibraryApiTests extends ApiTestSupport {
 		as(teacherA, get("/api/v1/library/documents?q=chăm sóc"), schoolA.getId()).andExpect(status().isOk())
 			.andExpect(jsonPath("$.items[*].id", hasItem(id)));
 		// Người ban hành luôn thấy văn bản mình quản lý
-		as(principalA, get(doc(id)), schoolA.getId()).andExpect(status().isOk())
+		as(viceA, get(doc(id)), schoolA.getId()).andExpect(status().isOk())
 			.andExpect(jsonPath("$.document.canManage").value(true));
 	}
 
 	@Test
-	void onlyPublishersCanIssueAndChainWideNeedsChainRole() throws Exception {
+	void onlyPublishersCanIssueAndOrganizationWideNeedsPrincipal() throws Exception {
 		String fileT = uploadPdf(teacherA, "gv.pdf");
 		createDocument(teacherA, schoolA.getId(), "Giáo viên ban hành", "[]", false, fileT)
 			.andExpect(status().isForbidden());
-		String fileP = uploadPdf(principalA, "ht.pdf");
-		createDocument(principalA, null, "Văn bản toàn chuỗi", "[]", false, fileP).andExpect(status().isForbidden());
-		createDocument(principalA, schoolB.getId(), "Văn bản cơ sở khác", "[]", false, fileP)
+		String fileP = uploadPdf(viceA, "ht.pdf");
+		createDocument(viceA, null, "Văn bản chung", "[]", false, fileP).andExpect(status().isForbidden());
+		createDocument(viceA, schoolB.getId(), "Văn bản cơ sở khác", "[]", false, fileP)
 			.andExpect(status().isForbidden());
 		as(teacherA, post("/api/v1/library/folders").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"name\":\"Thư mục GV\",\"schoolId\":\"%s\"}".formatted(schoolA.getId())), schoolA.getId())
@@ -107,15 +108,15 @@ class LibraryApiTests extends ApiTestSupport {
 		String chainId = publish(admin, null, "Quy chế chung", "[]", false);
 		as(teacherA, get(doc(chainId)), schoolA.getId()).andExpect(status().isOk());
 		as(teacherB, get(doc(chainId)), schoolB.getId()).andExpect(status().isOk());
-		// Hiệu trưởng xem được nhưng không sửa được văn bản toàn chuỗi
-		as(principalA, put(doc(chainId)).contentType(MediaType.APPLICATION_JSON)
+		// Phó hiệu trưởng xem được nhưng không sửa được văn bản chung của tổ chức
+		as(viceA, put(doc(chainId)).contentType(MediaType.APPLICATION_JSON)
 			.content("{\"title\":\"Sửa\",\"visibleRoles\":[],\"requireAck\":false}"), schoolA.getId())
 			.andExpect(status().isForbidden());
 	}
 
 	@Test
 	void acknowledgementRateUpdatesAndNewVersionCanRequireReack() throws Exception {
-		String id = publish(principalA, schoolA.getId(), "Quy định an toàn", "[\"TEACHER\"]", true);
+		String id = publish(viceA, schoolA.getId(), "Quy định an toàn", "[\"TEACHER\"]", true);
 		// Người cần đọc: 2 giáo viên cơ sở A (không gồm y tế, giáo viên cơ sở B, hiệu trưởng)
 		stats(id).andExpect(jsonPath("$.document.stats.required").value(2))
 			.andExpect(jsonPath("$.document.stats.acknowledged").value(0));
@@ -129,11 +130,11 @@ class LibraryApiTests extends ApiTestSupport {
 			.andExpect(jsonPath("$.document.myAck.acknowledgedAt").isNotEmpty());
 		as(teacherA, post(doc(id) + "/ack"), schoolA.getId()).andExpect(status().isOk());
 		stats(id).andExpect(jsonPath("$.document.stats.acknowledged").value(1));
-		as(principalA, get(doc(id) + "/readers?acknowledged=false"), schoolA.getId()).andExpect(status().isOk())
+		as(viceA, get(doc(id) + "/readers?acknowledged=false"), schoolA.getId()).andExpect(status().isOk())
 			.andExpect(jsonPath("$.length()").value(1));
 		// Y tế không thuộc diện đọc (không thấy văn bản), hiệu trưởng không có vai trò giáo viên
 		as(nurseA, post(doc(id) + "/ack"), schoolA.getId()).andExpect(status().isNotFound());
-		as(principalA, post(doc(id) + "/ack"), schoolA.getId()).andExpect(status().isForbidden());
+		as(viceA, post(doc(id) + "/ack"), schoolA.getId()).andExpect(status().isForbidden());
 
 		// Phiên bản mới không yêu cầu xác nhận lại: tỷ lệ giữ nguyên
 		addVersion(id, false).andExpect(status().isCreated()).andExpect(jsonPath("$.document.currentVersionNo").value(2))
@@ -149,11 +150,11 @@ class LibraryApiTests extends ApiTestSupport {
 
 	@Test
 	void myDocumentsListsPendingFirstAndOnlyOwnScope() throws Exception {
-		String read = publish(principalA, schoolA.getId(), "Đã đọc rồi", "[]", true);
+		String read = publish(viceA, schoolA.getId(), "Đã đọc rồi", "[]", true);
 		as(teacherA, post(doc(read) + "/ack"), schoolA.getId()).andExpect(status().isOk());
-		String pending = publish(principalA, schoolA.getId(), "Cần đọc", "[\"TEACHER\"]", true);
-		String nurseOnly = publish(principalA, schoolA.getId(), "Chỉ y tế", "[\"NURSE\"]", true);
-		publish(principalA, schoolA.getId(), "Không cần xác nhận", "[]", false);
+		String pending = publish(viceA, schoolA.getId(), "Cần đọc", "[\"TEACHER\"]", true);
+		String nurseOnly = publish(viceA, schoolA.getId(), "Chỉ y tế", "[\"NURSE\"]", true);
+		publish(viceA, schoolA.getId(), "Không cần xác nhận", "[]", false);
 
 		as(teacherA, get("/api/v1/me/library/documents")).andExpect(status().isOk())
 			.andExpect(jsonPath("$.length()").value(2))
@@ -166,25 +167,25 @@ class LibraryApiTests extends ApiTestSupport {
 
 	@Test
 	void remindOnlyUnreadReadersAtMostOncePerDay() throws Exception {
-		String id = publish(principalA, schoolA.getId(), "Lịch họp tháng", "[]", true);
+		String id = publish(viceA, schoolA.getId(), "Lịch họp tháng", "[]", true);
 		as(teacherA, post(doc(id) + "/ack"), schoolA.getId()).andExpect(status().isOk());
 		// Người cần đọc: hiệu trưởng, 2 giáo viên, y tế; đã đọc: teacherA
-		as(principalA, post(doc(id) + "/remind"), schoolA.getId()).andExpect(status().isOk())
+		as(viceA, post(doc(id) + "/remind"), schoolA.getId()).andExpect(status().isOk())
 			.andExpect(jsonPath("$.reminded").value(3));
 		assertThat(notificationRepo.findAll().stream()
 			.filter(n -> "LIBRARY_REMIND".equals(n.getType()) && ("/tai-lieu/" + id).equals(n.getLink()))
 			.map(n -> n.getUserId()))
-			.containsExactlyInAnyOrder(principalA.getId(), teacherA2.getId(), nurseA.getId());
-		as(principalA, post(doc(id) + "/remind"), schoolA.getId()).andExpect(status().isConflict())
+			.containsExactlyInAnyOrder(viceA.getId(), teacherA2.getId(), nurseA.getId());
+		as(viceA, post(doc(id) + "/remind"), schoolA.getId()).andExpect(status().isConflict())
 			.andExpect(jsonPath("$.code").value("REMIND_LIMIT"));
 		as(teacherA, post(doc(id) + "/remind"), schoolA.getId()).andExpect(status().isForbidden());
 	}
 
 	@Test
 	void foldersAreScopedAndDeletedOnlyWhenEmpty() throws Exception {
-		String folderA = folder(principalA, schoolA.getId(), null, "Quy chế");
-		String child = folder(principalA, null, folderA, "Nội quy lớp");
-		as(principalA, post("/api/v1/library/folders").contentType(MediaType.APPLICATION_JSON)
+		String folderA = folder(viceA, schoolA.getId(), null, "Quy chế");
+		String child = folder(viceA, null, folderA, "Nội quy lớp");
+		as(viceA, post("/api/v1/library/folders").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"name\":\"quy chế\",\"schoolId\":\"%s\"}".formatted(schoolA.getId())), schoolA.getId())
 			.andExpect(status().isConflict()).andExpect(jsonPath("$.errors[0].field").value("name"));
 
@@ -194,8 +195,8 @@ class LibraryApiTests extends ApiTestSupport {
 			.andExpect(jsonPath("$[?(@.id == '%s')].schoolId".formatted(child)).value(schoolA.getId().toString()))
 			.andExpect(jsonPath("$[?(@.id == '%s')].canManage".formatted(child)).value(false));
 
-		String fileId = uploadPdf(principalA, "nq.pdf");
-		String docId = JsonPath.read(as(principalA, post("/api/v1/library/documents").contentType(MediaType.APPLICATION_JSON)
+		String fileId = uploadPdf(viceA, "nq.pdf");
+		String docId = JsonPath.read(as(viceA, post("/api/v1/library/documents").contentType(MediaType.APPLICATION_JSON)
 			.content("""
 					{"folderId":"%s","schoolId":"%s","title":"Nội quy lớp Mầm","visibleRoles":[],"requireAck":false,"fileId":"%s"}"""
 				.formatted(child, schoolA.getId(), fileId)), schoolA.getId())
@@ -203,10 +204,10 @@ class LibraryApiTests extends ApiTestSupport {
 		as(teacherA, get("/api/v1/library/documents?folderId=" + child), schoolA.getId())
 			.andExpect(jsonPath("$.items[*].id", hasItem(docId)));
 
-		as(principalA, delete("/api/v1/library/folders/" + folderA), schoolA.getId()).andExpect(status().isConflict());
-		as(principalA, delete(doc(docId)), schoolA.getId()).andExpect(status().isNoContent());
-		as(principalA, delete("/api/v1/library/folders/" + child), schoolA.getId()).andExpect(status().isNoContent());
-		as(principalA, delete("/api/v1/library/folders/" + folderA), schoolA.getId()).andExpect(status().isNoContent());
+		as(viceA, delete("/api/v1/library/folders/" + folderA), schoolA.getId()).andExpect(status().isConflict());
+		as(viceA, delete(doc(docId)), schoolA.getId()).andExpect(status().isNoContent());
+		as(viceA, delete("/api/v1/library/folders/" + child), schoolA.getId()).andExpect(status().isNoContent());
+		as(viceA, delete("/api/v1/library/folders/" + folderA), schoolA.getId()).andExpect(status().isNoContent());
 	}
 
 	// ---- hỗ trợ
@@ -216,7 +217,7 @@ class LibraryApiTests extends ApiTestSupport {
 	}
 
 	private ResultActions stats(String id) throws Exception {
-		return as(principalA, get(doc(id)), schoolA.getId()).andExpect(status().isOk());
+		return as(viceA, get(doc(id)), schoolA.getId()).andExpect(status().isOk());
 	}
 
 	private ResultActions createDocument(User user, UUID schoolId, String title, String roles, boolean requireAck,
@@ -236,8 +237,8 @@ class LibraryApiTests extends ApiTestSupport {
 	}
 
 	private ResultActions addVersion(String id, boolean reack) throws Exception {
-		String fileId = uploadPdf(principalA, "ban-moi.pdf");
-		return as(principalA, post(doc(id) + "/versions").contentType(MediaType.APPLICATION_JSON)
+		String fileId = uploadPdf(viceA, "ban-moi.pdf");
+		return as(viceA, post(doc(id) + "/versions").contentType(MediaType.APPLICATION_JSON)
 			.content("{\"fileId\":\"%s\",\"note\":\"Sửa đổi\",\"requireReack\":%s}".formatted(fileId, reack)),
 				schoolA.getId());
 	}

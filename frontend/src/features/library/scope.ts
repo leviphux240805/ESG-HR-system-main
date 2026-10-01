@@ -2,7 +2,8 @@ import type { FolderDto, LibraryRole } from "@/api";
 
 interface Grant {
   role: LibraryRole;
-  schoolId?: string | null;
+  schoolId: string;
+  functionGroups?: readonly string[];
 }
 
 interface School {
@@ -10,27 +11,27 @@ interface School {
   name: string;
 }
 
-/** Phạm vi ban hành: null = toàn chuỗi, còn lại là id cơ sở. */
+/** Phạm vi ban hành: null = cả tổ chức, còn lại là id trường. */
 export interface PublishScope {
   schoolId: string | null;
   label: string;
 }
 
-export const CHAIN_LABEL = "Toàn chuỗi";
+export const CHAIN_LABEL = "Cả tổ chức";
 
 /**
- * Phạm vi người dùng được ban hành văn bản (chỉ để ẩn/hiện; backend kiểm tra lại): chủ chuỗi/văn phòng điều hành cho
- * toàn chuỗi và mọi cơ sở; hiệu trưởng, kế toán cho cơ sở được gán (kế toán cấp chuỗi: mọi cơ sở).
+ * Phạm vi người dùng được ban hành văn bản (chỉ để ẩn/hiện; backend kiểm tra lại): hiệu trưởng cho cả tổ chức và
+ * trường mình; phó hiệu trưởng nhóm Nhân sự, kế toán cho trường được gán.
  */
 export function publishScopes(grants: readonly Grant[], schools: readonly School[]): PublishScope[] {
-  const chain = grants.some((g) => !g.schoolId && (g.role === "OWNER" || g.role === "CHAIN_ADMIN"));
-  const result: PublishScope[] = chain ? [{ schoolId: null, label: CHAIN_LABEL }] : [];
+  const principal = grants.some((g) => g.role === "PRINCIPAL");
+  const result: PublishScope[] = principal ? [{ schoolId: null, label: CHAIN_LABEL }] : [];
   for (const school of schools) {
-    const allowed =
-      chain ||
-      grants.some(
-        (g) => (g.role === "PRINCIPAL" || g.role === "ACCOUNTANT") && (!g.schoolId || g.schoolId === school.id),
-      );
+    const allowed = grants.some(
+      (g) =>
+        g.schoolId === school.id &&
+        (g.role === "PRINCIPAL" || g.role === "ACCOUNTANT" || (g.role === "VICE_PRINCIPAL" && !!g.functionGroups?.includes("HR"))),
+    );
     if (allowed) result.push({ schoolId: school.id, label: school.name });
   }
   return result;
@@ -47,7 +48,7 @@ export interface FolderGroup {
   roots: FolderNode[];
 }
 
-/** Dựng cây thư mục theo nhóm (toàn chuỗi trước, rồi từng cơ sở theo tên); cha không thấy thì thành gốc. */
+/** Dựng cây thư mục theo nhóm (cả tổ chức trước, rồi từng cơ sở theo tên); cha không thấy thì thành gốc. */
 export function buildFolderGroups(folders: readonly FolderDto[], schools: readonly School[]): FolderGroup[] {
   const nodes = new Map<string, FolderNode>(folders.map((f) => [f.id, { ...f, children: [], depth: 0 }]));
   const groups = new Map<string, FolderGroup>();

@@ -27,7 +27,10 @@ public class SchoolAccessService {
 		this.schools = schools;
 	}
 
-	/** Nạp phạm vi của người dùng; tài khoản không tồn tại hoặc đã khóa thì từ chối. */
+	/**
+	 * Nạp phạm vi của người dùng; tài khoản không tồn tại hoặc đã khóa thì từ chối. Trường được truy cập = trường
+	 * đang hoạt động, cùng tổ chức, có ít nhất một vai trò.
+	 */
 	@Transactional(readOnly = true)
 	public SchoolAccess load(UUID userId) {
 		User user = users.findWithRolesById(userId)
@@ -37,25 +40,24 @@ public class SchoolAccessService {
 
 		List<SchoolAccess.Grant> grants = user.getRoles()
 			.stream()
-			.map(r -> new SchoolAccess.Grant(r.getRoleCode(), r.getSchoolId()))
+			.map(r -> new SchoolAccess.Grant(r.getRoleCode(), r.getSchoolId(), r.getFunctionGroups()))
 			.toList();
-		boolean chainWide = grants.stream().anyMatch(g -> g.schoolId() == null);
-
-		Set<UUID> activeIds = new LinkedHashSet<>();
-		schools.findAllByActiveTrueOrderByCode().forEach(s -> activeIds.add(s.getId()));
+		Set<UUID> granted = new LinkedHashSet<>(grants.stream().map(SchoolAccess.Grant::schoolId).toList());
 		Set<UUID> allowed = new LinkedHashSet<>();
-		if (chainWide) {
-			allowed.addAll(activeIds);
-		}
-		else {
-			grants.stream().map(SchoolAccess.Grant::schoolId).filter(activeIds::contains).forEach(allowed::add);
-		}
-		return new SchoolAccess(userId, user.getStaffId(), grants, chainWide, Set.copyOf(allowed));
+		schools.findAllByOrganizationIdAndActiveTrueOrderByCode(user.getOrganizationId())
+			.stream()
+			.map(School::getId)
+			.filter(granted::contains)
+			.forEach(allowed::add);
+		return new SchoolAccess(userId, user.getStaffId(), user.getOrganizationId(), grants, Set.copyOf(allowed));
 	}
 
 	@Transactional(readOnly = true)
 	public List<School> allowedSchools(SchoolAccess access) {
-		return schools.findAllByActiveTrueOrderByCode().stream().filter(s -> access.canAccess(s.getId())).toList();
+		return schools.findAllByOrganizationIdAndActiveTrueOrderByCode(access.organizationId())
+			.stream()
+			.filter(s -> access.canAccess(s.getId()))
+			.toList();
 	}
 
 }

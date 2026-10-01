@@ -33,7 +33,7 @@ import com.preschool.school.repository.SchoolRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Cấu hình chấm công theo cơ sở (bản mới theo ngày hiệu lực) và ngày lễ (toàn chuỗi hoặc riêng cơ sở). */
+/** Cấu hình chấm công theo cơ sở (bản mới theo ngày hiệu lực) và ngày lễ (cả tổ chức hoặc riêng cơ sở). */
 @Service
 public class AttendanceConfigService {
 
@@ -65,13 +65,13 @@ public class AttendanceConfigService {
 
 	/**
 	 * Bản cấu hình áp dụng cho cơ sở vào ngày {@code date}: bản của cơ sở có hiệu lực gần nhất, không có thì mặc định
-	 * toàn chuỗi. Chưa có cấu hình nào → lỗi (cần văn phòng điều hành tạo mặc định).
+	 * cả tổ chức. Chưa có cấu hình nào → lỗi (cần hiệu trưởng tạo mặc định).
 	 */
 	@Transactional(readOnly = true)
 	public AttendanceConfig effective(UUID schoolId, LocalDate date) {
 		return findEffective(configs.findForSchool(schoolId), schoolId, date)
 			.orElseThrow(() -> ApiException.conflict("ATTENDANCE_CONFIG_MISSING",
-					"Chưa có cấu hình chấm công. Văn phòng điều hành cần tạo cấu hình mặc định."));
+					"Chưa có cấu hình chấm công. Hiệu trưởng cần tạo cấu hình mặc định."));
 	}
 
 	private static Optional<AttendanceConfig> findEffective(List<AttendanceConfig> versions, UUID schoolId,
@@ -98,7 +98,7 @@ public class AttendanceConfigService {
 		boolean canManage;
 		if (schoolId == null) {
 			versions = configs.findChainDefaults();
-			canManage = access.isChainAdmin();
+			canManage = access.isPrincipal();
 		}
 		else {
 			access.requireView(schoolId);
@@ -114,7 +114,7 @@ public class AttendanceConfigService {
 	@Transactional
 	public ConfigDto create(CreateConfigRequest r) {
 		if (r.schoolId() == null) {
-			access.requireChainAdmin("Chỉ văn phòng điều hành đổi cấu hình mặc định toàn chuỗi.");
+			access.requirePrincipal("Chỉ hiệu trưởng đổi cấu hình mặc định của tổ chức.");
 		}
 		else {
 			access.requireManage(r.schoolId());
@@ -158,7 +158,7 @@ public class AttendanceConfigService {
 
 	// ------------------------------------------------------------ ngày lễ
 
-	/** Ngày lễ áp dụng cho cơ sở trong khoảng (toàn chuỗi + riêng cơ sở), kèm tên. */
+	/** Ngày lễ áp dụng cho cơ sở trong khoảng (cả tổ chức + riêng cơ sở), kèm tên. */
 	@Transactional(readOnly = true)
 	public Map<LocalDate, String> holidayNames(UUID schoolId, LocalDate from, LocalDate to) {
 		Map<LocalDate, String> result = new java.util.TreeMap<>();
@@ -171,7 +171,7 @@ public class AttendanceConfigService {
 
 	@Transactional(readOnly = true)
 	public List<HolidayDto> listHolidays(int year) {
-		if (!access.canViewAny() && !access.isChainAdmin()) {
+		if (!access.canViewAny() && !access.isPrincipal()) {
 			throw ApiException.forbidden("ATTENDANCE_FORBIDDEN", "Bạn không có quyền xem danh sách ngày lễ.");
 		}
 		Map<UUID, String> names = schoolNames();
@@ -222,7 +222,7 @@ public class AttendanceConfigService {
 
 	private void requireManageHoliday(UUID schoolId) {
 		if (schoolId == null) {
-			access.requireChainAdmin("Chỉ văn phòng điều hành quản lý ngày lễ toàn chuỗi.");
+			access.requirePrincipal("Chỉ hiệu trưởng quản lý ngày lễ chung của tổ chức.");
 		}
 		else {
 			access.requireManage(schoolId);
@@ -230,7 +230,7 @@ public class AttendanceConfigService {
 	}
 
 	private boolean canManageHoliday(UUID schoolId) {
-		return schoolId == null ? access.isChainAdmin() : access.canManage(schoolId);
+		return schoolId == null ? access.isPrincipal() : access.canManage(schoolId);
 	}
 
 	private HolidayDto toDto(Holiday h, Map<UUID, String> names) {

@@ -1,6 +1,9 @@
 package com.preschool.school.entity;
 
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
+
+import org.hibernate.annotations.Filter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,7 +11,8 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "schools")
-public class School extends BaseEntity {
+@Filter(name = OrganizationFilter.NAME)
+public class School extends OrganizationEntity {
 
 	@Column(nullable = false)
 	private String code;
@@ -39,6 +43,23 @@ public class School extends BaseEntity {
 	public School(String code, String name) {
 		this.code = code;
 		this.name = name;
+	}
+
+	/** Tạo ngoài request (seed, test, bên vận hành): gán tổ chức trực tiếp. */
+	public School(java.util.UUID organizationId, String code, String name) {
+		this(code, name);
+		assignOrganization(organizationId);
+	}
+
+	public void update(String code, String name, String provinceCode, String wardCode, String addressDetail,
+			String phone, String licenseNo) {
+		this.code = code;
+		this.name = name;
+		this.provinceCode = provinceCode;
+		this.wardCode = wardCode;
+		this.addressDetail = addressDetail;
+		this.phone = phone;
+		this.licenseNo = licenseNo;
 	}
 
 	public String getCode() {

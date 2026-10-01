@@ -202,7 +202,7 @@ function MyRequestsTab({ onPreview }: { onPreview: (r: LeaveRequestDto) => void 
   const [cancelling, setCancelling] = useState<LeaveRequestDto | null>(null);
 
   if (requests.isError && requests.error instanceof ApiError && requests.error.status === 404) {
-    return <EmptyState icon={UserX} title="Tài khoản chưa gắn hồ sơ nhân viên" description="Liên hệ văn phòng điều hành để gắn hồ sơ trước khi xin nghỉ." />;
+    return <EmptyState icon={UserX} title="Tài khoản chưa gắn hồ sơ nhân viên" description="Liên hệ hiệu trưởng để gắn hồ sơ trước khi xin nghỉ." />;
   }
   return (
     <div className="space-y-4">
@@ -419,7 +419,7 @@ function CalendarTab() {
   );
 }
 
-/** Nghỉ phép: đơn của tôi (mọi người), chờ duyệt (hiệu trưởng, văn phòng điều hành), lịch nghỉ của cơ sở. */
+/** Nghỉ phép: đơn của tôi (mọi người), chờ duyệt (ban giám hiệu), lịch nghỉ của cơ sở. */
 export default function LeavePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const canApprove = useCan("approve", "attendance");

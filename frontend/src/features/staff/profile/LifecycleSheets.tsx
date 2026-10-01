@@ -42,7 +42,7 @@ const transferSchema = z.object({
 type TransferValues = z.infer<typeof transferSchema>;
 
 /**
- * Điều chuyển sang cơ sở khác (chỉ cấp chuỗi). Hiệu lực hôm nay/quá khứ thì chuyển ngay và đổi cơ sở đang xem sang
+ * Điều chuyển sang cơ sở khác (chỉ hiệu trưởng). Hiệu lực hôm nay/quá khứ thì chuyển ngay và đổi cơ sở đang xem sang
  * cơ sở mới để vẫn thấy hồ sơ; ngày tương lai thì hệ thống tự chuyển khi tới ngày.
  */
 export function TransferSheet({ staff, open, onOpenChange }: Props) {

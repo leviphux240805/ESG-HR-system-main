@@ -51,7 +51,7 @@ public class LibraryController {
 	// ---- thư mục
 
 	@GetMapping("/folders")
-	@Operation(summary = "Thư mục: dùng chung toàn chuỗi + của các cơ sở đang chọn (danh sách phẳng, dựng cây theo parentId)")
+	@Operation(summary = "Thư mục: dùng chung trong tổ chức + của các cơ sở đang chọn (danh sách phẳng, dựng cây theo parentId)")
 	public List<FolderDto> folders() {
 		return library.folders();
 	}

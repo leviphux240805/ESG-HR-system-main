@@ -133,7 +133,7 @@ interface Props {
 
 /**
  * Các ô nhập hồ sơ nhân viên: thông tin cá nhân, địa chỉ (tỉnh + phường/xã), công việc. Rời ô CCCD/SĐT/email thì
- * kiểm tra trùng toàn chuỗi và báo ngay dưới ô.
+ * kiểm tra trùng trong tổ chức và báo ngay dưới ô.
  */
 export function StaffFormFields({ form, staffId, disabled, schoolField }: Props) {
   const provinces = useAddressData();

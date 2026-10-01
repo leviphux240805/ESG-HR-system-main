@@ -40,7 +40,7 @@ public class AttendanceConfigController {
 
 	@GetMapping("/attendance/configs")
 	@Operation(summary = "Cấu hình chấm công của cơ sở (bản đang áp dụng + lịch sử)",
-			description = "Bỏ trống schoolId = mặc định toàn chuỗi.")
+			description = "Bỏ trống schoolId = mặc định của tổ chức.")
 	public ConfigOverview configs(@RequestParam(required = false) UUID schoolId) {
 		return service.overview(schoolId);
 	}
@@ -53,7 +53,7 @@ public class AttendanceConfigController {
 	}
 
 	@GetMapping("/holidays")
-	@Operation(summary = "Ngày lễ trong năm (toàn chuỗi + cơ sở trong phạm vi)")
+	@Operation(summary = "Ngày lễ trong năm (cả tổ chức + cơ sở trong phạm vi)")
 	public List<HolidayDto> holidays(@Parameter(example = "2026") @RequestParam int year) {
 		return service.listHolidays(year);
 	}

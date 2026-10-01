@@ -2,16 +2,20 @@ package com.preschool.school.entity;
 
 import java.time.LocalDate;
 
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
+
+import org.hibernate.annotations.Filter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-/** Năm học dùng chung toàn chuỗi (không có school_id). */
+/** Năm học dùng chung trong tổ chức (không có school_id). */
 @Entity
 @Table(name = "school_years")
-public class SchoolYear extends BaseEntity {
+@Filter(name = OrganizationFilter.NAME)
+public class SchoolYear extends OrganizationEntity {
 
 	@Column(nullable = false)
 	private String name;
@@ -29,6 +33,12 @@ public class SchoolYear extends BaseEntity {
 	}
 
 	public SchoolYear(String name, LocalDate startDate, LocalDate endDate) {
+		this.name = name;
+		this.startDate = startDate;
+		this.endDate = endDate;
+	}
+
+	public void update(String name, LocalDate startDate, LocalDate endDate) {
 		this.name = name;
 		this.startDate = startDate;
 		this.endDate = endDate;

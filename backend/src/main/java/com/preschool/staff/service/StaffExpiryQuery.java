@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 /**
  * Giấy tờ sắp hết hạn của nhân viên đang làm: hợp đồng hiện hành, chứng chỉ, và bản hiện hành (mới nhất theo loại)
  * của giấy tờ có hạn. Native SQL nên KHÔNG qua Hibernate filter: phạm vi cơ sở truyền vào tường minh
- * ({@code schoolIds} rỗng = mọi cơ sở, chỉ dùng cho job nền hoặc cấp chuỗi xem "Tất cả cơ sở").
+ * ({@code schoolIds} rỗng = mọi cơ sở, chỉ dùng cho job nền hoặc hiệu trưởng xem "Tất cả cơ sở").
  */
 @Component
 public class StaffExpiryQuery {

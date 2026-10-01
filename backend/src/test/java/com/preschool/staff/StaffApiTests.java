@@ -16,6 +16,7 @@ import java.util.UUID;
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
 import com.preschool.TestData;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.account.repository.UserRepository;
@@ -82,9 +83,21 @@ class StaffApiTests extends ApiTestSupport {
 	}
 
 	@Test
-	void principalEditsOwnSchoolButCannotSeeBankOrSalary() throws Exception {
+	void principalSeesSalaryAndTransfers() throws Exception {
 		jdbc.update("UPDATE staff SET bank_account_no = '999888777' WHERE id = ?", staffA.getId());
 		User principalA = data.user(RoleCode.PRINCIPAL, schoolA);
+
+		as(principalA, get("/api/v1/staff/" + staffA.getId())).andExpect(status().isOk())
+			.andExpect(jsonPath("$.bank.bankAccountNo").value("999888777"))
+			.andExpect(jsonPath("$.permissions.canViewSalary").value(true))
+			.andExpect(jsonPath("$.permissions.canManageSalary").value(true))
+			.andExpect(jsonPath("$.permissions.canTransfer").value(true));
+	}
+
+	@Test
+	void hrVicePrincipalEditsOwnSchoolButCannotSeeBankOrSalary() throws Exception {
+		jdbc.update("UPDATE staff SET bank_account_no = '999888777' WHERE id = ?", staffA.getId());
+		User principalA = data.vicePrincipal(schoolA, FunctionGroup.HR);
 
 		as(principalA, get("/api/v1/staff/" + staffA.getId())).andExpect(status().isOk())
 			.andExpect(jsonPath("$.bank").doesNotExist())
@@ -148,7 +161,7 @@ class StaffApiTests extends ApiTestSupport {
 
 	@Test
 	void machineCodeIsNormalizedAndUniqueWithinSchoolOnly() throws Exception {
-		User admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		User admin = data.principal(schoolA, schoolB);
 		String code = "m" + TestData.randomDigits(5);
 		jdbc.update("UPDATE staff SET machine_code = ? WHERE id = ?", code.toUpperCase(), staffA.getId());
 
@@ -166,9 +179,9 @@ class StaffApiTests extends ApiTestSupport {
 	}
 
 	@Test
-	void onlyChainRolesCreateLoginAccounts() throws Exception {
-		User principalA = data.user(RoleCode.PRINCIPAL, schoolA);
-		User admin = data.user(RoleCode.CHAIN_ADMIN, null);
+	void onlyPrincipalsCreateLoginAccounts() throws Exception {
+		User principalA = data.vicePrincipal(schoolA, FunctionGroup.HR);
+		User admin = data.principal(schoolA, schoolB);
 		String account = "{\"roles\":[{\"role\":\"TEACHER\",\"schoolId\":\"%s\"}]}".formatted(schoolA.getId());
 		String email = "moi." + UUID.randomUUID().toString().substring(0, 8) + "@test.local";
 
@@ -190,7 +203,7 @@ class StaffApiTests extends ApiTestSupport {
 	@Test
 	void summaryCountsOnlyVisibleStaff() throws Exception {
 		User principalA = data.user(RoleCode.PRINCIPAL, schoolA);
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(schoolA, schoolB);
 
 		int teachersA = JsonPath.read(as(principalA, get("/api/v1/staff/summary")).andExpect(status().isOk())
 			.andReturn().getResponse().getContentAsString(), "$.byPosition.TEACHER");
@@ -205,7 +218,7 @@ class StaffApiTests extends ApiTestSupport {
 
 	@Test
 	void searchAndInvalidSort() throws Exception {
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(schoolA, schoolB);
 		as(owner, get("/api/v1/staff?q=" + staffA.getStaffCode())).andExpect(status().isOk())
 			.andExpect(jsonPath("$.items[0].id").value(staffA.getId().toString()))
 			.andExpect(jsonPath("$.totalElements").value(1));

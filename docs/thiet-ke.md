@@ -2,15 +2,15 @@
 
 > Bản xuất từ tài liệu thiết kế trên Claude (cập nhật 2026-09-29). Đây là nguồn chuẩn cho mọi quyết định thiết kế; khi thay đổi, sửa file này trước.
 
-Hệ thống web cho một chủ chuỗi quản lý nhiều cơ sở mầm non, dựng lại từ ESG HR: giữ phần lớn giao diện React, chuyển backend từ Supabase sang Java Spring Boot + PostgreSQL, gồm 10 module và làm theo 7 giai đoạn.
+Hệ thống web cho các hiệu trưởng quản lý một hoặc nhiều trường mầm non, dựng lại từ ESG HR: giữ phần lớn giao diện React, chuyển backend từ Supabase sang Java Spring Boot + PostgreSQL, gồm 10 module và làm theo 7 giai đoạn.
 
 ## Phạm vi và giả định
 
-Một lần triển khai phục vụ một chuỗi: chủ chuỗi và văn phòng điều hành thấy mọi cơ sở, còn nhân sự mỗi cơ sở chỉ thấy cơ sở của mình.
+Một lần triển khai phục vụ nhiều tổ chức. Mỗi tổ chức có một hoặc nhiều hiệu trưởng; mỗi hiệu trưởng quản lý các trường được gán, không thấy trường của hiệu trưởng khác. Nhân sự mỗi trường chỉ thấy trường của mình.
 
-- **Mô hình:** chuỗi trường cùng một chủ, không phải SaaS nhiều khách hàng. Mọi bảng nghiệp vụ mang cột `school_id`; dữ liệu dùng chung toàn chuỗi (năm học, ngày lễ, loại tài liệu, món ăn) để `school_id` rỗng.
+- **Mô hình:** `organizations` (tổ chức) → `schools` (trường). Mọi bảng nghiệp vụ mang `school_id`; dữ liệu dùng chung các trường của một tổ chức (năm học, khối, khoản thu, ngày lễ, món ăn chung, văn bản chung, việc chung) để `school_id` rỗng và luôn có `organization_id`. Danh mục hệ thống (chuẩn WHO, loại tài liệu, tham số lương/bảo hiểm theo luật) dùng chung toàn hệ thống. Tổ chức và tài khoản hiệu trưởng do bên vận hành tạo (lệnh SQL `provision_organization`), không có giao diện tự đăng ký.
 
-- **Người dùng bản đầu:** chủ chuỗi, văn phòng điều hành, kế toán, hiệu trưởng/quản lý cơ sở, giáo viên, nhân viên y tế, cấp dưỡng và nhân viên khác.
+- **Người dùng bản đầu:** hiệu trưởng (cao nhất), phó hiệu trưởng, kế toán, giáo viên, nhân viên y tế, cấp dưỡng và nhân viên khác.
 
 - **Nền tảng:** web app chạy tốt trên máy tính và điện thoại (giáo viên điểm danh trẻ bằng điện thoại), chưa làm app mobile riêng.
 
@@ -22,41 +22,53 @@ Một lần triển khai phục vụ một chuỗi: chủ chuỗi và văn phòn
 
 ## Vai trò và phân quyền
 
-Có 8 vai trò; mỗi lần gán vai trò cho một tài khoản kèm phạm vi là một cơ sở hoặc toàn chuỗi, nên một người có thể là kế toán cho hai cơ sở mà không cần vai trò mới.
+Có 7 vai trò, vai trò nào cũng gán theo từng trường (`user_roles.school_id` bắt buộc); một người có thể giữ vai trò ở nhiều trường. Hiệu trưởng là vai trò cao nhất (thay chủ chuỗi và văn phòng điều hành cũ).
 
-| Vai trò                     | Mã            | Phạm vi gán                                 | Dùng cho                                        |
-|-----------------------------|---------------|---------------------------------------------|-------------------------------------------------|
-| Chủ chuỗi                   | `OWNER`       | Toàn chuỗi                                  | Xem mọi thứ, duyệt bảng lương, báo cáo tổng hợp |
-| Văn phòng điều hành         | `CHAIN_ADMIN` | Toàn chuỗi                                  | Nhân sự, tài liệu chung, cấu hình, tài khoản    |
-| Kế toán                     | `ACCOUNTANT`  | Toàn chuỗi hoặc từng cơ sở                  | Học phí, thu chi, lương                         |
-| Hiệu trưởng / quản lý cơ sở | `PRINCIPAL`   | Một cơ sở                                   | Điều hành cơ sở, giao việc, duyệt nghỉ phép     |
-| Giáo viên / bảo mẫu         | `TEACHER`     | Một cơ sở, giới hạn theo lớp được phân công | Điểm danh trẻ, cân đo, sổ theo dõi lớp          |
-| Nhân viên y tế              | `NURSE`       | Một cơ sở                                   | Sức khỏe trẻ toàn cơ sở                         |
-| Cấp dưỡng                   | `KITCHEN`     | Một cơ sở                                   | Thực đơn, số suất ăn                            |
-| Nhân viên khác              | `STAFF`       | Một cơ sở                                   | Việc được giao, hồ sơ và công của bản thân      |
+| Vai trò             | Mã               | Dùng cho                                                                                                   |
+|---------------------|------------------|------------------------------------------------------------------------------------------------------------|
+| Hiệu trưởng         | `PRINCIPAL`      | Toàn quyền mọi module ở các trường được gán, kể cả lương và tài khoản; tạo/sửa/ngừng trường; dữ liệu chung của tổ chức |
+| Phó hiệu trưởng     | `VICE_PRINCIPAL` | Như hiệu trưởng nhưng chỉ ở trường được gán và trong các nhóm chức năng được giao                          |
+| Kế toán             | `ACCOUNTANT`     | Học phí, thu chi, lương ở trường được gán                                                                  |
+| Giáo viên / bảo mẫu | `TEACHER`        | Điểm danh trẻ, cân đo, sổ theo dõi lớp được phân công                                                     |
+| Nhân viên y tế      | `NURSE`          | Sức khỏe trẻ toàn trường                                                                                   |
+| Cấp dưỡng           | `KITCHEN`        | Thực đơn, số suất ăn                                                                                       |
+| Nhân viên khác      | `STAFF`          | Việc được giao, hồ sơ và công của bản thân                                                                 |
 
-Ma trận quyền theo module. **Chuỗi** = đọc/ghi mọi cơ sở · **Cơ sở** = đọc/ghi trong phạm vi được gán · **Xem** = chỉ đọc trong phạm vi · **Lớp** = lớp được phân công · **Mình** = dữ liệu của bản thân · **—** = không truy cập.
+**Nhóm chức năng của phó hiệu trưởng** (`user_roles.function_groups`, gán riêng cho từng trường):
 
-| Module                        | OWNER         | CHAIN_ADMIN | ACCOUNTANT             | PRINCIPAL                 | TEACHER                   | NURSE          | KITCHEN          | STAFF          |
-|-------------------------------|---------------|-------------|------------------------|---------------------------|---------------------------|----------------|------------------|----------------|
-| Cơ sở, tài khoản, cấu hình    | Chuỗi         | Chuỗi       | Xem                    | Xem                       | —                         | —              | —                | —              |
-| Nhân sự                       | Chuỗi         | Chuỗi       | Xem (lương, ngân hàng) | Cơ sở, trừ cấu hình lương | Mình                      | Mình           | Mình             | Mình           |
-| Tài liệu                      | Chuỗi         | Chuỗi       | Cơ sở                  | Cơ sở                     | Xem + xác nhận đã đọc     | Xem + xác nhận | Xem + xác nhận   | Xem + xác nhận |
-| Công việc                     | Chuỗi         | Chuỗi       | Mình                   | Cơ sở (giao việc)         | Mình                      | Mình           | Mình             | Mình           |
-| Chấm công & nghỉ phép         | Xem           | Chuỗi       | Xem                    | Cơ sở (duyệt nghỉ)        | Mình (xin nghỉ)           | Mình           | Mình             | Mình           |
-| Lớp học, hồ sơ trẻ, điểm danh | Xem           | Chuỗi       | Xem                    | Cơ sở                     | Lớp                       | Xem            | Xem (sĩ số)      | —              |
-| Thực đơn & sức khỏe           | Xem           | Chuỗi       | —                      | Cơ sở                     | Lớp (cân đo, sổ theo dõi) | Cơ sở          | Cơ sở (thực đơn) | —              |
-| Học phí & thu chi             | Xem           | Xem         | Cơ sở                  | Xem                       | —                         | —              | —                | —              |
-| Lương & phiếu lương           | Chuỗi (duyệt) | Xem         | Cơ sở                  | Mình                      | Mình                      | Mình           | Mình             | Mình           |
-| Báo cáo & dashboard           | Chuỗi         | Chuỗi       | Tài chính              | Cơ sở                     | —                         | —              | —                | —              |
+| Nhóm         | Mã          | Module                                                                 |
+|--------------|-------------|------------------------------------------------------------------------|
+| Lớp & trẻ    | `CLASSROOM` | Lớp học, hồ sơ trẻ, điểm danh                                          |
+| Thực đơn & sức khỏe | `NUTRITION` | Thực đơn, cân đo, sổ theo dõi, khám định kỳ                     |
+| Nhân sự      | `HR`        | Hồ sơ nhân viên (trừ lương), tài liệu, công việc, chấm công & nghỉ phép |
+| Tài chính    | `FINANCE`   | Học phí, thu chi, lương & phiếu lương, thông tin lương trong hồ sơ     |
+| Báo cáo      | `REPORTS`   | Dashboard và xuất Excel (chỉ số tài chính cần thêm nhóm Tài chính)      |
 
-Quyền kiểm tra ở backend, không dựa vào việc ẩn menu trên giao diện. Hiệu trưởng không xem lương người khác là mặc định đề xuất, cần chủ chuỗi xác nhận.
+Ma trận quyền theo module. **Trường** = đọc/ghi ở các trường được gán · **Nhóm** = như Trường nhưng chỉ khi được giao nhóm chức năng của module đó · **Xem** = chỉ đọc · **Lớp** = lớp được phân công · **Mình** = dữ liệu của bản thân · **—** = không truy cập.
+
+| Module                        | PRINCIPAL           | VICE_PRINCIPAL | ACCOUNTANT             | TEACHER                   | NURSE          | KITCHEN          | STAFF          |
+|-------------------------------|---------------------|----------------|------------------------|---------------------------|----------------|------------------|----------------|
+| Trường, tài khoản, cấu hình   | Trường (+ tạo trường) | —            | —                      | —                         | —              | —                | —              |
+| Nhân sự                       | Trường (cả lương)   | Nhóm (trừ lương) | Xem (lương, ngân hàng) | Mình                    | Mình           | Mình             | Mình           |
+| Tài liệu                      | Trường              | Nhóm           | Trường                 | Xem + xác nhận đã đọc     | Xem + xác nhận | Xem + xác nhận   | Xem + xác nhận |
+| Công việc                     | Trường              | Nhóm           | Mình                   | Mình                      | Mình           | Mình             | Mình           |
+| Chấm công & nghỉ phép         | Trường              | Nhóm           | Xem                    | Mình (xin nghỉ)           | Mình           | Mình             | Mình           |
+| Lớp học, hồ sơ trẻ, điểm danh | Trường              | Nhóm           | Xem                    | Lớp                       | Xem            | Xem (sĩ số)      | —              |
+| Thực đơn & sức khỏe           | Trường              | Nhóm           | —                      | Lớp (cân đo, sổ theo dõi) | Trường         | Trường (thực đơn) | —             |
+| Học phí & thu chi             | Trường              | Nhóm           | Trường                 | —                         | —              | —                | —              |
+| Lương & phiếu lương           | Trường              | Nhóm           | Trường                 | Mình                      | Mình           | Mình             | Mình           |
+| Báo cáo & dashboard           | Trường              | Nhóm           | Tài chính              | —                         | —              | —                | —              |
+
+- **Dữ liệu chung của tổ chức** (`school_id` rỗng: năm học, khối, khoản thu, ngày lễ chung, cấu hình mặc định, món ăn chung, văn bản chung, việc chung, danh mục thu chi): chỉ hiệu trưởng sửa; vai trò khác xem nếu module cho phép.
+- **Tài khoản:** hiệu trưởng tạo tài khoản và gán vai trò (trừ `PRINCIPAL`) ở các trường mình được gán, kèm nhóm chức năng cho phó hiệu trưởng. Vai trò `PRINCIPAL` chỉ do bên vận hành gán, hoặc tự gán khi hiệu trưởng tạo trường mới.
+- **Phạm vi:** header chọn "Tất cả trường" (mọi trường được gán) hoặc một trường. Hôm nay, Hộp duyệt, Báo cáo gộp số liệu các trường đang chọn. Hibernate filter luôn bật: `school_id` thuộc các trường đang chọn, dòng dùng chung phải cùng `organization_id`.
+- Quyền kiểm tra ở backend, không dựa vào việc ẩn menu trên giao diện.
 
 ## Kiến trúc tổng thể
 
 ```mermaid
 flowchart TD
-    U["Người dùng<br/>8 vai trò, máy tính + điện thoại"] --> FE
+    U["Người dùng<br/>7 vai trò, máy tính + điện thoại"] --> FE
     M["Máy chấm công tại cơ sở<br/>xuất Excel hằng tháng"] -- file .xlsx --> FE
     FE["Frontend React + Vite + shadcn/ui<br/>(fork ESG HR)"]
     FE -- "REST + JWT, header X-School-Id" --> API
@@ -95,11 +107,13 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 
 ### 1. Nền tảng
 
-- Đăng nhập bằng email **hoặc** số điện thoại + mật khẩu (một ô nhập, backend tự nhận dạng), quên mật khẩu qua email; tài khoản do văn phòng điều hành tạo, không tự đăng ký. Quên mật khẩu làm sau các phần cốt lõi của giai đoạn 1 (xem Lộ trình).
+- Đăng nhập bằng email **hoặc** số điện thoại + mật khẩu (một ô nhập, backend tự nhận dạng), quên mật khẩu qua email; tài khoản do hiệu trưởng tạo, không tự đăng ký. Quên mật khẩu làm sau các phần cốt lõi của giai đoạn 1 (xem Lộ trình).
 
-- Bộ chọn cơ sở trên header: vai trò cấp chuỗi chọn "Tất cả cơ sở" hoặc một cơ sở; vai trò cấp cơ sở bị khóa vào cơ sở của mình.
+- Bộ chọn trường trên header: "Tất cả trường" (mọi trường được gán) hoặc từng trường; người chỉ có một trường bị khóa vào trường đó.
 
-- Cấu hình dùng chung: năm học, ngày lễ (giữ danh sách ESG), loại tài liệu, tham số lương/bảo hiểm.
+- Quản lý trường (`/truong`): hiệu trưởng tạo, sửa, ngừng trường; trường mới thuộc tổ chức của người tạo và tự gán vai trò hiệu trưởng cho người tạo.
+
+- Cấu hình dùng chung của tổ chức: năm học, khối, ngày lễ (giữ danh sách ESG). Dùng chung toàn hệ thống: loại tài liệu, tham số lương/bảo hiểm, chuẩn WHO.
 
 - Nhật ký thao tác (ai sửa gì, lúc nào) cho lương, học phí, hồ sơ trẻ.
 
@@ -118,21 +132,21 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 - Cảnh báo trước 30 ngày khi hợp đồng, chứng chỉ hoặc giấy khám sức khỏe sắp hết hạn.
 
 - Quyết định chi tiết (chốt 2026-09-30):
-  - Thêm nhân viên: quét **mã QR trên CCCD gắn chip** ngay trong trình duyệt để điền số CCCD, họ tên, ngày sinh, giới tính, ngày cấp; địa chỉ trong QR là dạng cũ nên chỉ điền ô chi tiết. Ảnh 2 mặt lưu làm giấy tờ loại `CCCD`. Trùng CCCD/SĐT/email bị chặn toàn chuỗi.
-  - Hiệu trưởng: thêm/sửa hồ sơ, hợp đồng, giấy tờ, chứng chỉ và **cho nghỉ việc** nhân viên cơ sở mình (khóa tài khoản); không xem/sửa lương, không điều chuyển, không tạo tài khoản đăng nhập (việc của văn phòng điều hành/chủ chuỗi). Kế toán xem hồ sơ, lương, ngân hàng nhưng không sửa. Nhân viên khác chỉ xem hồ sơ của mình.
+  - Thêm nhân viên: quét **mã QR trên CCCD gắn chip** ngay trong trình duyệt để điền số CCCD, họ tên, ngày sinh, giới tính, ngày cấp; địa chỉ trong QR là dạng cũ nên chỉ điền ô chi tiết. Ảnh 2 mặt lưu làm giấy tờ loại `CCCD`. Trùng CCCD/SĐT/email bị chặn trong tổ chức.
+  - Hiệu trưởng: toàn quyền với nhân viên các trường được gán (hồ sơ, lương, điều chuyển giữa các trường của mình, cho nghỉ việc, tạo tài khoản). Phó hiệu trưởng nhóm Nhân sự: thêm/sửa hồ sơ, cho nghỉ việc, không xem lương (nhóm Tài chính thì xem được lương). Kế toán xem hồ sơ, lương, ngân hàng nhưng không sửa. Nhân viên khác chỉ xem hồ sơ của mình.
   - Điều chuyển cơ sở được đặt ngày hiệu lực tương lai; job hằng ngày áp dụng khi tới ngày. Không đặt trước lần điều chuyển gần nhất.
   - Cấu hình lương chỉ thêm bản mới có ngày hiệu lực, không sửa đè bản cũ; mọi thay đổi hồ sơ và lương ghi `audit_logs`.
-  - Nhân viên tự đề xuất cập nhật SĐT/địa chỉ (hiệu trưởng cơ sở hoặc văn phòng điều hành duyệt) và tài khoản ngân hàng (chỉ văn phòng điều hành hoặc kế toán duyệt).
+  - Nhân viên tự đề xuất cập nhật SĐT/địa chỉ (hiệu trưởng hoặc phó hiệu trưởng nhóm Nhân sự duyệt) và tài khoản ngân hàng (hiệu trưởng, kế toán hoặc phó hiệu trưởng nhóm Tài chính duyệt).
 
 ### 3. Tài liệu
 
 - **Hồ sơ gắn với người** (nhân viên, trẻ): theo danh mục `document_types` như ESG (`HOP_DONG_LAO_DONG`, `GIAY_KHAM_SUC_KHOE`…), thêm loại cho trẻ: giấy khai sinh, sổ tiêm chủng, thẻ BHYT, đơn nhập học.
 
-- **Thư viện văn bản** của chuỗi/cơ sở: thư mục, số hiệu, ngày ban hành, ngày hết hiệu lực, phiên bản, phạm vi xem (toàn chuỗi / cơ sở / vai trò).
+- **Thư viện văn bản** của tổ chức/trường: thư mục, số hiệu, ngày ban hành, ngày hết hiệu lực, phiên bản, phạm vi xem (cả tổ chức / trường / vai trò).
 
 - Văn bản có thể bật "yêu cầu xác nhận đã đọc"; người ban hành xem ai chưa đọc và nhắc lại.
 
-- Phạm vi xem văn bản = cơ sở (rỗng = toàn chuỗi) + danh sách vai trò (rỗng = mọi vai trò). Chủ chuỗi/văn phòng điều hành ban hành toàn chuỗi; hiệu trưởng, kế toán ban hành trong cơ sở mình. "Người cần đọc" là tài khoản gắn nhân viên đang làm thuộc phạm vi. Phiên bản mới có thể yêu cầu xác nhận lại. "Nhắc người chưa đọc" gửi thông báo trong app + email, tối đa 1 lần/ngày.
+- Phạm vi xem văn bản = trường (rỗng = cả tổ chức) + danh sách vai trò (rỗng = mọi vai trò). Hiệu trưởng ban hành cho cả tổ chức và từng trường; phó hiệu trưởng nhóm Nhân sự, kế toán ban hành trong trường mình. "Người cần đọc" là tài khoản gắn nhân viên đang làm thuộc phạm vi. Phiên bản mới có thể yêu cầu xác nhận lại. "Nhắc người chưa đọc" gửi thông báo trong app + email, tối đa 1 lần/ngày.
 
 - File lưu trên object storage, tải về qua link ký có hạn (giống signed URL của Supabase đang dùng).
 
@@ -154,16 +168,16 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 
 - Thêm đơn xin nghỉ có duyệt: hiệu trưởng duyệt xong hệ thống tự ghi mã P/1/2P/K vào bảng công và trừ ngày phép còn lại.
 
-- Khóa công tháng trước khi tính lương; mở khóa cần quyền cấp chuỗi và ghi nhật ký.
+- Khóa công tháng trước khi tính lương; mở khóa cần quyền hiệu trưởng và ghi nhật ký.
 
 - Chuyển logic đối soát (`attendanceReconciliation.ts`) về backend để bảng công và bảng lương dùng cùng một kết quả; frontend chỉ còn đọc file Excel.
 
 - Quyết định chi tiết (chốt 2026-09-30):
   - Mỗi nhân viên có **mã chấm công** (`staff.machine_code`, duy nhất trong cơ sở) để khớp dòng trong file máy chấm công; dòng không khớp được liệt kê để gán mã, không tự tạo nhân viên như ESG.
   - Phần đối soát (phút muộn, tính muộn, sai lệch, lý do, gợi ý mã) giữ đúng kết quả `attendanceReconciliation.ts` (có test đối chiếu trên cùng file Excel mẫu). Sửa 3 lỗi của bản cũ: máy ghi K/V được tính mã K (bản cũ thành X); 1/2P cộng 0,5 ngày phép, 1/2K cộng 0,5 ngày không lương; ngày có giờ vào/ra hợp lệ, không sai lệch và chưa chấm tay thì tự điền X.
-  - Cấu hình chấm công theo cơ sở, thêm bản mới theo `effective_from`: giờ ca, nghỉ trưa, phút ân hạn, số lần muộn cho phép, ngày làm việc trong tuần, ngày làm nửa buổi (mặc định thứ Bảy như ESG), số ngày phép năm. Ngày lễ dùng chung chuỗi hoặc riêng cơ sở.
+  - Cấu hình chấm công theo cơ sở, thêm bản mới theo `effective_from`: giờ ca, nghỉ trưa, phút ân hạn, số lần muộn cho phép, ngày làm việc trong tuần, ngày làm nửa buổi (mặc định thứ Bảy như ESG), số ngày phép năm. Ngày lễ dùng chung tổ chức hoặc riêng trường.
   - Đơn nghỉ theo mã công (P, K, O, CO, TS, T, NB; nửa ngày thành 1/2P, 1/2K). Duyệt xong ghi mã cho các ngày làm việc trong khoảng (bỏ ngày nghỉ tuần, ngày lễ) và trừ phép (P = 1, 1/2P = 0,5). Chặn đơn trùng ngày và đơn rơi vào tháng đã khóa công.
-  - Khóa công tháng theo cơ sở: hiệu trưởng hoặc văn phòng điều hành khóa; chỉ văn phòng điều hành mở khóa, bắt buộc ghi lý do (audit). Tháng đã khóa không sửa ô, không import, không duyệt đơn.
+  - Khóa công tháng theo trường: hiệu trưởng hoặc phó hiệu trưởng nhóm Nhân sự khóa; chỉ hiệu trưởng mở khóa, bắt buộc ghi lý do (audit). Đơn nghỉ của hiệu trưởng do một hiệu trưởng của trường đó duyệt (có thể chính mình). Tháng đã khóa không sửa ô, không import, không duyệt đơn.
 
 ### 6. Lương & phiếu lương
 
@@ -213,9 +227,9 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 
 ### 10. Báo cáo & dashboard
 
-- Dashboard chuỗi: sĩ số theo cơ sở, tỷ lệ đi học trong ngày, nhân sự, công nợ học phí, thu chi tháng, việc quá hạn.
+- Dashboard theo các trường đang chọn ("Tất cả trường" hoặc một trường): sĩ số theo trường, tỷ lệ đi học trong ngày, nhân sự, công nợ học phí, thu chi tháng, việc quá hạn.
 
-- Dashboard cơ sở: cùng chỉ số, giới hạn một cơ sở; so sánh giữa các cơ sở chỉ dành cho cấp chuỗi.
+- Khi chọn nhiều trường: thêm bảng so sánh giữa các trường; Hôm nay và Hộp duyệt cũng gộp các trường đang chọn.
 
 - Xuất Excel cho bảng công, bảng lương, công nợ, danh sách trẻ.
 
@@ -223,20 +237,21 @@ Frontend không còn nói chuyện trực tiếp với database như khi dùng S
 
 60 bảng PostgreSQL, quản lý bằng Flyway migration. Repo ESG HR không có file schema nào, nên đây là schema viết mới, dựa trên các bảng mà code cũ truy vấn.
 
-Quy ước chung: khóa chính `id` kiểu UUID; mọi bảng có `created_at`, `updated_at`, `created_by`; bảng nghiệp vụ có `school_id` (rỗng = dùng chung toàn chuỗi); nhân viên, trẻ, phiếu thu xóa mềm bằng `deleted_at`; tiền lưu `numeric(14,0)` (đồng); cột dạng trạng thái dùng `varchar` + CHECK thay vì enum của Postgres để dễ migration.
+Quy ước chung: khóa chính `id` kiểu UUID; mọi bảng có `created_at`, `updated_at`, `created_by`; bảng nghiệp vụ có `school_id` (rỗng = dùng chung trong tổ chức, khi đó bảng có `organization_id`); nhân viên, trẻ, phiếu thu xóa mềm bằng `deleted_at`; tiền lưu `numeric(14,0)` (đồng); cột dạng trạng thái dùng `varchar` + CHECK thay vì enum của Postgres để dễ migration.
 
 | Module    | Bảng                        | Cột chính / ghi chú                                                                                                                                                                                          | Thay cho bảng ESG                                |
 |-----------|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|
-| Nền tảng  | `schools`                   | code, name, province_code, ward_code (mã theo `addressData.json`), address_detail, phone, license_no, is_active                                                                                                                              | —                                                |
-| Nền tảng  | `users`                     | email (unique), phone? (unique, chỉ chữ số), full_name, password_hash, staff_id?, guardian_id?, is_active, last_login_at — đăng nhập bằng email hoặc phone                                                    | Supabase Auth                                    |
-| Nền tảng  | `user_roles`                | user_id, role_code, school_id? (rỗng = toàn chuỗi)                                                                                                                                                           | —                                                |
+| Nền tảng  | `organizations`             | name — một khách hàng (một hoặc nhiều hiệu trưởng cùng quản lý); dữ liệu dùng chung của các trường thuộc tổ chức gắn `organization_id` | — |
+| Nền tảng  | `schools`                   | organization_id, code (duy nhất trong tổ chức), name, province_code, ward_code (mã theo `addressData.json`), address_detail, phone, license_no, is_active | — |
+| Nền tảng  | `users`                     | organization_id, email (unique), phone? (unique, chỉ chữ số), full_name, password_hash, staff_id?, guardian_id?, is_active, last_login_at — đăng nhập bằng email hoặc phone | Supabase Auth |
+| Nền tảng  | `user_roles`                | user_id, role_code, school_id (bắt buộc), function_groups? (chỉ VICE_PRINCIPAL: CLASSROOM / NUTRITION / HR / FINANCE / REPORTS) | — |
 | Nền tảng  | `refresh_tokens`            | user_id, token_hash, family_id (chuỗi token xoay vòng), remember_me, expires_at, revoked_at                                                                                                                  | —                                                |
 | Nền tảng  | `password_reset_tokens`     | user_id, token_hash, expires_at (30 phút), used_at — link quên mật khẩu dùng một lần                                                                                                                        | —                                                |
-| Nền tảng  | `school_years`              | name (2026–2027), start_date, end_date, is_current                                                                                                                                                           | —                                                |
-| Nền tảng  | `holidays`                  | school_id?, holiday_date, name, is_custom                                                                                                                                                                    | `holidays`                                       |
+| Nền tảng  | `school_years`              | organization_id, name (2026–2027, duy nhất trong tổ chức), start_date, end_date, is_current (một năm hiện tại mỗi tổ chức) | — |
+| Nền tảng  | `holidays`                  | organization_id, school_id? (rỗng = cả tổ chức), holiday_date, name, is_custom | `holidays` |
 | Nền tảng  | `notifications`             | user_id, type, title, body, link, read_at, dedupe_key (không tạo trùng thông báo của job)                                                                                                                                                                    | —                                                |
 | Nền tảng  | `audit_logs`                | user_id, entity, entity_id, action (CREATE / UPDATE / DELETE), before_data/after_data (jsonb); thời điểm = created_at                                                                                         | —                                                |
-| Tài liệu  | `files`                     | school_id? (rỗng = dùng chung toàn chuỗi), storage_key, original_name, mime_type, size_bytes, status (PENDING / READY), uploaded_by — chỉ file READY mới tải được                                             | Supabase Storage                                 |
+| Tài liệu  | `files`                     | organization_id, school_id? (rỗng = dùng chung trong tổ chức), storage_key, original_name, mime_type, size_bytes, status (PENDING / READY), uploaded_by — chỉ file READY mới tải được                                             | Supabase Storage                                 |
 | Tài liệu  | `document_types`            | code, name, scope (STAFF / CHILD / LIBRARY), has_expiry                                                                                                                                                      | `document_types`                                 |
 | Tài liệu  | `staff_documents`           | staff_id, document_type_id, file_id, issued_date, expiry_date                                                                                                                                                | `employee_documents`                             |
 | Tài liệu  | `child_documents`           | child_id, document_type_id, file_id, expiry_date                                                                                                                                                             | —                                                |
@@ -275,13 +290,13 @@ Quy ước chung: khóa chính `id` kiểu UUID; mọi bảng có `created_at`, 
 | Lớp & trẻ | `child_guardians`           | child_id, guardian_id, relationship, is_primary, can_pick_up                                                                                                                                                 | —                                                |
 | Lớp & trẻ | `class_enrollments`         | child_id, class_id, from_date, to_date                                                                                                                                                                       | —                                                |
 | Lớp & trẻ | `child_attendance`          | child_id, class_id, attend_date, status, check_in_at, check_out_at, picked_up_by, note, locked_at                                                                                                            | —                                                |
-| Sức khỏe  | `growth_measurements`       | child_id, measured_on, weight_kg, height_cm, age_months, weight_status, height_status, bmi_status                                                                                                            | —                                                |
-| Sức khỏe  | `who_growth_standards`      | indicator, gender, age_months, sd3neg … sd3                                                                                                                                                                  | —                                                |
-| Sức khỏe  | `health_checkups`           | child_id, checkup_date, provider, summary, file_id                                                                                                                                                           | —                                                |
-| Sức khỏe  | `health_logs`               | child_id, log_date, type (SỐT / THUỐC / SỰ_CỐ / KHÁC), content, parent_notified_at, recorded_by                                                                                                              | —                                                |
-| Thực đơn  | `dishes`                    | name, ingredients (jsonb), kcal, protein_g, fat_g, carb_g                                                                                                                                                    | —                                                |
-| Thực đơn  | `menus`                     | school_id, age_group_id?, week_start, status                                                                                                                                                                 | —                                                |
-| Thực đơn  | `menu_items`                | menu_id, menu_date, meal (SÁNG / TRƯA / CHIỀU / PHỤ), dish_id                                                                                                                                                | —                                                |
+| Sức khỏe | `growth_measurements` | school_id, child_id, class_id?, measured_on, weight_kg, height_cm, age_days, age_months, bmi, weight_z/height_z/bmi_z, weight_status, height_status, bmi_status, standard (WHO_2006 / WHO_2007), source (CLASS / CHECKUP / PARENT), recorded_by | — |
+| Sức khỏe | `who_growth_standards` | indicator (WFA / HFA / BFA), gender, age_unit (DAY / MONTH), age, l, m, s, source (WHO_2006 / WHO_2007) | — |
+| Sức khỏe | `health_checkups` | school_id, child_id, checkup_date, provider, summary, file_id | — |
+| Sức khỏe | `health_logs` | school_id, child_id, class_id?, log_date, type (FEVER / MEDICINE / INCIDENT / OTHER), content, temperature_c, parent_notified_at, parent_notified_by, recorded_by | — |
+| Thực đơn | `dishes` | school_id? (rỗng = chung chuỗi), name, ingredients (jsonb [{name, grams}]), kcal, protein_g, fat_g, carb_g, active | — |
+| Thực đơn | `menus` | school_id, age_group_id?, week_start (thứ Hai), status (DRAFT / PUBLISHED), note, published_at; duy nhất theo cơ sở + khối + tuần | — |
+| Thực đơn | `menu_items` | school_id, menu_id, menu_date, meal (BREAKFAST / LUNCH / AFTERNOON / SNACK), dish_id, order_no, note | — |
 | Học phí   | `fee_types`                 | code, name, calc_method (MONTHLY / PER_DAY / ONE_TIME / OPTIONAL), refundable_on_absence                                                                                                                     | —                                                |
 | Học phí   | `fee_schedules`             | school_id, school_year_id, age_group_id?, fee_type_id, amount, effective_from                                                                                                                                | —                                                |
 | Học phí   | `child_fee_items`           | child_id, fee_type_id, from_month, to_month (khoản tự chọn trẻ đăng ký)                                                                                                                                      | —                                                |
@@ -367,8 +382,8 @@ Một ứng dụng Spring Boot duy nhất (modular monolith), chia package theo 
 | Lương         | `POST /payroll/periods/{month}/calculate`, `POST .../approve`, `POST .../send-payslips`                                                      |
 | Lớp & trẻ     | `GET/POST /classes`, `GET/POST /children`, `POST /classes/promote` (lên lớp hàng loạt)                                                       |
 | Điểm danh trẻ | `GET /classes/{id}/attendance?date=`, `PUT /classes/{id}/attendance` (cả lớp một lần), `POST .../lock`                                       |
-| Sức khỏe      | `POST /children/{id}/measurements`, `GET /children/{id}/growth-chart`, `POST /children/{id}/health-logs`                                     |
-| Thực đơn      | `GET/PUT /menus?week=`, `POST /menus/{id}/copy`, `GET /menus/{id}/portions`                                                                  |
+| Sức khỏe      | `GET/PUT /classes/{id}/measurements?date=` (nhập theo lớp), `GET /children/{id}/growth-chart`, `GET/POST /health-logs`, `GET/POST /children/{id}/checkups` |
+| Thực đơn      | `GET/POST/PUT /dishes`, `GET/PUT /menus?week=&ageGroupId=`, `POST /menus/copy`, `POST /menus/{id}/publish`, `GET /menus/{id}/allergy-warnings` |
 | Học phí       | `POST /invoices/generate?month=`, `POST /invoices/{id}/issue`, `POST /invoices/{id}/payments`, `GET /receivables`                            |
 | Báo cáo       | `GET /reports/dashboard`, `GET /reports/{name}/export` (Excel)                                                                               |
 
@@ -462,6 +477,10 @@ Giai đoạn 1 gồm:
 | 2026-09-30 | Giai đoạn 3: `staff.machine_code`; `attendance_configs` thêm `effective_from`, `half_day_weekdays`, `annual_leave_days`; `staff_attendance_days` thêm `school_id`, `discrepancy_reason`, `suggested_status`; `leave_requests` thêm `school_id`, `file_id`, `review_note`; bảng mới `task_attachments`, `attendance_month_locks` (trạng thái khóa công theo cơ sở + tháng); `staff_attendance_days.source` (MANUAL / MACHINE / LEAVE); mọi bảng chấm công/nghỉ phép/công việc có `school_id`; lịch sử trạng thái việc ghi `audit_logs` | Khớp file máy chấm công với nhân viên; tham số quy định lưu theo ngày hiệu lực (quy tắc 5); phân tách theo cơ sở (quy tắc 1); đính kèm việc |
 | 2026-09-30 | Đối soát chấm công giữ kết quả ESG nhưng sửa 3 lỗi (K/V thành X, nửa ngày không cộng vào tổng phép/không lương, ngày có giờ máy để trống); thứ Bảy nửa buổi thành cấu hình | Chủ dự án chốt khi lập kế hoạch giai đoạn 3 |
 | 2026-09-30 | Quyền nhân sự chi tiết (hiệu trưởng được cho nghỉ việc; điều chuyển/lương/tài khoản chỉ cấp chuỗi), duyệt đề xuất, điều chuyển ngày tương lai | Chủ dự án chốt khi lập kế hoạch giai đoạn 2 |
+| 2026-10-01 | Giai đoạn 6 (V10): `fee_types` thêm `active`, `order_no`, `refundable_on_absence` chỉ cho PER_DAY; `fee_schedules` theo cơ sở + năm học + nhóm tuổi (rỗng = mọi nhóm) + `effective_from`; bảng mới `finance_configs` (quy tắc hoàn tiền ăn, cách tính tháng nhập/nghỉ giữa chừng, ngày hạn nộp; có `effective_from`); `invoices` thêm `class_id`, `refund`, `carried_balance`, `carried_to_id`, `issued_by`, `cancelled_at`, `cancel_reason`, trạng thái `CARRIED`, số phiếu cấp khi phát hành, không trùng trẻ + tháng (trừ phiếu hủy); `invoice_lines` có `kind` (CHARGE/REFUND/DISCOUNT/CARRIED), tiền có dấu; `payments.paid_on` (ngày) thay `paid_at`, hủy thay vì xóa (`voided_*`); `cash_categories` thêm `school_id`, `system_code`; `cash_entries.source` (MANUAL/PAYMENT/PAYROLL) + `source_id` duy nhất | Sinh phiếu thu ở backend (quy tắc 4), tham số cấu hình theo ngày hiệu lực (quy tắc 5), chuyển nợ cũ/trả thừa sang tháng sau có dấu vết, thanh toán tự ghi sổ thu |
+| 2026-10-01 | API bổ sung giai đoạn 6: `GET /invoices/summary`, `GET /invoices/export` (Excel), `POST /invoices/{id}/payments/{paymentId}/void` (lý do bắt buộc), `GET /receivables/summary`, `GET /cash-entries/summary`, `GET /cash-entries/{id}/file-url`; quyền tài chính của hiệu trưởng là xem + ghi nhận thu tiền | Thẻ tổng trên trang phiếu thu/công nợ/sổ thu chi, xuất Excel, sửa nhầm lần thu có dấu vết, xem chứng từ qua presigned URL |
+| 2026-10-01 | Giai đoạn 7 (V11, V12): `who_growth_standards` lưu bảng LMS chính thức của WHO (2006 theo ngày tuổi 0–1826, 2007 theo tháng 60–96) thay cho các mốc SD; `growth_measurements` thêm `school_id`, `class_id`, `recorded_by`, `source` (CLASS/CHECKUP/PARENT), `bmi`, z-score và `standard`; `dishes.school_id` (rỗng = chung chuỗi); `menus` duy nhất theo cơ sở + khối + tuần, có `note`, `published_at`; `menu_items` thêm `order_no`, `note`; `health_logs`, `health_checkups` thêm `school_id`; cảnh báo dị ứng so khớp ghi chú dị ứng (không phân biệt hoa thường, dấu) với tên nguyên liệu, trẻ có ghi chú dị ứng luôn được liệt kê | Xếp kênh đúng thuật toán WHO (z-score hiệu chỉnh, nội suy tháng) và kiểm chứng được với gói anthro/anthroplus; phân tách theo cơ sở (quy tắc 1); ghi nguồn số liệu cân đo |
+| 2026-10-01 | Mô hình quyền mới: bỏ `OWNER`, `CHAIN_ADMIN`; `PRINCIPAL` là vai trò cao nhất, quản lý nhiều trường, toàn quyền kể cả lương và tài khoản; thêm `VICE_PRINCIPAL` giới hạn theo trường + nhóm chức năng (`user_roles.function_groups`); mọi vai trò gắn trường. Thêm `organizations`; `organization_id` ở `schools`, `users`, các bảng có `school_id` rỗng (dùng chung trong tổ chức) và danh mục `school_years`, `age_groups`, `fee_types`; ràng buộc duy nhất tính trong tổ chức. API `/schools` (tạo, sửa, ngừng; trường mới tự gán người tạo). Hibernate filter luôn bật (cả "Tất cả trường"). Bỏ giả định "hiệu trưởng không xem lương" | Chủ dự án đổi mô hình: nhiều hiệu trưởng độc lập trên một hệ thống, dữ liệu dùng chung tách theo tổ chức; tạo tổ chức/hiệu trưởng do bên vận hành |
 
 ## Nguồn
 

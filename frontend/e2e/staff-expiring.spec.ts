@@ -29,7 +29,7 @@ test("chủ chuỗi: 30 ngày chưa thấy hợp đồng 75 ngày, 90 ngày thì
   await expect(hoa).toHaveCount(0);
 
   await page.getByRole("radio", { name: "90 ngày tới" }).click();
-  await expect(hoa).toContainText("Cơ sở B – Hoa Mai");
+  await expect(hoa).toContainText("Trường B – Hoa Mai");
 
   await page.getByLabel("Loại").click();
   await page.getByRole("option", { name: "Chứng chỉ" }).click();

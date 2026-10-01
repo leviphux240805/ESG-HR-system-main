@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,7 +57,7 @@ export function TextField<T extends FieldValues>({
   );
 }
 
-export function TextAreaField<T extends FieldValues>({ form, name, label, required }: Base<T>) {
+export function TextAreaField<T extends FieldValues>({ form, name, label, required, description, rows = 2 }: Base<T> & { rows?: number }) {
   return (
     <FormField
       control={form.control}
@@ -68,8 +69,9 @@ export function TextAreaField<T extends FieldValues>({ form, name, label, requir
             <RequiredMark required={required} />
           </FormLabel>
           <FormControl>
-            <Textarea rows={2} {...field} value={field.value ?? ""} />
+            <Textarea rows={rows} {...field} value={field.value ?? ""} />
           </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -110,6 +112,26 @@ export function SelectField<T extends FieldValues>({
             </SelectContent>
           </Select>
           <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function CheckboxField<T extends FieldValues>({ form, name, label, description }: Base<T>) {
+  return (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="flex min-h-11 items-start gap-3 space-y-0">
+          <FormControl>
+            <Checkbox className="mt-1" checked={field.value === true} onCheckedChange={(v) => field.onChange(v === true)} />
+          </FormControl>
+          <div className="space-y-1">
+            <FormLabel className="font-normal">{label}</FormLabel>
+            {description && <FormDescription>{description}</FormDescription>}
+          </div>
         </FormItem>
       )}
     />

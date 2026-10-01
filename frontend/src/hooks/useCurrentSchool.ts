@@ -10,11 +10,11 @@ export function schoolQueryKey(schoolId: string | null, ...parts: readonly unkno
   return [...parts, { schoolId: schoolId ?? "ALL" }];
 }
 
-/** Cơ sở đang chọn trên header và các thao tác liên quan. */
+/** Trường đang chọn trên header và các thao tác liên quan. */
 export function useCurrentSchool() {
   const { me, selectedSchoolId, selectSchool } = useAuth();
   const schools = useMemo(() => me?.schools ?? [], [me]);
-  const canChooseAll = !!me?.chainWide;
+  const canChooseAll = schools.length > 1;
 
   const queryKey = useCallback(
     (...parts: readonly unknown[]) => schoolQueryKey(selectedSchoolId, ...parts),
@@ -22,13 +22,13 @@ export function useCurrentSchool() {
   );
 
   return {
-    /** null = "Tất cả cơ sở" (chỉ vai trò cấp chuỗi). */
+    /** null = "Tất cả trường" được gán. */
     schoolId: selectedSchoolId,
     school: schools.find((s) => s.id === selectedSchoolId) ?? null,
     schools,
     isAllSchools: selectedSchoolId === null,
     canChooseAll,
-    /** Không đổi được cơ sở (chỉ có một cơ sở, không có vai trò cấp chuỗi). */
+    /** Không đổi được trường (chỉ có một trường). */
     locked: !canChooseAll && schools.length <= 1,
     select: selectSchool,
     queryKey,

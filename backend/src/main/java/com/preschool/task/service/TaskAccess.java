@@ -2,17 +2,17 @@ package com.preschool.task.service;
 
 import java.util.UUID;
 
-import com.preschool.account.entity.RoleCode;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.common.error.ApiException;
 import com.preschool.security.SchoolScope;
 
 import org.springframework.stereotype.Component;
 
 /**
- * Quyền module công việc (ma trận thiết kế): chủ chuỗi và văn phòng điều hành giao việc toàn chuỗi; hiệu trưởng
- * giao việc trong cơ sở mình; nhân viên khác chỉ thấy và cập nhật việc được giao cho mình.
+ * Quyền module công việc (ma trận thiết kế): hiệu trưởng và phó hiệu trưởng nhóm Nhân sự giao việc trong trường được
+ * gán; nhân viên khác chỉ thấy và cập nhật việc được giao cho mình.
  *
- * <p>Việc có {@code schoolId} rỗng là việc toàn chuỗi (văn phòng điều hành giao), chỉ vai trò cấp chuỗi quản lý.
+ * <p>Việc có {@code schoolId} rỗng là việc chung của tổ chức, chỉ hiệu trưởng quản lý.
  */
 @Component
 public class TaskAccess {
@@ -21,34 +21,28 @@ public class TaskAccess {
 		return SchoolScope.require();
 	}
 
-	/** Giao việc, sửa, xóa: cấp chuỗi ở mọi cơ sở; hiệu trưởng ở cơ sở mình. */
+	/** Giao việc, sửa, xóa: việc chung của tổ chức → hiệu trưởng; việc của trường → ban giám hiệu nhóm Nhân sự. */
 	public boolean canManage(UUID schoolId) {
-		if (isChainManager()) {
-			return true;
-		}
-		return schoolId != null && scope().hasRoleAt(RoleCode.PRINCIPAL, schoolId);
+		return schoolId == null ? isPrincipal() : scope().manages(schoolId, FunctionGroup.HR);
 	}
 
-	/** Chủ chuỗi hoặc văn phòng điều hành (vai trò cấp chuỗi): quản lý cả việc toàn chuỗi. */
-	public boolean isChainManager() {
-		return scope().access()
-			.grants()
-			.stream()
-			.anyMatch(g -> g.schoolId() == null && (g.role() == RoleCode.OWNER || g.role() == RoleCode.CHAIN_ADMIN));
+	/** Hiệu trưởng: quản lý cả việc chung của tổ chức. */
+	public boolean isPrincipal() {
+		return scope().isPrincipal();
 	}
 
-	/** Có quyền giao việc ở ít nhất một cơ sở (hiện/ẩn nút "Giao việc"). */
+	/** Có quyền giao việc ở ít nhất một trường (hiện/ẩn nút "Giao việc"). */
 	public boolean canManageAny() {
-		return isChainManager() || scope().effectiveSchoolIds().stream().anyMatch(this::canManage);
+		return isPrincipal() || scope().managesAny(FunctionGroup.HR);
 	}
 
 	public void requireManage(UUID schoolId) {
 		if (schoolId != null && !scope().canAccessSchool(schoolId)) {
-			throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn không có quyền truy cập cơ sở này.");
+			throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn không có quyền truy cập trường này.");
 		}
 		if (!canManage(schoolId)) {
 			throw ApiException.forbidden("TASK_FORBIDDEN", schoolId == null
-					? "Chỉ văn phòng điều hành giao được việc toàn chuỗi." : "Bạn không có quyền giao việc ở cơ sở này.");
+					? "Chỉ hiệu trưởng giao được việc chung của tổ chức." : "Bạn không có quyền giao việc ở trường này.");
 		}
 	}
 

@@ -26,7 +26,7 @@ public class DocumentTypeController {
 	}
 
 	@GetMapping
-	@Operation(summary = "Danh mục loại giấy tờ (dùng chung toàn chuỗi)")
+	@Operation(summary = "Danh mục loại giấy tờ (dùng chung trong tổ chức)")
 	public List<DocumentTypeDto> list(@RequestParam(defaultValue = "STAFF") DocumentType.Scope scope) {
 		return records.documentTypes(scope);
 	}

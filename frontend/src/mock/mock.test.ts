@@ -98,4 +98,97 @@ describe("API giả", () => {
     const after = await call<{ staff: { staffId: string; totals: { unpaidLeave: number } }[] }>("GET", "/attendance/staff?month=2026-09", undefined, school);
     expect(after.data.staff.find((r) => r.staffId === staffId)!.totals.unpaidLeave).toBe(unpaid + 1);
   });
+
+  it("học phí: sinh → phát hành → thu hai lần → đã thu đủ; sinh lại không trùng phiếu", async () => {
+    setSessionRole("principal");
+    const school = db().schools[0].id;
+    type Row = { id: string; childId: string; status: string; balance: number };
+    const list = async () => (await call<{ items: Row[] }>("GET", "/invoices?month=2026-10&size=100", undefined, school)).data.items;
+    const first = await call<{ created: number }>("POST", "/invoices/generate", { month: "2026-10" }, school);
+    expect(first.status).toBe(200);
+    expect(first.data.created).toBeGreaterThan(0);
+    await call("POST", "/invoices/generate", { month: "2026-10" }, school);
+    const drafts = await list();
+    expect(new Set(drafts.map((r) => r.childId)).size).toBe(drafts.length);
+    const target = drafts[0];
+    expect((await call("POST", "/invoices/issue", { month: "2026-10", ids: [target.id] }, school)).status).toBe(200);
+    const issued = (await list()).find((r) => r.id === target.id)!;
+    expect(issued.status).toBe("ISSUED");
+    const half = Math.floor(issued.balance / 2);
+    const pay = (amount: number) => call<{ invoice: Row }>("POST", `/invoices/${target.id}/payments`, { amount, method: "CASH", paidOn: "2026-09-30" }, school);
+    expect((await pay(half)).data.invoice.status).toBe("PARTIAL");
+    const done = await pay(issued.balance - half);
+    expect(done.data.invoice.status).toBe("PAID");
+    expect(done.data.invoice.balance).toBe(0);
+  });
+
+  it("thực đơn: giáo viên chỉ xem; sao chép tuần hỏi trước khi ghi đè; cảnh báo dị ứng liệt kê mọi trẻ có ghi chú", async () => {
+    const school = db().schools[0].id;
+    setSessionRole("teacher");
+    const seen = await call<{ items: unknown[]; canEdit: boolean }>("GET", "/menus/week?weekStart=2026-09-28", undefined, school);
+    expect(seen.data.items.length).toBeGreaterThan(0);
+    expect(seen.data.canEdit).toBe(false);
+    expect((await call("PUT", "/menus/week", { weekStart: "2026-09-28", items: [] }, school)).status).toBe(403);
+
+    setSessionRole("principal");
+    expect((await call("GET", "/menus/week?weekStart=2026-09-29", undefined, school)).status).toBe(400);
+    const copy = (overwrite: boolean) => call("POST", "/menus/copy", { fromWeekStart: "2026-09-28", toWeekStart: "2026-10-05", overwrite }, school);
+    expect((await copy(false)).status).toBe(409);
+    const copied = await copy(true);
+    expect(copied.status).toBe(200);
+    expect((copied.data as { status: string }).status).toBe("DRAFT");
+
+    type Warning = { allergyNote: string; matches: unknown[] };
+    const warnings = (await call<Warning[]>("GET", "/menus/allergy-warnings?weekStart=2026-09-28", undefined, school)).data;
+    const allergic = db().children.filter((c) => c.schoolId === school && c.allergies);
+    expect(warnings).toHaveLength(allergic.length);
+  });
+
+  it("cân đo: lưu cả lớp, xếp kênh WHO; biểu đồ có đường chuẩn và số đo", async () => {
+    setSessionRole("principal");
+    const school = db().schools[0].id;
+    const cls = db().classes.find((c) => c.schoolId === school)!;
+    const child = db().children.find((c) => c.classId === cls.id)!;
+    type Sheet = { rows: { childId: string; current?: { weightStatus?: string; standard?: string } }[] };
+    const saved = await call<Sheet>("PUT", `/classes/${cls.id}/measurements`, { date: "2026-09-30", source: "CLASS", rows: [{ childId: child.id, weightKg: 9, heightCm: 100 }] }, school);
+    expect(saved.status).toBe(200);
+    const row = saved.data.rows.find((r) => r.childId === child.id)!;
+    expect(row.current?.standard).toBeTruthy();
+    expect(row.current?.weightStatus).toBe("SEVERE_UNDERWEIGHT");
+    const health = await call<{ growth: { measurements: unknown[]; weightCurve: unknown[] } }>("GET", `/children/${child.id}/health`, undefined, school);
+    expect(health.data.growth.measurements.length).toBeGreaterThan(0);
+    expect(health.data.growth.weightCurve.length).toBeGreaterThan(24);
+    expect((await call("PUT", `/classes/${cls.id}/measurements`, { date: "2026-10-30", source: "CLASS", rows: [{ childId: child.id, weightKg: 15, heightCm: 100 }] }, school)).status).toBe(400);
+  });
+
+  it("hiệu trưởng: \"Tất cả trường\" gộp số liệu, tạo trường mới, gán phó hiệu trưởng cần nhóm chức năng", async () => {
+    setSessionRole("principal");
+    const [a, b] = db().schools;
+    const all = await call<{ chainView: boolean; schools: { schoolId: string }[]; totals: { children: number } }>("GET", "/reports/dashboard");
+    expect(all.data.chainView).toBe(true);
+    expect(all.data.schools.map((s) => s.schoolId)).toEqual([a.id, b.id]);
+    const one = await call<{ totals: { children: number } }>("GET", "/reports/dashboard", undefined, a.id);
+    expect(all.data.totals.children).toBeGreaterThan(one.data.totals.children);
+    const approvals = await call<unknown[]>("GET", "/approvals");
+    const approvalsA = await call<unknown[]>("GET", "/approvals", undefined, a.id);
+    expect(approvals.data.length).toBeGreaterThanOrEqual(approvalsA.data.length);
+
+    const created = await call<{ id: string; canEdit: boolean }>("POST", "/schools", { code: "MNV-MOI", name: "Trường Mới" });
+    expect(created.data.canEdit).toBe(true);
+    expect((await call<{ schools: { id: string }[] }>("GET", "/me")).data.schools.map((s) => s.id)).toContain(created.data.id);
+
+    type Account = { id: string; principal: boolean; roles: { role: string; editable: boolean }[] };
+    const accounts = (await call<{ items: Account[] }>("GET", "/accounts?size=100", undefined, a.id)).data.items;
+    const target = accounts.find((x) => !x.principal && x.roles.some((r) => r.role === "TEACHER"))!;
+    const vice = (groups: string[]) => call("PUT", `/accounts/${target.id}/roles`, { roles: [{ role: "VICE_PRINCIPAL", schoolId: a.id, functionGroups: groups }] }, a.id);
+    expect((await vice([])).status).toBe(400);
+    expect((await vice(["HR"])).status).toBe(200);
+    const me = accounts.find((x) => x.principal)!;
+    expect((await call("PUT", `/accounts/${me.id}/roles`, { roles: [{ role: "TEACHER", schoolId: a.id }] }, a.id)).status).toBe(403);
+
+    setSessionRole("vice");
+    expect((await call("GET", "/accounts", undefined, a.id)).status).toBe(403);
+    expect((await call("POST", "/schools", { code: "X", name: "Y" })).status).toBe(403);
+  });
 });
+

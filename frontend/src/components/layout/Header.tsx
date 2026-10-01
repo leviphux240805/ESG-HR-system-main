@@ -24,7 +24,7 @@ import { SidebarContent } from "./Sidebar";
 
 const ALL_SCHOOLS = "ALL";
 
-/** Bộ chọn cơ sở: cấp chuỗi có "Tất cả cơ sở"; người chỉ có một cơ sở thì bị khóa vào cơ sở đó. */
+/** Bộ chọn trường: có từ 2 trường thì thêm "Tất cả trường"; người chỉ có một trường thì bị khóa vào trường đó. */
 function SchoolSelector() {
   const { schoolId, schools, canChooseAll, locked, select } = useCurrentSchool();
   if (schools.length === 0 && !canChooseAll) return null;
@@ -35,11 +35,11 @@ function SchoolSelector() {
       onValueChange={(value) => select(value === ALL_SCHOOLS ? null : value)}
       disabled={locked}
     >
-      <SelectTrigger className="w-40 sm:w-56 min-h-11" aria-label="Chọn cơ sở">
-        <SelectValue placeholder="Chọn cơ sở" />
+      <SelectTrigger className="w-40 sm:w-56 min-h-11" aria-label="Chọn trường">
+        <SelectValue placeholder="Chọn trường" />
       </SelectTrigger>
       <SelectContent>
-        {canChooseAll && <SelectItem value={ALL_SCHOOLS}>Tất cả cơ sở</SelectItem>}
+        {canChooseAll && <SelectItem value={ALL_SCHOOLS}>Tất cả trường</SelectItem>}
         {schools.map((school) => (
           <SelectItem key={school.id} value={school.id}>
             {school.name}

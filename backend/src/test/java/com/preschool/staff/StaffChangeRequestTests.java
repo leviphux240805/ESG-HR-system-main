@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.notification.repository.NotificationRepository;
@@ -58,7 +59,7 @@ class StaffChangeRequestTests extends ApiTestSupport {
 		principalA = data.user(RoleCode.PRINCIPAL, schoolA);
 		principalB = data.user(RoleCode.PRINCIPAL, schoolB);
 		accountantA = data.user(RoleCode.ACCOUNTANT, schoolA);
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		admin = data.principal(schoolA, schoolB);
 	}
 
 	@Test
@@ -115,15 +116,16 @@ class StaffChangeRequestTests extends ApiTestSupport {
 	}
 
 	@Test
-	void bankChangeIsApprovedByAccountantOrChainAdminNotPrincipal() throws Exception {
+	void bankChangeIsApprovedByAccountantNotHrVicePrincipal() throws Exception {
+		User viceHr = data.vicePrincipal(schoolA, FunctionGroup.HR);
 		String id = JsonPath.read(submit(teacher,
 				"{\"bankName\":\"Vietcombank\",\"bankAccountNo\":\"0123456789\",\"bankAccountHolder\":\"NGUYEN VAN A\"}")
 			.andExpect(status().isCreated()).andExpect(jsonPath("$.kind").value("BANK"))
 			.andReturn().getResponse().getContentAsString(), "$.id");
 
-		as(principalA, get("/api/v1/staff/change-requests"), schoolA.getId())
+		as(viceHr, get("/api/v1/staff/change-requests"), schoolA.getId())
 			.andExpect(jsonPath("$.items[*].id", not(hasItem(id))));
-		as(principalA, post("/api/v1/staff/change-requests/" + id + "/approve"), schoolA.getId())
+		as(viceHr, post("/api/v1/staff/change-requests/" + id + "/approve"), schoolA.getId())
 			.andExpect(status().isForbidden());
 		as(accountantA, post("/api/v1/staff/change-requests/" + id + "/reject"), schoolA.getId())
 			.andExpect(status().isBadRequest());

@@ -15,6 +15,7 @@ import java.time.Instant;
 
 import com.preschool.ApiTestSupport;
 import com.preschool.TestData;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.account.repository.UserRepository;
@@ -40,7 +41,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void loginWithEmailSetsSessionRefreshCookie() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 
 		MvcResult result = login(user.getEmail().toUpperCase(), false);
 
@@ -65,7 +66,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void rememberMeMakesCookiePersistent() throws Exception {
-		User user = data.user(RoleCode.CHAIN_ADMIN, null);
+		User user = data.principal(data.school());
 
 		String setCookie = login(user.getEmail(), true).getResponse().getHeader(HttpHeaders.SET_COOKIE);
 
@@ -74,7 +75,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void wrongPasswordAndUnknownAccountLookTheSame() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 
 		postLogin(user.getEmail(), "sai-mat-khau").andExpect(status().isUnauthorized())
 			.andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
@@ -100,32 +101,35 @@ class AuthTests extends ApiTestSupport {
 	}
 
 	@Test
-	void meForChainRoleListsAllActiveSchools() throws Exception {
+	void meForPrincipalListsAssignedSchoolsAndOrganization() throws Exception {
 		School a = data.school();
 		School b = data.school();
-		User owner = data.user(RoleCode.OWNER, null);
-
-		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, bearer(owner)))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.email").value(owner.getEmail()))
-			.andExpect(jsonPath("$.chainWide").value(true))
-			.andExpect(jsonPath("$.roles[0].role").value("OWNER"))
-			.andExpect(jsonPath("$.schools[*].id", hasItem(a.getId().toString())))
-			.andExpect(jsonPath("$.schools[*].id", hasItem(b.getId().toString())));
-	}
-
-	@Test
-	void meForSchoolRoleListsOnlyOwnSchool() throws Exception {
-		School a = data.school();
-		data.school();
-		User principal = data.user(RoleCode.PRINCIPAL, a);
+		School notMine = data.school();
+		User principal = data.principal(a, b);
 
 		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, bearer(principal)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.chainWide").value(false))
+			.andExpect(jsonPath("$.email").value(principal.getEmail()))
+			.andExpect(jsonPath("$.organization.id").value(TestData.DEFAULT_ORG.toString()))
+			.andExpect(jsonPath("$.roles[0].role").value("PRINCIPAL"))
+			.andExpect(jsonPath("$.schools", hasSize(2)))
+			.andExpect(jsonPath("$.schools[*].id", hasItem(a.getId().toString())))
+			.andExpect(jsonPath("$.schools[*].id", hasItem(b.getId().toString())))
+			.andExpect(jsonPath("$.schools[*].id", not(hasItem(notMine.getId().toString()))));
+	}
+
+	@Test
+	void meForVicePrincipalShowsFunctionGroups() throws Exception {
+		School a = data.school();
+		data.school();
+		User vice = data.vicePrincipal(a, FunctionGroup.CLASSROOM);
+
+		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, bearer(vice)))
+			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.schools", hasSize(1)))
 			.andExpect(jsonPath("$.schools[0].id").value(a.getId().toString()))
-			.andExpect(jsonPath("$.roles[0].schoolId").value(a.getId().toString()));
+			.andExpect(jsonPath("$.roles[0].schoolId").value(a.getId().toString()))
+			.andExpect(jsonPath("$.roles[0].functionGroups[0]").value("CLASSROOM"));
 	}
 
 	@Test
@@ -139,7 +143,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void meRejectsTokenOfDeactivatedAccount() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		String bearer = bearer(user);
 		data.deactivate(user);
 
@@ -150,7 +154,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void refreshRotatesToken() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		Cookie first = refreshCookie(login(user.getEmail(), true));
 
 		MvcResult refreshed = refresh(first).andExpect(status().isOk())
@@ -166,7 +170,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void reusingRotatedTokenRevokesWholeFamily() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		Cookie first = refreshCookie(login(user.getEmail(), false));
 		Cookie second = refreshCookie(refresh(first).andExpect(status().isOk()).andReturn());
 		// Giả lập token cũ đã bị thay thế từ lâu (ngoài khoảng ân hạn)
@@ -180,7 +184,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void concurrentRefreshWithinGraceKeepsNewToken() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		Cookie first = refreshCookie(login(user.getEmail(), false));
 		Cookie second = refreshCookie(refresh(first).andExpect(status().isOk()).andReturn());
 
@@ -191,7 +195,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void expiredOrMissingRefreshTokenIsRejected() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		Cookie cookie = refreshCookie(login(user.getEmail(), false));
 		jdbc.update("UPDATE refresh_tokens SET expires_at = now() - interval '1 second' WHERE user_id = ?",
 				user.getId());
@@ -203,7 +207,7 @@ class AuthTests extends ApiTestSupport {
 
 	@Test
 	void logoutRevokesAndClearsCookie() throws Exception {
-		User user = data.user(RoleCode.OWNER, null);
+		User user = data.principal(data.school());
 		Cookie cookie = refreshCookie(login(user.getEmail(), true));
 
 		MvcResult result = mvc.perform(post("/api/v1/auth/logout").cookie(cookie))

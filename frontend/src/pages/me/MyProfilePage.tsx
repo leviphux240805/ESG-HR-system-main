@@ -67,7 +67,7 @@ export default function MyProfilePage() {
           <EmptyState
             icon={UserX}
             title="Tài khoản chưa gắn hồ sơ nhân viên"
-            description="Liên hệ văn phòng điều hành để gắn tài khoản với hồ sơ nhân sự của bạn."
+            description="Liên hệ hiệu trưởng để gắn tài khoản với hồ sơ nhân sự của bạn."
           />
         ) : (
           <ErrorState error={profile.error} onRetry={() => profile.refetch()} />

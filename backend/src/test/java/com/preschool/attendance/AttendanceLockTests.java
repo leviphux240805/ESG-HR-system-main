@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.school.entity.School;
@@ -45,14 +46,14 @@ class AttendanceLockTests extends ApiTestSupport {
 	@BeforeEach
 	void setUp() {
 		schoolA = data.school();
-		principalA = data.user(RoleCode.PRINCIPAL, schoolA);
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		principalA = data.vicePrincipal(schoolA, FunctionGroup.HR);
+		admin = data.principal(schoolA);
 		staff = data.staff(schoolA, Position.TEACHER);
 		jdbc.update("UPDATE staff SET machine_code = 'L1' WHERE id = ?", staff.getId());
 		jdbc.update("""
-				INSERT INTO attendance_configs (school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
+				INSERT INTO attendance_configs (organization_id, school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
 				  late_grace_minutes, max_late_count_allowed, working_weekdays, half_day_weekdays, annual_leave_days)
-				VALUES (?, '2020-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5,6}', '{6}', 12)""",
+				SELECT organization_id, id, '2020-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5,6}', '{6}', 12 FROM schools WHERE id = ?""",
 				schoolA.getId());
 	}
 
@@ -62,7 +63,7 @@ class AttendanceLockTests extends ApiTestSupport {
 	}
 
 	@Test
-	void lockedMonthCannotBeEditedUntilChainAdminUnlocksWithReason() throws Exception {
+	void lockedMonthCannotBeEditedUntilPrincipalUnlocksWithReason() throws Exception {
 		putCell(principalA, "2026-09-03", "X").andExpect(status().isOk());
 		putCell(principalA, "2026-09-04", "1/2P").andExpect(status().isOk());
 

@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Khóa công tháng của cơ sở trước khi tính lương: chốt tổng tháng vào {@code staff_attendance_months}; sau đó bảng công
- * chỉ xem. Mở khóa: văn phòng điều hành, bắt buộc lý do (audit).
+ * chỉ xem. Mở khóa: hiệu trưởng, bắt buộc lý do (audit).
  */
 @Service
 public class AttendanceLockService {
@@ -85,7 +85,9 @@ public class AttendanceLockService {
 		YearMonth month = AttendanceService.parseMonth(monthValue);
 		UUID schoolId = AttendanceService.currentSchool();
 		access.requireView(schoolId);
-		access.requireChainAdmin("Chỉ văn phòng điều hành được mở khóa công tháng.");
+		if (!access.isPrincipalAt(schoolId)) {
+			throw ApiException.forbidden("ATTENDANCE_FORBIDDEN", "Chỉ hiệu trưởng được mở khóa công tháng.");
+		}
 		AttendanceMonthLock lock = locks.findBySchoolIdAndMonth(schoolId, month.atDay(1))
 			.orElseThrow(() -> ApiException.conflict("ATTENDANCE_MONTH_NOT_LOCKED", "Công tháng này chưa khóa."));
 		months.findBySchoolIdAndMonth(schoolId, month.atDay(1)).forEach(StaffAttendanceMonth::unlock);

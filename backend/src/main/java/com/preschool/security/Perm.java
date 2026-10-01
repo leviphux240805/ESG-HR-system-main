@@ -3,6 +3,7 @@ package com.preschool.security;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 
 import org.springframework.stereotype.Component;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
  * Hàm kiểm tra quyền cho {@code @PreAuthorize}, luôn xét theo cơ sở đang chọn. Ví dụ:
  *
  * <pre>
- * &#64;PreAuthorize("@perm.hasAnyRole('OWNER', 'CHAIN_ADMIN', 'PRINCIPAL')")
+ * &#64;PreAuthorize("@perm.hasAnyRole('PRINCIPAL', 'VICE_PRINCIPAL')")
  * &#64;PreAuthorize("@perm.hasRoleAt('PRINCIPAL', #schoolId)")
  * </pre>
  *
@@ -38,9 +39,13 @@ public class Perm {
 		return SchoolScope.current().map(s -> s.canAccessSchool(schoolId)).orElse(false);
 	}
 
-	/** Có vai trò cấp chuỗi (được xem "Tất cả cơ sở"). */
-	public boolean isChainWide() {
-		return SchoolScope.current().map(s -> s.access().chainWide()).orElse(false);
+	/** Hiệu trưởng, hoặc phó hiệu trưởng được giao nhóm {@code group}, ở trường {@code schoolId}. */
+	public boolean manages(String group, UUID schoolId) {
+		return SchoolScope.current().map(s -> s.manages(schoolId, FunctionGroup.valueOf(group))).orElse(false);
+	}
+
+	public boolean isPrincipal() {
+		return SchoolScope.current().map(SchoolScope::isPrincipal).orElse(false);
 	}
 
 }

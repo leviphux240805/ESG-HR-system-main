@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.account.repository.UserRepository;
@@ -50,8 +51,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Đơn nghỉ theo mã công. Nhân viên xin nghỉ; hiệu trưởng cơ sở hoặc văn phòng điều hành duyệt (đơn của hiệu trưởng do
- * văn phòng điều hành duyệt). Duyệt xong ghi mã vào bảng công các ngày làm việc trong khoảng và trừ phép năm.
+ * Đơn nghỉ theo mã công. Nhân viên xin nghỉ; ban giám hiệu duyệt (đơn của hiệu trưởng do
+ * hiệu trưởng duyệt). Duyệt xong ghi mã vào bảng công các ngày làm việc trong khoảng và trừ phép năm.
  */
 @Service
 public class LeaveService {
@@ -339,28 +340,38 @@ public class LeaveService {
 	}
 
 	/**
-	 * Người duyệt: hiệu trưởng cơ sở hoặc văn phòng điều hành, không tự duyệt đơn của mình.
-	 * TODO(assumption): đơn của hiệu trưởng chỉ văn phòng điều hành duyệt.
+	 * Người duyệt: hiệu trưởng hoặc phó hiệu trưởng nhóm Nhân sự của trường, không tự duyệt đơn của mình. Đơn của ban
+	 * giám hiệu (hiệu trưởng, phó hiệu trưởng) do hiệu trưởng của trường duyệt.
+	 * TODO(assumption): hiệu trưởng tự duyệt đơn của mình khi trường không có hiệu trưởng khác.
 	 */
-	private boolean canReview(LeaveRequest request, Map<UUID, Boolean> principalCache) {
-		if (!access.canManage(request.getSchoolId())
-				|| request.getStaffId().equals(SchoolScope.require().access().staffId())) {
-			return false;
+	private boolean canReview(LeaveRequest request, Map<UUID, Boolean> leaderCache) {
+		UUID schoolId = request.getSchoolId();
+		boolean requesterIsLeader = leaderCache.computeIfAbsent(request.getStaffId(),
+				staffId -> users.findByStaffId(staffId).map(u -> isLeaderAt(u, schoolId)).orElse(false));
+		if (requesterIsLeader) {
+			return access.isPrincipalAt(schoolId);
 		}
-		boolean requesterIsPrincipal = principalCache.computeIfAbsent(request.getStaffId(),
-				staffId -> users.findByStaffId(staffId)
-					.map(u -> u.getRoles().stream().anyMatch(role -> role.getRoleCode() == RoleCode.PRINCIPAL))
-					.orElse(false));
-		return !requesterIsPrincipal || access.isChainAdmin();
+		return access.canManage(schoolId) && !request.getStaffId().equals(SchoolScope.require().access().staffId());
+	}
+
+	private static boolean isLeaderAt(User user, UUID schoolId) {
+		return user.getRoles()
+			.stream()
+			.anyMatch(r -> r.getSchoolId().equals(schoolId)
+					&& (r.getRoleCode() == RoleCode.PRINCIPAL || r.getRoleCode() == RoleCode.VICE_PRINCIPAL));
 	}
 
 	private List<User> approvers(Staff staff) {
-		Set<User> result = new java.util.LinkedHashSet<>(users.findActiveByRole(RoleCode.CHAIN_ADMIN, null));
-		boolean isPrincipal = users.findByStaffId(staff.getId())
-			.map(u -> u.getRoles().stream().anyMatch(r -> r.getRoleCode() == RoleCode.PRINCIPAL))
-			.orElse(false);
-		if (!isPrincipal) {
-			result.addAll(users.findActiveByRole(RoleCode.PRINCIPAL, staff.getSchoolId()));
+		Set<User> result = new java.util.LinkedHashSet<>(users.findActiveByRole(RoleCode.PRINCIPAL, staff.getSchoolId()));
+		boolean isLeader = users.findByStaffId(staff.getId()).map(u -> isLeaderAt(u, staff.getSchoolId())).orElse(false);
+		if (!isLeader) {
+			users.findActiveByRole(RoleCode.VICE_PRINCIPAL, staff.getSchoolId())
+				.stream()
+				.filter(u -> u.getRoles()
+					.stream()
+					.anyMatch(r -> r.getRoleCode() == RoleCode.VICE_PRINCIPAL && r.getSchoolId().equals(staff.getSchoolId())
+							&& r.getFunctionGroups().contains(FunctionGroup.HR)))
+				.forEach(result::add);
 		}
 		return new ArrayList<>(result);
 	}

@@ -50,7 +50,7 @@ export function useStaffSummary(schoolId?: string) {
 
 export type DocumentTypeDto = S["DocumentTypeDto"];
 
-/** Danh mục loại giấy tờ nhân viên (dùng chung toàn chuỗi, ít thay đổi). */
+/** Danh mục loại giấy tờ nhân viên (dùng chung trong tổ chức, ít thay đổi). */
 export function useDocumentTypes() {
   return useQuery({
     queryKey: ["document-types", "STAFF"],

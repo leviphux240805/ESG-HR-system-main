@@ -3,7 +3,8 @@ package com.preschool.school.entity;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
 import com.preschool.common.jpa.SchoolFilter;
 
 import org.hibernate.annotations.Filter;
@@ -12,11 +13,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-/** Ngày lễ; {@code schoolId} rỗng = áp dụng toàn chuỗi. */
+/** Ngày lễ; {@code schoolId} rỗng = áp dụng cả tổ chức. */
 @Entity
 @Table(name = "holidays")
+@Filter(name = OrganizationFilter.NAME)
 @Filter(name = SchoolFilter.NAME)
-public class Holiday extends BaseEntity {
+public class Holiday extends OrganizationEntity {
 
 	@Column(name = "school_id")
 	private UUID schoolId;

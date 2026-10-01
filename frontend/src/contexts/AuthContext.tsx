@@ -25,7 +25,7 @@ type AuthStatus = "loading" | "authenticated" | "anonymous";
 interface AuthContextType {
   status: AuthStatus;
   me: Me | null;
-  /** Cơ sở đang chọn; null = "Tất cả cơ sở" (chỉ vai trò cấp chuỗi). */
+  /** Trường đang chọn; null = "Tất cả trường" được gán. */
   selectedSchoolId: string | null;
   selectSchool: (schoolId: string | null) => void;
   /** Có vai trò áp dụng cho phạm vi đang chọn. Chỉ dùng để ẩn/hiện giao diện; quyền thật kiểm tra ở backend. */
@@ -34,6 +34,8 @@ interface AuthContextType {
   /** Bản demo: đăng nhập giả theo vai trò. */
   loginAs: (role: DemoRole) => Promise<void>;
   logout: () => Promise<void>;
+  /** Nạp lại /me (sau khi thêm, ngừng trường), giữ trường đang chọn nếu còn hợp lệ. */
+  refreshMe: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,12 +60,13 @@ function storeSchool(userId: string, schoolId: string | null) {
   }
 }
 
-/** Chọn cơ sở ban đầu: lựa chọn đã lưu nếu còn hợp lệ, nếu không thì "Tất cả" (cấp chuỗi) hoặc cơ sở đầu tiên. */
+/** Chọn trường ban đầu: lựa chọn đã lưu nếu còn hợp lệ, nếu không thì "Tất cả trường" (có từ 2 trường) hoặc trường duy nhất. */
 function initialSchool(me: Me): string | null {
   const stored = readStoredSchool(me.id);
-  if (stored === null && me.chainWide) return null;
+  const multi = me.schools.length > 1;
+  if (stored === null && multi) return null;
   if (stored && me.schools.some((s) => s.id === stored)) return stored;
-  return me.chainWide ? null : (me.schools[0]?.id ?? null);
+  return multi ? null : (me.schools[0]?.id ?? null);
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -144,9 +147,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const selectSchool = useCallback(
     (schoolId: string | null) => {
       if (!me) return;
-      if (schoolId === null && !me.chainWide) return;
+      if (schoolId === null && me.schools.length < 2) return;
       if (schoolId !== null && !me.schools.some((s) => s.id === schoolId)) return;
-      // Header X-School-Id đổi ngay; query dùng schoolQueryKey (useCurrentSchool) tự tải lại theo cơ sở mới
+      // Header X-School-Id đổi ngay; query dùng schoolQueryKey (useCurrentSchool) tự tải lại theo trường mới
       setClientSchool(schoolId);
       setSelectedSchoolId(schoolId);
       storeSchool(me.id, schoolId);
@@ -155,13 +158,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const hasRole = useCallback(
-    (...roles: RoleCode[]) => rolesInScope(me?.roles ?? [], selectedSchoolId).some((r) => roles.includes(r)),
+    (...roles: RoleCode[]) => rolesInScope(me?.roles ?? [], selectedSchoolId).some((r) => roles.includes(r.role)),
     [me, selectedSchoolId],
   );
 
   const value = useMemo(
-    () => ({ status, me, selectedSchoolId, selectSchool, hasRole, login, loginAs, logout }),
-    [status, me, selectedSchoolId, selectSchool, hasRole, login, loginAs, logout],
+    () => ({ status, me, selectedSchoolId, selectSchool, hasRole, login, loginAs, logout, refreshMe: loadMe }),
+    [status, me, selectedSchoolId, selectSchool, hasRole, login, loginAs, logout, loadMe],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

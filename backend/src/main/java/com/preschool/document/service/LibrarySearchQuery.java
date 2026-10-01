@@ -15,14 +15,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * Tìm văn bản người dùng được xem, có phân trang. Native SQL (điều kiện vai trò trên mảng {@code visible_roles}) nên
- * KHÔNG qua Hibernate filter: phạm vi cơ sở truyền vào tường minh. Điều kiện xem phải khớp
+ * KHÔNG qua Hibernate filter: tổ chức và phạm vi trường truyền vào tường minh. Điều kiện xem phải khớp
  * {@link LibraryAccess#canView}.
  */
 @Component
 public class LibrarySearchQuery {
 
 	/** Phạm vi và quyền của người đang xem. */
-	public record Viewer(UUID userId, Set<UUID> schoolIds, boolean allSchools, boolean chainPublisher,
+	public record Viewer(UUID userId, UUID organizationId, Set<UUID> schoolIds, boolean organizationPublisher,
 			Set<UUID> publisherSchools) {
 	}
 
@@ -34,17 +34,16 @@ public class LibrarySearchQuery {
 
 	private static final String FROM = """
 			FROM library_documents d
-			WHERE (:allSchools OR d.school_id IS NULL OR d.school_id IN (:schoolIds))
+			WHERE d.organization_id = :organizationId AND (d.school_id IS NULL OR d.school_id IN (:schoolIds))
 			  AND (CAST(:folderId AS uuid) IS NULL OR d.folder_id = CAST(:folderId AS uuid))
 			  AND (NOT :unfiled OR d.folder_id IS NULL)
 			  AND (CAST(:q AS varchar) IS NULL OR d.title ILIKE CAST(:q AS varchar) OR d.doc_number ILIKE CAST(:q AS varchar))
-			  AND (:chainPublisher
+			  AND ((:organizationPublisher AND d.school_id IS NULL)
 			       OR d.school_id IN (:publisherSchools)
 			       OR cardinality(d.visible_roles) = 0
 			       OR EXISTS (SELECT 1 FROM user_roles ur
 			                  WHERE ur.user_id = :userId AND ur.role_code = ANY (d.visible_roles)
-			                    AND (ur.school_id IS NULL
-			                         OR (d.school_id IS NULL AND ur.school_id IN (:schoolIds))
+			                    AND ((d.school_id IS NULL AND ur.school_id IN (:schoolIds))
 			                         OR ur.school_id = d.school_id)))
 			""";
 
@@ -87,9 +86,9 @@ public class LibrarySearchQuery {
 		String q = criteria.q() == null || criteria.q().isBlank() ? null
 				: "%" + criteria.q().trim().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
 		return new MapSqlParameterSource().addValue("userId", viewer.userId())
-			.addValue("allSchools", viewer.allSchools())
+			.addValue("organizationId", viewer.organizationId())
 			.addValue("schoolIds", viewer.schoolIds().isEmpty() ? none : viewer.schoolIds())
-			.addValue("chainPublisher", viewer.chainPublisher())
+			.addValue("organizationPublisher", viewer.organizationPublisher())
 			.addValue("publisherSchools", viewer.publisherSchools().isEmpty() ? none : viewer.publisherSchools())
 			.addValue("folderId", criteria.folderId())
 			.addValue("unfiled", criteria.unfiled())

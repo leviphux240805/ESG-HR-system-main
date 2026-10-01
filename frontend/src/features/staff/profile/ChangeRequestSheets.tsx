@@ -35,7 +35,7 @@ const contactSchema = z.object({
 });
 type ContactValues = z.infer<typeof contactSchema>;
 
-/** Đề xuất đổi SĐT/địa chỉ; hiệu trưởng cơ sở hoặc văn phòng điều hành duyệt rồi mới ghi vào hồ sơ. */
+/** Đề xuất đổi SĐT/địa chỉ; ban giám hiệu duyệt rồi mới ghi vào hồ sơ. */
 export function ContactRequestSheet({ staff, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const provinces = useAddressData();
@@ -59,7 +59,7 @@ export function ContactRequestSheet({ staff, open, onOpenChange }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       title="Đề xuất đổi số điện thoại, địa chỉ"
-      description="Thay đổi được ghi vào hồ sơ sau khi hiệu trưởng hoặc văn phòng điều hành duyệt."
+      description="Thay đổi được ghi vào hồ sơ sau khi ban giám hiệu duyệt."
       form={form}
       submitLabel="Gửi đề xuất"
       successMessage="Đã gửi đề xuất, vui lòng chờ duyệt."
@@ -86,7 +86,7 @@ const bankSchema = z.object({
 });
 type BankValues = z.infer<typeof bankSchema>;
 
-/** Đề xuất đổi tài khoản nhận lương; văn phòng điều hành hoặc kế toán duyệt. */
+/** Đề xuất đổi tài khoản nhận lương; hiệu trưởng hoặc kế toán duyệt. */
 export function BankRequestSheet({ staff, open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const banks = useQuery({ queryKey: ["banks"], queryFn: getAllBanks, staleTime: Infinity, enabled: open });
@@ -110,7 +110,7 @@ export function BankRequestSheet({ staff, open, onOpenChange }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       title="Đề xuất đổi tài khoản nhận lương"
-      description="Thay đổi được áp dụng sau khi văn phòng điều hành hoặc kế toán duyệt."
+      description="Thay đổi được áp dụng sau khi hiệu trưởng hoặc kế toán duyệt."
       form={form}
       submitLabel="Gửi đề xuất"
       successMessage="Đã gửi đề xuất, vui lòng chờ duyệt."

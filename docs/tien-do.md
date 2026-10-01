@@ -10,6 +10,66 @@ học phí; thực đơn tuần, cân đo; báo cáo. Đã gỡ Supabase và cá
 Chưa làm: e2e Playwright chưa chạy lại cho chế độ demo (các test cũ cần backend); cấu hình chấm công và import máy
 chấm công bị ẩn; upload file trả "Bản demo chưa hỗ trợ". Việc dở trên `main`: W1 (backend công việc, chưa commit).
 
+## Nhánh `demo` – backend giai đoạn 5–6 (chưa commit, chủ dự án tự commit)
+
+- Giai đoạn 5 (lớp, trẻ, điểm danh): L2–L4 xong (API lớp/trẻ/điểm danh + test chéo cơ sở, vai trò); backend 159 test xanh.
+- Giai đoạn 6 (học phí, thu chi): H1–H9 xong 2026-10-01 (chưa commit). Backend 189 test xanh; `npm test`, lint,
+  build, build:demo xanh; e2e `finance.spec.ts` xanh.
+  - Backend: V9 (giấy tờ trẻ), V10 (học phí, thu chi), `InvoiceCalculator` + unit test (nhập/nghỉ giữa tháng, trả
+    thiếu/thừa, hoàn tiền ăn, miễn giảm, nợ cũ), sinh/phát hành/hủy phiếu, thu nhiều lần, hủy lần thu, PDF (OpenPDF,
+    font trong `resources/fonts`), công nợ, sổ thu chi.
+  - Giao diện: `/hoc-phi/phieu-thu`, `/hoc-phi/cong-no`, `/hoc-phi/bieu-phi`, `/hoc-phi/khoan-thu`, `/thu-chi`, tab
+    Học phí ở `/tre/:id`; mock cho bản demo (không có PDF và xem chứng từ: trả 501).
+  - Giả định: hiệu trưởng được ghi nhận thanh toán (quyền xem tài chính = VIEW); trẻ bảo lưu không sinh phiếu; hoàn
+    tiền ăn không trừ miễn giảm; giá lấy bản hiệu lực mới nhất ≤ cuối tháng; "báo trước" xét theo `updated_at` điểm
+    danh (demo: mọi ngày vắng có phép); trẻ trả thừa không vào công nợ; lớp ở công nợ là lớp trên phiếu mới nhất;
+    hiệu trưởng demo có thêm vai trò kế toán chuỗi.
+  - Còn lỗi e2e có sẵn ở `roles.spec.ts` (menu "Phiếu lương của tôi", trang `/luong` "sắp có"), không thuộc giai đoạn 6.
+  - Tiếp theo: chủ dự án commit; sửa `roles.spec.ts` theo menu lương hiện tại; nghiệm thu giai đoạn 6.
+- Giai đoạn 7 (thực đơn, sức khỏe, báo cáo): S1–S9 xong 2026-10-01 (chưa commit). Backend 211 test xanh; `npm test`
+  (89), lint, build, build:demo xanh; e2e `health.spec.ts` + `finance.spec.ts` xanh.
+  - Backend: V11 (món ăn, thực đơn tuần, cân đo, khám, sổ theo dõi), V12 (bảng LMS chính thức WHO 2006 theo ngày
+    0–1826, WHO 2007 theo tháng 60–96); `GrowthClassifier` + JUnit đối chiếu bộ mẫu anthroplus (153 dòng) và điểm
+    test của anthro, các mốc ±2/±3 SD; `AllergyMatcher`; API `/dishes`, `/menus/week|copy|{id}/publish|allergy-warnings`,
+    `/classes/{id}/measurements`, `/children/{id}/health|checkups`, `/health-logs`, `/reports/dashboard`,
+    `/reports/{name}/export` (staff-attendance, payroll, receivables, children). Test chéo cơ sở + theo vai trò
+    (`MenuApiTests`, `HealthApiTests`, `ReportApiTests`). Seed dev: món, thực đơn tuần 28/09 và 05/10 ở Cơ sở A, cân
+    đo, sổ theo dõi, dị ứng ở trẻ 801, 804.
+  - Sửa lỗi chung: `/api/v1/me` khớp nhầm tiền tố `/api/v1/menus` nên header cơ sở bị bỏ qua (`SchoolScope.isSchoolAgnostic`).
+    Gom `fold` và phân trang trong bộ nhớ về `common/text/Texts`, `PageResponse.slice`; thêm `common/excel/ExcelTable`.
+  - Giao diện: `/thuc-don` (lưới bữa × ngày, thẻ theo ngày trên điện thoại, sao chép tuần, công bố, cảnh báo dị ứng),
+    `/thuc-don/mon-an`, `/suc-khoe/can-do`, `/suc-khoe/so-theo-doi`, tab Sức khỏe ở `/tre/:id` (biểu đồ recharts
+    −3…+3 SD), `/bao-cao` (KPI, so sánh cơ sở khi xem nhiều cơ sở, biểu đồ, xuất Excel). Quyền giao diện tách `menu`
+    (cấp dưỡng sửa) và `health` (cấp dưỡng không xem). Mock demo dùng bảng LMS theo tháng (`mock/whoLms.ts`, sinh từ V12).
+  - Giả định (`TODO(assumption)`): cấp dưỡng, y tế, hiệu trưởng sửa thực đơn cơ sở mình; món chung chuỗi do văn
+    phòng điều hành; y tế, giáo viên chủ nhiệm, hiệu trưởng nhập cân đo; khám định kỳ chỉ y tế/hiệu trưởng ghi;
+    ngưỡng kênh cố định theo WHO, BMI từ 61 tháng theo WHO 2007; dưới 731 ngày đo nằm, từ 731 ngày đo đứng (không
+    hiệu chỉnh 0,7 cm); hiệu trưởng không xuất bảng lương; kế toán chỉ thấy chỉ số tài chính trên dashboard.
+  - Chưa làm: số suất ăn theo sĩ số đã chốt (`/menus/{id}/portions`); xuất bảng lương lấy từ `payroll_records`
+    (giai đoạn 4 chưa có API nên file rỗng nếu chưa tính lương).
+  - Tiếp theo: chủ dự án commit; nghiệm thu giai đoạn 7.
+- Mô hình quyền mới (2026-10-01, chưa commit): bỏ OWNER, CHAIN_ADMIN; PRINCIPAL cao nhất, quản lý nhiều trường;
+  VICE_PRINCIPAL theo trường + nhóm chức năng; bảng `organizations` tách dữ liệu dùng chung giữa các hiệu trưởng.
+  Backend 220 test xanh; `npm test`, lint, build, build:demo xanh; e2e 33/47 xanh (gồm `schools.spec.ts` mới).
+  14 lỗi e2e không do thay đổi này: trang chưa có route trên nhánh demo (cấu hình chấm công, thư viện,
+  `/cua-toi/*`), `roles.spec.ts` (menu lương), staff-list (locator trùng thẻ điện thoại + bảng), staff-expiring
+  (lệch ngày), finance (seed hết phiếu chưa thu sau nhiều lần chạy).
+  - Backend: V13 (`organizations`, `organization_id`, `user_roles.function_groups`, ràng buộc duy nhất theo tổ chức,
+    hàm `provision_organization` cho bên vận hành); filter tổ chức luôn bật; mọi lớp `*Access` viết lại theo
+    trường + nhóm chức năng; API `/schools`; tài khoản: hiệu trưởng gán vai trò (trừ PRINCIPAL) ở trường mình, vai
+    trò trường khác giữ nguyên, không sửa/khóa tài khoản hiệu trưởng; kiểm tra trùng CCCD/SĐT/email/mã định danh
+    trong tổ chức. Test mới: `SchoolApiTests`, `SchoolScopeTests` (cách ly tổ chức, phó hiệu trưởng theo nhóm),
+    `AccountAdminTests` viết lại.
+  - Giao diện: ma trận quyền 7 vai trò + nhóm chức năng; bộ chọn "Tất cả trường"; trang **Trường**, **Tài khoản**
+    (chọn nhóm chức năng cho phó hiệu trưởng); mock demo: hiệu trưởng mọi trường, phó hiệu trưởng có nhóm, Hôm nay,
+    Hộp duyệt, Báo cáo gộp các trường đang chọn.
+  - Seed dev: tổ chức 1 (hiệu trưởng 0900000001 × trường A, B, C), tổ chức 2 (hiệu trưởng 0900000002 × trường D),
+    0900000004 thành phó hiệu trưởng A.
+  - Giả định (`TODO(assumption)`): hiệu trưởng tự duyệt đơn nghỉ của mình khi trường không có hiệu trưởng khác; danh
+    mục tổ chức (năm học, khối, khoản thu, món chung, văn bản chung, ngày lễ chung) chỉ hiệu trưởng sửa; loại giấy tờ,
+    tham số lương/bảo hiểm, chuẩn WHO dùng chung toàn hệ thống.
+  - Tiếp theo: chủ dự án commit; sửa các e2e có sẵn lỗi trên nhánh demo.
+
 ## Giai đoạn hiện tại: 3 – Chấm công, nghỉ phép, công việc (đang làm)
 
 Kế hoạch 17 bước (C1–C11 chấm công/nghỉ phép, W1–W4 công việc, Z1 dọn legacy) duyệt ngày 2026-09-30; quyết định chốt

@@ -98,7 +98,7 @@ Cập nhật mục này khi lệnh thay đổi.
 
 ## Giả định mặc định (cho đến khi chủ dự án chốt)
 
-- Hiệu trưởng không xem được lương người khác.
+- Hiệu trưởng là vai trò cao nhất, toàn quyền (kể cả lương) ở các trường được gán; tổ chức và hiệu trưởng mới do bên vận hành tạo.
 - Biểu phí khác nhau theo từng cơ sở; kế toán có thể gán cho một hoặc nhiều cơ sở.
 - Tiền ăn hoàn theo ngày vắng có phép được báo trước giờ báo ăn (quy tắc cấu hình được).
 - Máy chấm công các cơ sở xuất cùng định dạng Excel mà ESG HR đang đọc.

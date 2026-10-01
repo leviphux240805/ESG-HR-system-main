@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 
 /**
  * Tỷ lệ bảo hiểm, mức giảm trừ gia cảnh và biểu thuế TNCN theo ngày hiệu lực. Do pháp luật quy định nên dùng chung
- * toàn chuỗi. Chỉ thêm bản mới, không sửa đè (quy tắc 5).
+ * cả tổ chức. Chỉ thêm bản mới, không sửa đè (quy tắc 5).
  */
 @Entity
 @Table(name = "payroll_params")

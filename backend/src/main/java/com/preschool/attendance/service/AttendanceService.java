@@ -117,7 +117,7 @@ public class AttendanceService {
 		}
 	}
 
-	/** Cơ sở đang chọn; cấp chuỗi đang xem "Tất cả cơ sở" phải chọn một cơ sở. */
+	/** Cơ sở đang chọn; hiệu trưởng đang xem "Tất cả cơ sở" phải chọn một cơ sở. */
 	public static UUID currentSchool() {
 		SchoolScope scope = SchoolScope.require();
 		if (scope.selectedSchoolId() != null) {
@@ -217,7 +217,7 @@ public class AttendanceService {
 		LockInfo lock = locks.findBySchoolIdAndMonth(schoolId, first)
 			.map(l -> new LockInfo(l.getLockedAt(), users.findById(l.getLockedBy()).map(User::getFullName).orElse(null)))
 			.orElse(null);
-		return new MonthSheet(month.toString(), schoolId, lock, access.canManage(schoolId), access.isChainAdmin(),
+		return new MonthSheet(month.toString(), schoolId, lock, access.canManage(schoolId), access.isPrincipalAt(schoolId),
 				dayInfos, staffRows, discrepancies);
 	}
 

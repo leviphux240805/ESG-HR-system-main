@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.staff.entity.StaffEnums.Gender;
 import com.preschool.staff.entity.StaffEnums.Position;
@@ -134,13 +135,15 @@ public final class StaffDtos {
 			@NotNull LocalDate startDate) {
 	}
 
-	/** Tạo tài khoản đăng nhập cùng lúc với hồ sơ (chỉ văn phòng điều hành/chủ chuỗi). */
+	/** Tạo tài khoản đăng nhập cùng lúc với hồ sơ (chỉ hiệu trưởng). */
 	public record NewAccount(
-			@Schema(description = "Vai trò kèm cơ sở; bỏ trống schoolId = toàn chuỗi")
+			@Schema(description = "Vai trò kèm cơ sở; bỏ trống schoolId = cả tổ chức")
 			@NotNull @Size(min = 1) List<@Valid RoleAssignment> roles) {
 	}
 
-	public record RoleAssignment(@NotNull RoleCode role, UUID schoolId) {
+	public record RoleAssignment(@NotNull(message = "Vui lòng chọn vai trò.") RoleCode role,
+			@NotNull(message = "Vui lòng chọn trường.") UUID schoolId,
+			@Schema(description = "Nhóm chức năng, chỉ dùng cho phó hiệu trưởng") java.util.Set<FunctionGroup> functionGroups) {
 	}
 
 	public record CreateStaffRequest(

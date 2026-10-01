@@ -61,7 +61,7 @@ public class OpenApiConfig {
 			openApi.getPaths().forEach((path, item) -> item.readOperations().forEach(operation -> {
 				operation.getResponses().addApiResponse("default", problemResponse());
 				if (path.startsWith("/api/v1/")
-						&& SchoolScope.SCHOOL_AGNOSTIC_PREFIXES.stream().noneMatch(path::startsWith)) {
+						&& !SchoolScope.isSchoolAgnostic(path)) {
 					operation.addParametersItem(new HeaderParameter()
 						.name(SchoolScope.HEADER)
 						.required(false)

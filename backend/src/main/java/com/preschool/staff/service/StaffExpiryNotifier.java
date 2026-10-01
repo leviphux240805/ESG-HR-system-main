@@ -22,7 +22,7 @@ import org.springframework.web.util.HtmlUtils;
 
 /**
  * Cảnh báo giấy tờ sắp hết hạn (hợp đồng, chứng chỉ, giấy khám sức khỏe…) trước {@value StaffService#EXPIRY_WARNING_DAYS}
- * ngày: thông báo trong app cho văn phòng điều hành và hiệu trưởng cơ sở, kèm một email tóm tắt các mục mới.
+ * ngày: thông báo trong app cho hiệu trưởng, kèm một email tóm tắt các mục mới.
  * Chạy lại cùng ngày không tạo trùng (dedupe theo bản ghi + ngày hết hạn).
  */
 @Service
@@ -53,14 +53,12 @@ public class StaffExpiryNotifier {
 	public int run(LocalDate today) {
 		List<Item> items = expiryQuery.find(null, today, today.plusDays(StaffService.EXPIRY_WARNING_DAYS), null,
 				10_000, 0);
-		List<User> chainAdmins = users.findActiveByRole(RoleCode.CHAIN_ADMIN, null);
 		Map<java.util.UUID, List<User>> principalsBySchool = new LinkedHashMap<>();
 		Map<User, List<String>> digest = new LinkedHashMap<>();
 		int created = 0;
 
 		for (Item item : items) {
-			Set<User> recipients = new LinkedHashSet<>(chainAdmins);
-			recipients.addAll(principalsBySchool.computeIfAbsent(item.schoolId(),
+			Set<User> recipients = new LinkedHashSet<>(principalsBySchool.computeIfAbsent(item.schoolId(),
 					school -> users.findActiveByRole(RoleCode.PRINCIPAL, school)));
 			String title = "%s của %s hết hạn ngày %s".formatted(item.title(), item.staffName(),
 					DATE.format(item.expiryDate()));

@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.preschool.account.entity.RoleCode;
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
 import com.preschool.common.jpa.SchoolFilter;
 
 import jakarta.persistence.Column;
@@ -18,13 +19,14 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Văn bản trong thư viện. Phạm vi xem = {@code schoolId} (rỗng = toàn chuỗi) + {@code visibleRoles} (rỗng = mọi vai
+ * Văn bản trong thư viện. Phạm vi xem = {@code schoolId} (rỗng = cả tổ chức) + {@code visibleRoles} (rỗng = mọi vai
  * trò). Khi {@code requireAck}, người đọc phải xác nhận phiên bản {@code ackVersionNo} (hoặc mới hơn).
  */
 @Entity
 @Table(name = "library_documents")
+@Filter(name = OrganizationFilter.NAME)
 @Filter(name = SchoolFilter.NAME)
-public class LibraryDocument extends BaseEntity {
+public class LibraryDocument extends OrganizationEntity {
 
 	@Column(name = "school_id")
 	private UUID schoolId;

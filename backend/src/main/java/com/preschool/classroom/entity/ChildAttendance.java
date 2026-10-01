@@ -88,6 +88,11 @@ public class ChildAttendance extends BaseEntity {
 		this.pickedUpBy = guardianId;
 	}
 
+	/** Sửa giờ đến (giáo viên nhập bù khi điểm danh muộn). */
+	public void checkIn(Instant at) {
+		this.checkInAt = at;
+	}
+
 	public void lock(Instant at) {
 		this.lockedAt = at;
 	}

@@ -32,7 +32,8 @@ public class LibraryReaderQuery {
 	private static final String READERS = """
 			FROM library_documents d
 			JOIN staff s ON s.deleted_at IS NULL AND s.status = 'ACTIVE'
-			     AND (d.school_id IS NULL OR s.school_id = d.school_id)
+			     AND (s.school_id = d.school_id OR (d.school_id IS NULL
+			          AND s.school_id IN (SELECT sc.id FROM schools sc WHERE sc.organization_id = d.organization_id)))
 			JOIN users u ON u.staff_id = s.id AND u.is_active
 			LEFT JOIN LATERAL (
 			    SELECT max(a.acknowledged_at) AS acknowledged_at FROM document_acks a
@@ -41,7 +42,7 @@ public class LibraryReaderQuery {
 			WHERE (cardinality(d.visible_roles) = 0 OR EXISTS (
 			    SELECT 1 FROM user_roles ur
 			    WHERE ur.user_id = u.id AND ur.role_code = ANY (d.visible_roles)
-			      AND (ur.school_id IS NULL OR ur.school_id = s.school_id)))
+			      AND ur.school_id = s.school_id))
 			""";
 
 	private final NamedParameterJdbcTemplate jdbc;

@@ -16,4 +16,8 @@ public interface ChildGuardianRepository extends JpaRepository<ChildGuardian, UU
 
 	List<ChildGuardian> findByChildIdAndCanPickUpTrue(UUID childId);
 
+	List<ChildGuardian> findByGuardianIdIn(Collection<UUID> guardianIds);
+
+	boolean existsByChildIdAndGuardianId(UUID childId, UUID guardianId);
+
 }

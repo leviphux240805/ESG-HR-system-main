@@ -1,5 +1,5 @@
 import type { components } from "@/api/schema";
-import type { AgeGroup, ChildFields, ChildMark, DayMenu, Measurement, TaskPriority, TaskStatus } from "@/api/contracts";
+import type { AgeGroup, ChildFields, ChildMark, TaskPriority, TaskStatus } from "@/api/contracts";
 
 type S = components["schemas"];
 
@@ -10,6 +10,18 @@ export interface SchoolRec {
   code: string;
   name: string;
   address: string;
+  phone?: string;
+  /** Rỗng = đang hoạt động */
+  active?: boolean;
+}
+
+/** Tài khoản đăng nhập của nhân viên (ngoài 3 tài khoản demo, vai trò của chúng nằm ở `users`). */
+export interface AccountRec {
+  id: string;
+  staffId: string;
+  email: string;
+  active: boolean;
+  roles: { role: string; schoolId: string; functionGroups?: string[] }[];
 }
 
 export type StaffRec = Omit<S["StaffDetail"], "permissions">;
@@ -74,21 +86,49 @@ export interface TaskRec {
 
 export interface InvoiceRec {
   id: string;
-  code: string;
   schoolId: string;
   childId: string;
-  month: string;
+  classId: string;
+  /** "YYYY-MM-01" */
+  periodMonth: string;
+  invoiceNo?: string;
+  status: S["InvoiceRow"]["status"];
   dueDate: string;
-  lines: { name: string; amount: number }[];
-  payments: { id: string; date: string; amount: number; method: "CASH" | "TRANSFER" }[];
+  issuedAt?: string;
+  lines: S["InvoiceLineDto"][];
+  payments: S["PaymentDto"][];
+  carriedToId?: string;
+  cancelReason?: string;
 }
+
+export type ChildFeeItemRec = S["ChildFeeItemDto"] & { childId: string };
+export type ChildDiscountRec = S["ChildDiscountDto"] & { childId: string };
+
+export type DishRec = Omit<S["DishDto"], "canEdit">;
 
 export interface MenuRec {
   id: string;
   schoolId: string;
+  ageGroupId?: string;
   weekStart: string;
-  days: DayMenu[];
+  status: S["MenuWeekDto"]["status"];
+  note?: string;
+  publishedAt?: string;
 }
+
+export interface MenuItemRec {
+  id: string;
+  menuId: string;
+  date: string;
+  meal: S["MenuItemDto"]["meal"];
+  dishId: string;
+  orderNo: number;
+  note?: string;
+}
+
+export type MeasurementRec = S["MeasurementDto"] & { schoolId: string; classId: string };
+export type HealthLogRec = Omit<S["HealthLogDto"], "canEdit"> & { schoolId: string };
+export type CheckupRec = S["CheckupDto"] & { schoolId: string };
 
 export interface NotificationRec {
   id: string;
@@ -106,7 +146,8 @@ export interface DemoDB {
   generatedOn: string;
   startDate: string;
   schools: SchoolRec[];
-  users: Record<DemoRole, { staffId: string; grants: { role: string; schoolId: string }[] }>;
+  accounts: AccountRec[];
+  users: Record<DemoRole, { staffId: string; grants: { role: string; schoolId: string; functionGroups?: string[] }[] }>;
   staff: StaffRec[];
   contracts: Record<string, S["ContractDto"][]>;
   certificates: Record<string, S["CertificateDto"][]>;
@@ -128,13 +169,26 @@ export interface DemoDB {
   leaves: LeaveRec[];
   substitutions: SubstitutionRec[];
   tasks: TaskRec[];
+  schoolYears: S["SchoolYearDto"][];
+  ageGroups: (S["AgeGroupDto"] & { code: AgeGroup })[];
+  feeTypes: S["FeeTypeDto"][];
+  feeSchedules: S["FeeScheduleDto"][];
+  financeConfigs: S["FinanceConfigDto"][];
+  feeItems: ChildFeeItemRec[];
+  discounts: ChildDiscountRec[];
   invoices: InvoiceRec[];
+  cashCategories: S["CashCategoryDto"][];
+  cashEntries: S["CashEntryDto"][];
+  dishes: DishRec[];
   menus: MenuRec[];
-  growth: Measurement[];
+  menuItems: MenuItemRec[];
+  measurements: MeasurementRec[];
+  healthLogs: HealthLogRec[];
+  checkups: CheckupRec[];
   notifications: NotificationRec[];
 }
 
-export const DB_VERSION = 2;
+export const DB_VERSION = 6;
 const STORAGE_KEY = "mnv.demo.db";
 
 let current: DemoDB | null = null;

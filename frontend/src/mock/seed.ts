@@ -1,8 +1,9 @@
 import { fakerVI as faker } from "@faker-js/faker";
 import type { AgeGroup, ChildMark, Gender, TaskPriority, TaskStatus } from "@/api/contracts";
 import { DB_VERSION, type ClassRec, type ChildRec, type DemoDB, type LeaveRec, type StaffRec, type TaskRec } from "./db";
-import { addDays, ageMonths, iso, isSchoolDay, isWorkDay, monthDays, monthOf, range, shiftMonthStr, weekStart, holidayName } from "./dates";
-import { valueAt } from "./growth";
+import { addDays, ageMonths, iso, isSchoolDay, isWorkDay, monthDays, monthOf, range, shiftMonthStr, weekStart, weekday, holidayName } from "./dates";
+import { amountDue, generate as generateInvoices, issue as issueInvoices, pay as payInvoice, PAYROLL_CATEGORY_ID, TUITION_CATEGORY_ID } from "./finance";
+import { ageInMonths, classify, valueAt } from "./growth";
 
 /** Seed cố định: mọi lần sinh (cùng ngày) cho cùng một bộ dữ liệu. */
 const SEED = 20260930;
@@ -10,7 +11,7 @@ const SEED = 20260930;
 const MIDDLE_FEMALE = ["Thị", "Ngọc", "Thu", "Minh", "Thanh", "Phương", "Bảo", "Khánh"];
 const MIDDLE_MALE = ["Văn", "Đức", "Minh", "Quang", "Gia", "Hoàng", "Bảo", "Anh"];
 const NICKNAMES = ["Bin", "Bông", "Su", "Na", "Cún", "Mít", "Bơ", "Tôm", "Sóc", "Nấm", "Gấu", "Kem", "Bắp", "Xoài", "Mây", "Thỏ", "Chip", "Ken", "Cốm", "Bống", "Tít", "Đậu", "Sữa", "Mochi"];
-const ALLERGIES = ["Dị ứng hải sản", "Dị ứng sữa bò", "Dị ứng trứng", "Dị ứng đậu phộng"];
+const ALLERGIES = ["Dị ứng tôm, cua", "Dị ứng sữa bò", "Dị ứng trứng", "Dị ứng đậu phộng"];
 const WARDS = [["00199", "Phường Láng"], ["00175", "Phường Yên Hòa"], ["00166", "Phường Cầu Giấy"], ["00160", "Phường Nghĩa Đô"], ["00235", "Phường Đống Đa"], ["00367", "Phường Thanh Xuân"], ["00364", "Phường Khương Đình"], ["00025", "Phường Giảng Võ"]];
 const STREETS = ["Nguyễn Chí Thanh", "Láng Hạ", "Trần Duy Hưng", "Hoàng Quốc Việt", "Chùa Láng", "Nguyễn Trãi", "Lê Văn Lương", "Kim Mã", "Xuân Thủy", "Cầu Giấy"];
 
@@ -24,9 +25,36 @@ export const CLASS_FEE: Record<AgeGroup, number> = Object.fromEntries(CLASS_DEFS
 export const MEAL_PRICE = 35_000;
 export const TALENT_FEE = 400_000;
 
+const AGE_GROUP_DEFS: { code: AgeGroup; name: string; minMonths: number; maxMonths: number; maxClassSize: number }[] = [
+  { code: "NHA_TRE", name: "Nhà trẻ (24–36 tháng)", minMonths: 24, maxMonths: 36, maxClassSize: 25 },
+  { code: "MAM", name: "Mẫu giáo bé (3–4 tuổi)", minMonths: 36, maxMonths: 48, maxClassSize: 25 },
+  { code: "CHOI", name: "Mẫu giáo nhỡ (4–5 tuổi)", minMonths: 48, maxMonths: 60, maxClassSize: 30 },
+  { code: "LA", name: "Mẫu giáo lớn (5–6 tuổi)", minMonths: 60, maxMonths: 72, maxClassSize: 35 },
+];
+const FEE_TYPE_DEFS = [
+  { id: "ft-tuition", code: "HOC_PHI", name: "Học phí", calcMethod: "MONTHLY", refundableOnAbsence: false },
+  { id: "ft-meal", code: "TIEN_AN", name: "Tiền ăn", calcMethod: "PER_DAY", refundableOnAbsence: true },
+  { id: "ft-facility", code: "CSVC", name: "Cơ sở vật chất", calcMethod: "ONE_TIME", refundableOnAbsence: false },
+  { id: "ft-english", code: "TIENG_ANH", name: "Năng khiếu tiếng Anh", calcMethod: "OPTIONAL", refundableOnAbsence: false },
+  { id: "ft-bus", code: "XE_DUA_DON", name: "Xe đưa đón", calcMethod: "OPTIONAL", refundableOnAbsence: false },
+] as const;
+const CASH_CATEGORY_DEFS: { id?: string; name: string; direction: "IN" | "OUT" }[] = [
+  { id: TUITION_CATEGORY_ID, name: "Thu học phí", direction: "IN" },
+  { name: "Thu bán đồng phục", direction: "IN" },
+  { name: "Thu khác", direction: "IN" },
+  { id: PAYROLL_CATEGORY_ID, name: "Chi lương", direction: "OUT" },
+  { name: "Thực phẩm", direction: "OUT" },
+  { name: "Điện, nước, internet", direction: "OUT" },
+  { name: "Văn phòng phẩm, đồ dùng", direction: "OUT" },
+  { name: "Sửa chữa, bảo trì", direction: "OUT" },
+  { name: "Chi khác", direction: "OUT" },
+];
+const FOOD_SUPPLIERS = ["Công ty Thực phẩm sạch Hà Nội", "HTX rau an toàn Văn Đức", "Cửa hàng thịt Hòa Phát"];
+const formatDay = (date: string) => `${date.slice(8)}/${date.slice(5, 7)}`;
+
 const SCHOOL_DEFS = [
-  { code: "MNV-HB", name: "Cơ sở Hoa Ban", address: "Số 18 Nguyễn Chí Thanh, phường Láng, Hà Nội", classes: ["Ong Vàng", "Thỏ Ngọc", "Họa Mi", "Sóc Nâu"] },
-  { code: "MNV-SM", name: "Cơ sở Sen Mai", address: "Số 45 Lê Văn Lương, phường Yên Hòa, Hà Nội", classes: ["Cá Heo", "Bướm Xinh", "Sơn Ca", "Hướng Dương"] },
+  { code: "MNV-HB", name: "Trường Hoa Ban", address: "Số 18 Nguyễn Chí Thanh, phường Láng, Hà Nội", classes: ["Ong Vàng", "Thỏ Ngọc", "Họa Mi", "Sóc Nâu"] },
+  { code: "MNV-SM", name: "Trường Sen Mai", address: "Số 45 Lê Văn Lương, phường Yên Hòa, Hà Nội", classes: ["Cá Heo", "Bướm Xinh", "Sơn Ca", "Hướng Dương"] },
 ];
 
 // Mỗi cơ sở 15 nhân viên
@@ -43,6 +71,18 @@ const BREAKFAST = ["Cháo thịt bằm cà rốt", "Phở gà", "Bún mọc", "B
 const MAINS = ["Thịt kho trứng cút", "Cá basa sốt cà chua", "Gà rim nấm", "Tôm rim thịt", "Đậu phụ nhồi thịt sốt cà", "Bò xào hành tây", "Trứng đúc thịt", "Thịt viên sốt cà chua", "Chả lá lốt", "Cá thu sốt cà", "Gà kho gừng", "Thịt lợn rim tiêu"];
 const SOUPS = ["Canh bí đỏ nấu thịt", "Canh rau ngót thịt băm", "Canh cải nấu tôm", "Canh chua cá", "Canh mồng tơi cua đồng", "Canh bí xanh nấu tôm", "Canh khoai tây cà rốt sườn", "Canh cải cúc thịt băm"];
 const VEGGIES = ["Su su xào", "Rau muống luộc", "Bắp cải xào", "Cải chíp xào tỏi", "Đậu cô ve xào", "Bí xanh luộc", "Cà rốt xào trứng"];
+const INGREDIENT_WORDS: [RegExp, string][] = [
+  [/tôm/i, "Tôm"], [/cua/i, "Cua đồng"], [/cá|lươn/i, "Cá"], [/trứng/i, "Trứng gà"], [/sữa|flan|váng/i, "Sữa bò"],
+  [/bò/i, "Thịt bò"], [/gà/i, "Thịt gà"], [/thịt|chả|sườn|viên/i, "Thịt lợn"], [/đậu phụ/i, "Đậu phụ"], [/đậu xanh/i, "Đậu xanh"],
+  [/cháo|cơm|xôi/i, "Gạo"], [/bún|phở|miến|mì|bánh/i, "Bột gạo, bột mì"],
+];
+
+/** Nguyên liệu suy từ tên món (đủ để demo cảnh báo dị ứng). */
+function dishIngredients(name: string): { name: string; grams: number }[] {
+  const found = INGREDIENT_WORDS.filter(([re]) => re.test(name)).map(([, ingredient]) => ingredient);
+  return [...new Set(found.length ? found : [name])].map((n) => ({ name: n, grams: faker.number.int({ min: 10, max: 60 }) }));
+}
+
 const SNACKS = ["Sữa chua", "Chè đậu xanh", "Bánh flan", "Chuối tiêu", "Sữa tươi, bánh quy", "Thanh long", "Hồng xiêm", "Váng sữa", "Đu đủ chín", "Chè khoai môn", "Bánh bông lan", "Nước cam"];
 
 export const MENU_POOLS = { BREAKFAST, MAINS, SOUPS, VEGGIES, SNACKS };
@@ -135,9 +175,23 @@ export function generateDb(todayDate = new Date()): DemoDB {
     leaves: [],
     substitutions: [],
     tasks: [],
+    schoolYears: [],
+    ageGroups: [],
+    feeTypes: [],
+    feeSchedules: [],
+    financeConfigs: [],
+    feeItems: [],
+    discounts: [],
     invoices: [],
+    cashCategories: [],
+    cashEntries: [],
+    accounts: [],
+    dishes: [],
     menus: [],
-    growth: [],
+    menuItems: [],
+    measurements: [],
+    healthLogs: [],
+    checkups: [],
     notifications: [],
   };
 
@@ -261,10 +315,13 @@ export function generateDb(todayDate = new Date()): DemoDB {
     const managers = members.filter((m) => m.position === "MANAGER");
     if (schoolIndex === 0) {
       db.users.principal = { staffId: managers[0].id, grants: [] };
-      db.users.vice = { staffId: managers[1].id, grants: [{ role: "VICE_PRINCIPAL", schoolId: school.id }] };
+      db.users.vice = {
+        staffId: managers[1].id,
+        grants: [{ role: "VICE_PRINCIPAL", schoolId: school.id, functionGroups: ["CLASSROOM", "NUTRITION", "HR", "REPORTS"] }],
+      };
       db.users.teacher = { staffId: teachers[6].id, grants: [{ role: "TEACHER", schoolId: school.id }] };
     }
-    // Hiệu trưởng demo phụ trách cả hai cơ sở để thấy bộ chọn cơ sở
+    // Hiệu trưởng demo quản lý mọi trường (toàn quyền, kể cả học phí, lương) để thấy bộ chọn trường
     db.users.principal.grants.push({ role: "PRINCIPAL", schoolId: school.id });
   });
 
@@ -429,77 +486,192 @@ export function generateDb(todayDate = new Date()): DemoDB {
   }
 
   // ---- Học phí ----
-  const classById = new Map(db.classes.map((c) => [c.id, c]));
-  const months = [shiftMonthStr(month, -2), shiftMonthStr(month, -1), month];
-  let invoiceNo = 0;
-  for (const m of months) {
-    const mealDays = monthDays(m).filter(isSchoolDay).length;
-    const prev = shiftMonthStr(m, -1);
-    for (const child of db.children) {
-      if (child.enrolledOn > `${m}-28`) continue;
-      const cls = classById.get(child.classId)!;
-      const lines = [
-        { name: "Học phí", amount: CLASS_FEE[cls.ageGroup] },
-        { name: `Tiền ăn (${mealDays} ngày × ${MEAL_PRICE.toLocaleString("vi-VN")} ₫)`, amount: mealDays * MEAL_PRICE },
-      ];
-      const excused = Object.entries(db.childAttendance).filter(([d, marks]) => monthOf(d) === prev && marks[child.id] === "E").length;
-      if (excused > 0) lines.push({ name: `Hoàn tiền ăn ${excused} ngày nghỉ có phép tháng trước`, amount: -excused * MEAL_PRICE });
-      if (Number(child.id.slice(1)) % 5 < 2) lines.push({ name: "Năng khiếu (tiếng Anh)", amount: TALENT_FEE });
-      const total = lines.reduce((sum, l) => sum + l.amount, 0);
-      invoiceNo += 1;
-      const current = m === month;
+  for (const y of [schoolYear - 1, schoolYear]) {
+    db.schoolYears.push({ id: `sy-${y}`, name: `${y}–${y + 1}`, startDate: `${y}-08-01`, endDate: `${y + 1}-07-31`, current: y === schoolYear });
+  }
+  db.ageGroups = AGE_GROUP_DEFS.map((a) => ({ id: `ag-${a.code}`, ...a }));
+  db.feeTypes = FEE_TYPE_DEFS.map((f, i) => ({ ...f, orderNo: i + 1, active: true }));
+  db.financeConfigs.push({ id: "cfg-chain", effectiveFrom: `${schoolYear - 1}-08-01`, dueDay: 10, mealRefundRule: "BEFORE_CUTOFF", proration: "FULL_MONTH" });
+  db.schools.forEach((school, schoolIndex) => {
+    for (const year of db.schoolYears) {
+      const schedule = (feeTypeId: string, amount: number, ageGroupId?: string) =>
+        db.feeSchedules.push({
+          id: faker.string.uuid(),
+          schoolId: school.id,
+          schoolYearId: year.id,
+          feeTypeId,
+          feeTypeName: db.feeTypes.find((f) => f.id === feeTypeId)!.name,
+          calcMethod: db.feeTypes.find((f) => f.id === feeTypeId)!.calcMethod,
+          ageGroupId,
+          ageGroupName: db.ageGroups.find((a) => a.id === ageGroupId)?.name,
+          amount,
+          effectiveFrom: year.startDate,
+        });
+      for (const a of db.ageGroups) schedule("ft-tuition", CLASS_FEE[a.code] + schoolIndex * 100_000, a.id);
+      schedule("ft-meal", MEAL_PRICE);
+      schedule("ft-facility", 1_200_000);
+      schedule("ft-english", TALENT_FEE);
+      schedule("ft-bus", 800_000);
+    }
+  });
+  for (const child of db.children) {
+    const n = Number(child.id.slice(1));
+    const from = `${schoolYear}-08-01`;
+    if (n % 5 < 2) db.feeItems.push({ id: faker.string.uuid(), childId: child.id, feeTypeId: "ft-english", feeTypeName: "Năng khiếu tiếng Anh", fromMonth: `${schoolYear - 1}-08-01` });
+    if (n % 7 === 0) db.feeItems.push({ id: faker.string.uuid(), childId: child.id, feeTypeId: "ft-bus", feeTypeName: "Xe đưa đón", fromMonth: from });
+    if (n % 11 === 0) db.discounts.push({ id: faker.string.uuid(), childId: child.id, feeTypeId: "ft-tuition", feeTypeName: "Học phí", percent: 10, reason: "Con thứ hai trong gia đình", fromMonth: from });
+    else if (n % 17 === 0) db.discounts.push({ id: faker.string.uuid(), childId: child.id, amount: 500_000, reason: "Con cán bộ, giáo viên", fromMonth: from });
+  }
+  db.cashCategories = CASH_CATEGORY_DEFS.map((c, i) => ({ id: c.id ?? `cat-${i}`, name: c.name, direction: c.direction, system: !!c.id, active: true, orderNo: i + 1 }));
+
+  const cashier = db.staff.find((s) => s.id === db.users.principal.staffId)!.fullName;
+  for (const m of [shiftMonthStr(month, -2), shiftMonthStr(month, -1), month]) {
+    const current = m === month;
+    for (const school of db.schools) {
+      generateInvoices(db, school.id, m, () => faker.string.uuid());
+      issueInvoices(db, db.invoices.filter((i) => i.schoolId === school.id && i.periodMonth === `${m}-01` && i.status === "DRAFT"), `${m}-01T08:30:00+07:00`);
+    }
+    for (const inv of db.invoices.filter((i) => i.periodMonth === `${m}-01`)) {
+      const due = amountDue(inv);
       const roll = faker.number.float({ min: 0, max: 1 });
-      const paid = current ? (roll < 0.62 ? total : roll < 0.68 ? Math.round(total / 2 / 1000) * 1000 : 0) : roll < 0.9 ? total : roll < 0.95 ? Math.round(total / 2 / 1000) * 1000 : 0;
+      const half = Math.round(due / 2 / 1000) * 1000;
+      const paid = current ? (roll < 0.62 ? due : roll < 0.68 ? half : 0) : roll < 0.9 ? due : roll < 0.95 ? half : 0;
+      if (paid <= 0) continue;
       // Tháng hiện tại chỉ thu tới hôm nay; đầu tháng thì rơi về chính ngày bắt đầu
-      const payDay = dateBetween(`${m}-01`, current ? (today < `${m}-12` ? today : `${m}-12`) : `${m}-15`);
-      db.invoices.push({
-        id: faker.string.uuid(),
-        code: `PT${m.replace("-", "").slice(2)}-${String(invoiceNo).padStart(4, "0")}`,
-        schoolId: child.schoolId,
-        childId: child.id,
-        month: m,
-        dueDate: `${m}-10`,
-        lines,
-        payments: paid > 0 ? [{ id: faker.string.uuid(), date: payDay, amount: paid, method: faker.datatype.boolean({ probability: 0.7 }) ? "TRANSFER" : "CASH" }] : [],
-      });
+      const paidOn = dateBetween(`${m}-01`, current ? (today < `${m}-12` ? today : `${m}-12`) : `${m}-15`);
+      const method = faker.datatype.boolean({ probability: 0.7 }) ? "TRANSFER" : "CASH";
+      payInvoice(db, inv, { id: faker.string.uuid(), amount: paid, method, paidOn, reference: method === "TRANSFER" ? `FT${faker.string.numeric(10)}` : undefined, receivedByName: cashier });
+    }
+    for (const school of db.schools) {
+      const out = (categoryIndex: number, entryDate: string, amount: number, description: string, source: "MANUAL" | "PAYROLL" = "MANUAL") => {
+        if (entryDate > today) return;
+        const category = db.cashCategories[categoryIndex];
+        db.cashEntries.push({ id: faker.string.uuid(), schoolId: school.id, categoryId: category.id, categoryName: category.name, direction: category.direction, source, amount, entryDate, description, createdByName: cashier });
+      };
+      const outIndex = (name: string) => db.cashCategories.findIndex((c) => c.name === name);
+      for (const day of monthDays(m).filter((d) => weekday(d) === 1)) {
+        out(outIndex("Thực phẩm"), day, faker.number.int({ min: 90, max: 130 }) * 100_000, `Thực phẩm tuần ${formatDay(day)} (${faker.helpers.arrayElement(FOOD_SUPPLIERS)})`);
+      }
+      out(outIndex("Điện, nước, internet"), `${m}-05`, faker.number.int({ min: 55, max: 85 }) * 100_000, `Tiền điện, nước, internet tháng ${Number(shiftMonthStr(m, -1).slice(5))}`);
+      out(outIndex("Chi lương"), `${m}-05`, faker.number.int({ min: 1650, max: 1850 }) * 100_000, `Lương tháng ${Number(shiftMonthStr(m, -1).slice(5))}`, "PAYROLL");
+      out(outIndex("Văn phòng phẩm, đồ dùng"), dateBetween(`${m}-08`, `${m}-20`), faker.number.int({ min: 8, max: 30 }) * 100_000, faker.helpers.arrayElement(["Giấy A4, bút, mực in", "Đồ dùng học tập lớp", "Bột màu, đất nặn, giấy thủ công"]));
+      if (faker.datatype.boolean({ probability: 0.6 })) out(outIndex("Sửa chữa, bảo trì"), dateBetween(`${m}-10`, `${m}-25`), faker.number.int({ min: 10, max: 60 }) * 100_000, faker.helpers.arrayElement(["Sửa điều hòa phòng lớp", "Thay bóng đèn, ổ cắm", "Bảo trì cầu trượt sân chơi"]));
+      out(outIndex("Thu bán đồng phục"), dateBetween(`${m}-02`, `${m}-10`), faker.number.int({ min: 10, max: 40 }) * 250_000, "Bán đồng phục cho trẻ mới");
     }
   }
 
-  // ---- Thực đơn ----
+  // ---- Món ăn, thực đơn (chung mọi khối, công bố trước tuần hiện tại) ----
+  const pools = { BREAKFAST, MAINS, SOUPS, VEGGIES, SNACKS };
+  const dishIds = new Map<string, string>();
+  for (const name of [...BREAKFAST, ...MAINS, ...SOUPS, ...VEGGIES, ...SNACKS, "Cơm trắng"]) {
+    if (dishIds.has(name)) continue;
+    const id = faker.string.uuid();
+    dishIds.set(name, id);
+    const lunch = MAINS.includes(name);
+    db.dishes.push({
+      id,
+      shared: true,
+      name,
+      ingredients: dishIngredients(name),
+      kcal: lunch ? faker.number.int({ min: 120, max: 180 }) : faker.number.int({ min: 60, max: 260 }),
+      proteinG: faker.number.int({ min: 2, max: 15 }),
+      fatG: faker.number.int({ min: 1, max: 10 }),
+      carbG: faker.number.int({ min: 3, max: 45 }),
+      active: true,
+    });
+  }
   for (const school of db.schools) {
     for (let ws = weekStart(startDate); ws <= addDays(weekStart(today), 7); ws = addDays(ws, 7)) {
       // Không lặp món trong một tuần
-      const [breakfast, mains, soups, veggies, snacks] = [BREAKFAST, MAINS, SOUPS, VEGGIES, SNACKS].map((pool) => faker.helpers.arrayElements(pool, 5));
-      db.menus.push({
+      const [breakfast, mains, soups, veggies, snacks] = (Object.keys(pools) as (keyof typeof pools)[]).map((k) => faker.helpers.arrayElements(pools[k], 5));
+      const menuId = faker.string.uuid();
+      db.menus.push({ id: menuId, schoolId: school.id, weekStart: ws, status: ws <= weekStart(today) ? "PUBLISHED" : "DRAFT", publishedAt: ws <= weekStart(today) ? at(addDays(ws, -3), 9) : undefined });
+      for (let k = 0; k < 5; k++) {
+        const date = addDays(ws, k);
+        const add = (meal: "BREAKFAST" | "LUNCH" | "AFTERNOON", name: string, orderNo: number) =>
+          db.menuItems.push({ id: faker.string.uuid(), menuId, date, meal, dishId: dishIds.get(name)!, orderNo });
+        add("BREAKFAST", breakfast[k], 1);
+        add("LUNCH", "Cơm trắng", 1);
+        add("LUNCH", mains[k], 2);
+        add("LUNCH", soups[k], 3);
+        add("LUNCH", veggies[k], 4);
+        add("AFTERNOON", snacks[k], 1);
+      }
+    }
+  }
+
+  // ---- Cân đo (mỗi tháng một lần, kênh theo chuẩn WHO) ----
+  const recorder = byId.get(db.users.principal.staffId)!.fullName;
+  for (const child of db.children) {
+    const zw = normal() * 0.9 + (faker.datatype.boolean({ probability: 0.05 }) ? -1.8 : faker.datatype.boolean({ probability: 0.05 }) ? 2.2 : 0);
+    const zh = normal() * 0.9 + (faker.datatype.boolean({ probability: 0.04 }) ? -1.6 : 0);
+    for (const m of [shiftMonthStr(month, -2), shiftMonthStr(month, -1), month]) {
+      const date = `${m}-${String(faker.number.int({ min: 8, max: 12 })).padStart(2, "0")}`;
+      if (date > today || date < child.enrolledOn) continue;
+      const months = ageInMonths(child.dob, date);
+      const heightCm = +valueAt("HFA", child.gender, months, zh).toFixed(1);
+      const weightKg = +valueAt("WFA", child.gender, months, zw + normal() * 0.05).toFixed(1);
+      db.measurements.push({
         id: faker.string.uuid(),
-        schoolId: school.id,
-        weekStart: ws,
-        days: [0, 1, 2, 3, 4].map((k) => ({
-          date: addDays(ws, k),
-          breakfast: breakfast[k],
-          lunch: [mains[k], soups[k], veggies[k], "Cơm trắng"],
-          snack: snacks[k],
-        })),
+        schoolId: child.schoolId,
+        classId: child.classId,
+        childId: child.id,
+        measuredOn: date,
+        weightKg,
+        heightCm,
+        source: "CLASS",
+        recordedByName: recorder,
+        ...classify(child.gender, child.dob, date, weightKg, heightCm),
       });
     }
   }
 
-  // ---- Cân đo (mỗi tháng một lần) ----
-  for (const child of db.children) {
-    const zw = normal() * 0.9 + (faker.datatype.boolean({ probability: 0.05 }) ? -1.6 : faker.datatype.boolean({ probability: 0.05 }) ? 1.8 : 0);
-    const zh = normal() * 0.9;
-    for (const m of months) {
-      const date = `${m}-${String(faker.number.int({ min: 8, max: 12 })).padStart(2, "0")}`;
-      if (date > today) continue;
-      const age = ageMonths(child.dob, date);
-      db.growth.push({
+  // ---- Sổ theo dõi sức khỏe, khám định kỳ ----
+  const LOGS = [
+    { type: "FEVER" as const, content: "Sốt sau giờ ngủ trưa, đã chườm mát và báo phụ huynh", temperatureC: 38.3 },
+    { type: "MEDICINE" as const, content: "Phụ huynh dặn uống siro ho sau bữa trưa" },
+    { type: "INCIDENT" as const, content: "Ngã trầy đầu gối khi chơi ngoài sân, đã sát trùng" },
+    { type: "OTHER" as const, content: "Ăn ít hơn mọi ngày, theo dõi thêm" },
+  ];
+  for (const school of db.schools) {
+    const kids = db.children.filter((c) => c.schoolId === school.id);
+    for (let i = 0; i < 8; i++) {
+      const child = faker.helpers.arrayElement(kids);
+      const log = faker.helpers.arrayElement(LOGS);
+      const date = addDays(today, -faker.number.int({ min: 0, max: 20 }));
+      db.healthLogs.push({
         id: faker.string.uuid(),
+        schoolId: school.id,
         childId: child.id,
-        date,
-        heightCm: +valueAt("height", child.gender, age, zh).toFixed(1),
-        weightKg: +valueAt("weight", child.gender, age, zw + normal() * 0.05).toFixed(1),
+        childName: child.fullName,
+        classId: child.classId,
+        className: db.classes.find((c) => c.id === child.classId)?.name,
+        logDate: date,
+        type: log.type,
+        content: log.content,
+        temperatureC: log.temperatureC,
+        parentNotifiedAt: log.type === "FEVER" || faker.datatype.boolean() ? at(date, 14) : undefined,
+        parentNotifiedByName: recorder,
+        recordedByName: recorder,
       });
     }
+    for (const child of kids.slice(0, 10)) {
+      db.checkups.push({ id: faker.string.uuid(), schoolId: school.id, childId: child.id, checkupDate: `${shiftMonthStr(month, -1)}-20`, provider: "Trạm y tế phường", summary: "Sức khỏe bình thường." });
+    }
+  }
+
+  // ---- Tài khoản đăng nhập: mỗi nhân viên có email một tài khoản, vai trò theo chức vụ ----
+  const ACCOUNT_ROLE: Partial<Record<StaffRec["position"], string>> = {
+    TEACHER: "TEACHER",
+    NURSE: "NURSE",
+    COOK: "KITCHEN",
+    ACCOUNTANT: "ACCOUNTANT",
+    SECURITY: "STAFF",
+  };
+  for (const s of db.staff) {
+    const role = ACCOUNT_ROLE[s.position];
+    if (!s.email || (!role && s.position !== "MANAGER")) continue;
+    db.accounts.push({ id: faker.string.uuid(), staffId: s.id, email: s.email, active: true, roles: role ? [{ role, schoolId: s.schoolId }] : [] });
   }
 
   // ---- Thông báo ----

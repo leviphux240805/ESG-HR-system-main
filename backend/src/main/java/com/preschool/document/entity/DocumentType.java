@@ -8,7 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
-/** Danh mục loại giấy tờ (dùng chung toàn chuỗi). */
+/** Danh mục loại giấy tờ (dùng chung trong tổ chức). */
 @Entity
 @Table(name = "document_types")
 public class DocumentType extends BaseEntity {

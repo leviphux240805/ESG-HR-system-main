@@ -13,17 +13,19 @@ import org.springframework.data.repository.query.Param;
 /** Truy vấn JPQL/Specification tự lọc theo cơ sở đang chọn (Hibernate filter) và bỏ hồ sơ đã xóa mềm. */
 public interface StaffRepository extends JpaRepository<Staff, UUID>, JpaSpecificationExecutor<Staff> {
 
-	// ---- Kiểm tra trùng: native query KHÔNG qua filter cơ sở, vì trùng CCCD/SĐT/email bị chặn toàn chuỗi
+	// ---- Kiểm tra trùng: native query KHÔNG qua filter trường, vì trùng CCCD/SĐT/email bị chặn trong cả tổ chức
 
 	@Query(value = """
-			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND citizen_id = :value
+			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND citizen_id = :value AND school_id IN (SELECT id FROM schools WHERE organization_id = :org)
 			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)
-	boolean citizenIdTakenAnywhere(@Param("value") String value, @Param("exclude") UUID excludeStaffId);
+	boolean citizenIdTakenInOrganization(@Param("org") UUID organizationId, @Param("value") String value,
+			@Param("exclude") UUID excludeStaffId);
 
 	@Query(value = """
-			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND phone = :value
+			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND phone = :value AND school_id IN (SELECT id FROM schools WHERE organization_id = :org)
 			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)
-	boolean phoneTakenAnywhere(@Param("value") String value, @Param("exclude") UUID excludeStaffId);
+	boolean phoneTakenInOrganization(@Param("org") UUID organizationId, @Param("value") String value,
+			@Param("exclude") UUID excludeStaffId);
 
 	/** Mã chấm công đã dùng trong cơ sở (kể cả hồ sơ người dùng không thấy). */
 	@Query(value = """
@@ -33,9 +35,10 @@ public interface StaffRepository extends JpaRepository<Staff, UUID>, JpaSpecific
 			@Param("exclude") UUID excludeStaffId);
 
 	@Query(value = """
-			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND email = :value
+			SELECT count(*) > 0 FROM staff WHERE deleted_at IS NULL AND email = :value AND school_id IN (SELECT id FROM schools WHERE organization_id = :org)
 			  AND (CAST(:exclude AS uuid) IS NULL OR id <> CAST(:exclude AS uuid))""", nativeQuery = true)
-	boolean emailTakenAnywhere(@Param("value") String value, @Param("exclude") UUID excludeStaffId);
+	boolean emailTakenInOrganization(@Param("org") UUID organizationId, @Param("value") String value,
+			@Param("exclude") UUID excludeStaffId);
 
 	/** File có thuộc hồ sơ nhân viên này không (ảnh, hợp đồng, chứng chỉ, đào tạo, giấy tờ, quyết định điều chuyển). */
 	@Query(value = """

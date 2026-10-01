@@ -18,7 +18,7 @@ public final class ChangeRequestDtos {
 	private ChangeRequestDtos() {
 	}
 
-	/** CONTACT = số điện thoại, địa chỉ (hiệu trưởng cơ sở hoặc văn phòng điều hành duyệt); BANK = tài khoản ngân hàng (văn phòng điều hành hoặc kế toán duyệt). */
+	/** CONTACT = số điện thoại, địa chỉ (ban giám hiệu duyệt); BANK = tài khoản ngân hàng (hiệu trưởng hoặc kế toán duyệt). */
 	public enum Kind {
 		CONTACT, BANK
 	}

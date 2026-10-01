@@ -43,10 +43,10 @@ test("giáo viên không có menu Chấm công và bị chặn khi mở trực t
   await expect(page.getByRole("heading", { name: "Bạn không có quyền truy cập trang này" })).toBeVisible();
 });
 
-test("chủ chuỗi xem tất cả cơ sở được nhắc chọn một cơ sở", async ({ page }) => {
+test("hiệu trưởng xem tất cả trường được nhắc chọn một trường", async ({ page }) => {
   await login(page, ACCOUNTS.owner);
   await page.goto("/cham-cong");
-  await expect(page.getByText("Chọn một cơ sở", { exact: true })).toBeVisible();
+  await expect(page.getByText("Chọn một trường", { exact: true })).toBeVisible();
 });
 
 // Định nghĩa "xong" (1): import file Excel mẫu → đối soát → khóa tháng
@@ -80,12 +80,12 @@ test("import file máy chấm công mẫu, xử lý sai lệch, khóa công, m�
   await expect(page.getByRole("dialog")).toContainText("Công tháng đã khóa, chỉ xem.");
   await page.keyboard.press("Escape");
 
-  // Chỉ văn phòng điều hành mở khóa, bắt buộc lý do
+  // Phó hiệu trưởng khóa được nhưng chỉ hiệu trưởng mở khóa, bắt buộc lý do
   await expect(page.getByRole("button", { name: "Mở khóa công" })).toHaveCount(0);
   const admin = await browser.newPage();
-  await login(admin, "admin@preschool.local");
-  await admin.getByLabel("Chọn cơ sở").click();
-  await admin.getByRole("option", { name: "Cơ sở A – Hoa Sen" }).click();
+  await login(admin, ACCOUNTS.owner);
+  await admin.getByLabel("Chọn trường").click();
+  await admin.getByRole("option", { name: "Trường A – Hoa Sen" }).click();
   await admin.goto("/cham-cong?month=2026-09");
   await admin.getByRole("button", { name: "Mở khóa công" }).click();
   await admin.getByRole("dialog").getByRole("button", { name: "Mở khóa" }).click();
@@ -131,7 +131,7 @@ test("cấu hình chấm công: xem bản đang áp dụng, thêm bản mới, t
   await page.getByLabel("Năm").click();
   await page.getByRole("option", { name: String(nextYear) }).click();
   const item = page.getByRole("list", { name: "Danh sách ngày lễ" }).getByRole("listitem").filter({ hasText: "Hội thao cơ sở" });
-  await expect(item).toContainText("Cơ sở A – Hoa Sen");
+  await expect(item).toContainText("Trường A – Hoa Sen");
   await item.getByRole("button", { name: /^Xóa ngày lễ/ }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Xóa" }).click();
   await expect(item).toHaveCount(0);

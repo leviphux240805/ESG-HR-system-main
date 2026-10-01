@@ -24,7 +24,7 @@ public final class AttendanceConfigDtos {
 
 	public record ConfigDto(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-			@Schema(description = "Rỗng = mặc định toàn chuỗi") UUID schoolId,
+			@Schema(description = "Rỗng = mặc định của tổ chức") UUID schoolId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) LocalDate effectiveFrom,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, type = "string", example = "07:30") LocalTime shiftStart,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, type = "string", example = "17:00") LocalTime shiftEnd,
@@ -38,13 +38,13 @@ public final class AttendanceConfigDtos {
 	}
 
 	public record ConfigOverview(
-			@Schema(description = "Bản đang áp dụng hôm nay (của cơ sở, không có thì mặc định toàn chuỗi)") ConfigDto effective,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Các bản của cơ sở và toàn chuỗi, mới nhất trước") List<ConfigDto> versions,
+			@Schema(description = "Bản đang áp dụng hôm nay (của cơ sở, không có thì mặc định của tổ chức)") ConfigDto effective,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Các bản của cơ sở và cả tổ chức, mới nhất trước") List<ConfigDto> versions,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean canManage) {
 	}
 
 	public record CreateConfigRequest(
-			@Schema(description = "Bỏ trống = mặc định toàn chuỗi (văn phòng điều hành)") UUID schoolId,
+			@Schema(description = "Bỏ trống = mặc định của tổ chức (hiệu trưởng)") UUID schoolId,
 			@NotNull LocalDate effectiveFrom,
 			@NotNull @Schema(type = "string", example = "07:30") LocalTime shiftStart,
 			@NotNull @Schema(type = "string", example = "17:00") LocalTime shiftEnd,
@@ -59,7 +59,7 @@ public final class AttendanceConfigDtos {
 
 	public record HolidayDto(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-			@Schema(description = "Rỗng = toàn chuỗi") UUID schoolId,
+			@Schema(description = "Rỗng = cả tổ chức") UUID schoolId,
 			String schoolName,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) LocalDate date,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String name,
@@ -67,7 +67,7 @@ public final class AttendanceConfigDtos {
 	}
 
 	public record CreateHolidayRequest(
-			@Schema(description = "Bỏ trống = toàn chuỗi (văn phòng điều hành)") UUID schoolId,
+			@Schema(description = "Bỏ trống = cả tổ chức (hiệu trưởng)") UUID schoolId,
 			@NotNull LocalDate fromDate,
 			@Schema(description = "Bỏ trống = một ngày") LocalDate toDate,
 			@NotBlank @Size(max = 200) String name) {

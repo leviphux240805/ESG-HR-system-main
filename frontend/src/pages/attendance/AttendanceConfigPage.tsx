@@ -21,6 +21,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { commonHolidays } from "@/data/vietnameseHolidays";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCan } from "@/hooks/useCan";
+import { isPrincipal } from "@/lib/permissions";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDate } from "@/lib/format";
 import { SelectField, TextField } from "@/features/staff/profile/fields";
@@ -175,7 +176,7 @@ function ConfigSection({ schoolId, scopeLabel }: { schoolId: string | null; scop
         </CardHeader>
         <CardContent>
           {!current ? (
-            <EmptyState title="Chưa có cấu hình" description={data.canManage ? "Bấm “Cấu hình mới” để tạo." : "Liên hệ văn phòng điều hành."} />
+            <EmptyState title="Chưa có cấu hình" description={data.canManage ? "Bấm “Cấu hình mới” để tạo." : "Liên hệ hiệu trưởng."} />
           ) : (
             <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm" data-testid="effective-config">
               <div><dt className="text-muted-foreground">Ca làm việc</dt><dd>{hhmm(current.shiftStart)} – {hhmm(current.shiftEnd)}</dd></div>
@@ -186,7 +187,7 @@ function ConfigSection({ schoolId, scopeLabel }: { schoolId: string | null; scop
               <div><dt className="text-muted-foreground">Nửa buổi</dt><dd>{weekdays(current.halfDayWeekdays)}</dd></div>
               <div>
                 <dt className="text-muted-foreground">Nguồn</dt>
-                <dd>{current.schoolId ? "Riêng cơ sở" : "Mặc định toàn chuỗi"} · từ {formatDate(current.effectiveFrom)}</dd>
+                <dd>{current.schoolId ? "Riêng cơ sở" : "Mặc định của tổ chức"} · từ {formatDate(current.effectiveFrom)}</dd>
               </div>
             </dl>
           )}
@@ -215,7 +216,7 @@ function ConfigSection({ schoolId, scopeLabel }: { schoolId: string | null; scop
                       {formatDate(v.effectiveFrom)}{" "}
                       {current?.id === v.id && <StatusBadge status="CURRENT" labels={{ CURRENT: { label: "Đang áp dụng", tone: "success" } }} />}
                     </TableCell>
-                    <TableCell>{v.schoolId ? "Riêng cơ sở" : "Toàn chuỗi"}</TableCell>
+                    <TableCell>{v.schoolId ? "Riêng cơ sở" : "Cả tổ chức"}</TableCell>
                     <TableCell>{hhmm(v.shiftStart)} – {hhmm(v.shiftEnd)}</TableCell>
                     <TableCell>{v.graceMinutes} phút / {v.maxLateAllowed} lần</TableCell>
                     <TableCell>{weekdays(v.workingWeekdays)}</TableCell>
@@ -255,8 +256,8 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState<HolidayDto | null>(null);
   const holidays = useHolidays(year);
-  const isChainAdmin = !!me?.roles.some((r) => r.role === "CHAIN_ADMIN" && !r.schoolId);
-  // Chỉ để ẩn/hiện: chủ chuỗi, kế toán chỉ xem; backend kiểm tra lại
+  const isChainAdmin = isPrincipal(me?.roles ?? []);
+  // Chỉ để ẩn/hiện: kế toán chỉ xem; ngày lễ chung của tổ chức chỉ hiệu trưởng; backend kiểm tra lại
   const canManage = useCan("manage", "attendance");
   const canAddSchool = !!schoolId && canManage;
   const form = useForm<HolidayValues>({
@@ -268,7 +269,7 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
   }, [adding, form, schoolId]);
   const preset = form.watch("preset");
   const scopeOptions = [
-    ...(isChainAdmin ? [{ value: CHAIN, label: "Toàn chuỗi" }] : []),
+    ...(isChainAdmin ? [{ value: CHAIN, label: "Cả tổ chức" }] : []),
     ...(canAddSchool ? [{ value: schoolId!, label: "Riêng cơ sở đang chọn" }] : []),
   ];
 
@@ -312,7 +313,7 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
               <li key={h.id} className="flex items-center gap-3 py-2">
                 <span className="w-28 text-sm tabular-nums">{formatDate(h.date)}</span>
                 <span className="flex-1 min-w-0">
-                  {h.name} <span className="text-xs text-muted-foreground">· {h.schoolName ?? "Toàn chuỗi"}</span>
+                  {h.name} <span className="text-xs text-muted-foreground">· {h.schoolName ?? "Cả tổ chức"}</span>
                 </span>
                 {h.canManage && (
                   <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setDeleting(h)} aria-label={`Xóa ngày lễ ${formatDate(h.date)}`}>
@@ -368,12 +369,12 @@ function HolidaySection({ schoolId }: { schoolId: string | null }) {
 /** Cấu hình chấm công theo cơ sở (bản mới theo ngày hiệu lực) và danh sách ngày lễ. */
 export default function AttendanceConfigPage() {
   const { schoolId, school } = useCurrentSchool();
-  const scopeLabel = schoolId ? school?.name ?? "Cơ sở" : "Mặc định toàn chuỗi";
+  const scopeLabel = schoolId ? school?.name ?? "Cơ sở" : "Mặc định của tổ chức";
   return (
     <div>
       <PageHeader
         title="Cấu hình chấm công"
-        description={schoolId ? `Cấu hình của ${scopeLabel}; không có thì dùng mặc định toàn chuỗi.` : "Đang xem cấu hình mặc định toàn chuỗi (chọn một cơ sở để cấu hình riêng)."}
+        description={schoolId ? `Cấu hình của ${scopeLabel}; không có thì dùng mặc định của tổ chức.` : "Đang xem cấu hình mặc định của tổ chức (chọn một cơ sở để cấu hình riêng)."}
         breadcrumbs={[{ label: "Chấm công", to: "/cham-cong" }, { label: "Cấu hình" }]}
       />
       <Tabs defaultValue="config">

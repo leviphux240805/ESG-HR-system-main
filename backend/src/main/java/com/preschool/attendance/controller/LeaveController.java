@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Đơn nghỉ phép: của tôi (xin, hủy, phép còn lại) và duyệt (hiệu trưởng, văn phòng điều hành). */
+/** Đơn nghỉ phép: của tôi (xin, hủy, phép còn lại) và duyệt (ban giám hiệu). */
 @RestController
 @RequestMapping("/api/v1")
 @Tag(name = "Nghỉ phép")

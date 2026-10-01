@@ -20,7 +20,7 @@ public final class FileDtos {
 			@Schema(example = "hop-dong.pdf") @NotBlank @Size(max = 255) String fileName,
 			@Schema(example = "application/pdf") @NotBlank @Size(max = 100) String contentType,
 			@Schema(description = "Kích thước file (byte)") @NotNull @Positive Long sizeBytes,
-			@Schema(description = "Cơ sở sở hữu file; bỏ trống = cơ sở đang chọn (hoặc toàn chuỗi nếu đang chọn "
+			@Schema(description = "Cơ sở sở hữu file; bỏ trống = cơ sở đang chọn (hoặc cả tổ chức nếu đang chọn "
 					+ "\"Tất cả cơ sở\")") UUID schoolId) {
 	}
 
@@ -41,7 +41,7 @@ public final class FileDtos {
 
 	public record FileResponse(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-			@Schema(description = "Rỗng = dùng chung toàn chuỗi") UUID schoolId,
+			@Schema(description = "Rỗng = dùng chung trong tổ chức") UUID schoolId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String originalName,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String mimeType,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) long sizeBytes,

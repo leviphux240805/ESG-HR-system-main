@@ -3,7 +3,7 @@ import { ACCOUNTS, login } from "./helpers";
 
 // Dữ liệu seed dev: Cơ sở A có "Nguyễn Thị Lan" (hợp đồng hết hạn sau 20 ngày), Cơ sở B có "Phạm Thị Hoa".
 
-test("chủ chuỗi xem nhân sự mọi cơ sở, lọc và xuất Excel", async ({ page }) => {
+test("hiệu trưởng xem nhân sự mọi trường của mình, lọc và xuất Excel", async ({ page }) => {
   await login(page, ACCOUNTS.owner);
   await page.getByRole("navigation", { name: "Menu chính" }).getByRole("link", { name: "Nhân sự" }).click();
   await expect(page.getByRole("heading", { name: "Nhân sự" })).toBeVisible();
@@ -22,7 +22,7 @@ test("chủ chuỗi xem nhân sự mọi cơ sở, lọc và xuất Excel", asyn
   expect((await download).suggestedFilename()).toMatch(/\.xlsx$/);
 });
 
-test("hiệu trưởng cơ sở A chỉ thấy nhân viên cơ sở A", async ({ page }) => {
+test("phó hiệu trưởng trường A chỉ thấy nhân viên trường A", async ({ page }) => {
   await login(page, "0900000004");
   await page.goto("/nhan-su");
   await expect(page.getByText("Nguyễn Thị Lan")).toBeVisible();

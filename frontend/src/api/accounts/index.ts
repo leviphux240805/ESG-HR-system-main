@@ -11,7 +11,7 @@ export type RoleCode = AccountRole["role"];
 /** Bộ lọc danh sách tài khoản trên URL. */
 export const ACCOUNT_FILTER_KEYS = ["role", "schoolId", "active"] as const;
 
-/** Tài khoản là dữ liệu toàn chuỗi: không theo cơ sở đang chọn. */
+/** Tài khoản là dữ liệu cả tổ chức: không theo cơ sở đang chọn. */
 export function useAccounts(params: ListParams) {
   const { page, size, sort, q, role, schoolId, active } = params.apiParams as Record<string, string | number | undefined>;
   const query = {

@@ -12,7 +12,7 @@ public interface HolidayRepository extends JpaRepository<Holiday, UUID> {
 
 	List<Holiday> findAllByOrderByHolidayDate();
 
-	/** Ngày lễ trong khoảng (đã lọc theo cơ sở: toàn chuỗi + cơ sở trong phạm vi). */
+	/** Ngày lễ trong khoảng (đã lọc theo cơ sở: cả tổ chức + cơ sở trong phạm vi). */
 	List<Holiday> findByHolidayDateBetweenOrderByHolidayDate(java.time.LocalDate from, java.time.LocalDate to);
 
 }

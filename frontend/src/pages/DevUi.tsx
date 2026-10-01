@@ -219,7 +219,7 @@ function FormDemo() {
   );
 }
 
-const ALL_RESOURCES: Resource[] = ["settings", "staff", "documents", "tasks", "attendance", "classes", "health", "finance", "payroll", "reports"];
+const ALL_RESOURCES: Resource[] = ["settings", "staff", "documents", "tasks", "attendance", "classes", "menu", "health", "finance", "payroll", "reports"];
 const ALL_ACTIONS: Action[] = ["view", "manage", "approve", "export"];
 
 function PermissionDemo() {

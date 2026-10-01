@@ -71,7 +71,7 @@ export default function AttendancePage() {
       />
 
       {needSchool ? (
-        <EmptyState icon={CalendarCheck} title="Chọn một cơ sở" description="Bảng công xem theo từng cơ sở: chọn cơ sở ở đầu trang." />
+        <EmptyState icon={CalendarCheck} title="Chọn một trường" description="Bảng công xem theo từng trường: chọn cơ sở ở đầu trang." />
       ) : sheet.isLoading ? (
         <TableSkeleton rows={8} columns={10} />
       ) : sheet.isError ? (

@@ -6,7 +6,7 @@ import { schoolQueryKey } from "./useCurrentSchool";
 const auth = vi.hoisted(() => ({
   me: {
     roles: [
-      { role: "PRINCIPAL", schoolId: "a" },
+      { role: "VICE_PRINCIPAL", schoolId: "a", functionGroups: ["HR"] },
       { role: "ACCOUNTANT", schoolId: "b" },
     ],
   },
@@ -16,7 +16,7 @@ const auth = vi.hoisted(() => ({
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => auth }));
 
 describe("useCan", () => {
-  it("xét quyền theo vai trò của cơ sở đang chọn", () => {
+  it("xét quyền theo vai trò và nhóm chức năng của trường đang chọn", () => {
     auth.selectedSchoolId = "a";
     expect(renderHook(() => useCan("approve", "attendance")).result.current).toBe(true);
     expect(renderHook(() => useCan("manage", "payroll")).result.current).toBe(false);
@@ -28,7 +28,7 @@ describe("useCan", () => {
 });
 
 describe("schoolQueryKey", () => {
-  it("đưa cơ sở đang chọn vào query key để đổi cơ sở thì tải lại", () => {
+  it("đưa trường đang chọn vào query key để đổi trường thì tải lại", () => {
     expect(schoolQueryKey("a", "staff", { page: 1 })).toEqual(["staff", { page: 1 }, { schoolId: "a" }]);
     expect(schoolQueryKey(null, "staff")).toEqual(["staff", { schoolId: "ALL" }]);
   });

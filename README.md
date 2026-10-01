@@ -62,32 +62,39 @@ Mọi tài khoản dùng mật khẩu **`Matkhau@123`**; đăng nhập bằng em
 
 | Vai trò | Email | SĐT | Phạm vi |
 |---|---|---|---|
-| Chủ chuỗi | owner@preschool.local | 0900000001 | Toàn chuỗi |
-| Văn phòng điều hành | admin@preschool.local | 0900000002 | Toàn chuỗi |
-| Kế toán | ketoan.a@preschool.local | 0900000003 | Cơ sở A |
-| Hiệu trưởng | hieutruong.a@preschool.local | 0900000004 | Cơ sở A |
-| Giáo viên | giaovien.a@preschool.local | 0900000005 | Cơ sở A |
-| Nhân viên y tế | yte.a@preschool.local | 0900000006 | Cơ sở A |
-| Cấp dưỡng | capduong.b@preschool.local | 0900000007 | Cơ sở B |
-| Nhân viên | nhanvien.b@preschool.local | 0900000008 | Cơ sở B |
+| Hiệu trưởng | owner@preschool.local | 0900000001 | Trường A, B, C (tổ chức "Chuỗi Mầm non Hoa") |
+| Hiệu trưởng | admin@preschool.local | 0900000002 | Trường D (tổ chức "Mầm non Sao Mai") |
+| Kế toán | ketoan.a@preschool.local | 0900000003 | Trường A |
+| Phó hiệu trưởng | hieutruong.a@preschool.local | 0900000004 | Trường A: Lớp & trẻ, Thực đơn & sức khỏe, Nhân sự, Báo cáo |
+| Giáo viên | giaovien.a@preschool.local | 0900000005 | Trường A |
+| Nhân viên y tế | yte.a@preschool.local | 0900000006 | Trường A |
+| Cấp dưỡng | capduong.b@preschool.local | 0900000007 | Trường B |
+| Nhân viên | nhanvien.b@preschool.local | 0900000008 | Trường B |
 
-Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`). Seed có 12 hồ sơ nhân viên ở 2 cơ sở; các tài
-khoản từ `0900000003` tới `0900000008` gắn với một hồ sơ (xem được ở **Của tôi › Hồ sơ của tôi**), chủ chuỗi và văn
-phòng điều hành không gắn hồ sơ. Nguyễn Thị Lan (Cơ sở A) có hợp đồng hết hạn sau 20 ngày để thử cảnh báo.
+Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`). Seed có 12 hồ sơ nhân viên ở trường A, B; các
+tài khoản từ `0900000003` tới `0900000008` gắn với một hồ sơ, hai hiệu trưởng không gắn hồ sơ. Nguyễn Thị Lan
+(trường A) có hợp đồng hết hạn sau 20 ngày để thử cảnh báo. Hai tổ chức tách biệt: hiệu trưởng trường D không thấy
+trường, tài khoản, dữ liệu dùng chung của tổ chức kia.
+
+Tổ chức và hiệu trưởng mới do bên vận hành tạo bằng SQL: `SELECT provision_organization('<uuid>', 'Tên');` (chép
+danh mục mặc định), thêm tài khoản vào `users` với `organization_id`, tạo trường đầu tiên rồi gán `PRINCIPAL` ở
+`user_roles`. Sau đó hiệu trưởng tự thêm trường ở **Quản trị › Trường**.
 
 ## Thử nhanh
 
-1. Đăng nhập `owner@preschool.local` → bộ chọn cơ sở trên header có "Tất cả cơ sở", Cơ sở A, Cơ sở B.
-2. Đăng nhập `0900000005` (giáo viên) → bộ chọn bị khóa ở Cơ sở A.
-3. Nhân sự (`admin@preschool.local`, chọn Cơ sở A): **Nhân sự › Thêm nhân viên** → **Quét CCCD** (ảnh mặt trước có
-   mã QR) → lưu → hồ sơ mở ra; tab **Hợp đồng & quyết định** tải hợp đồng PDF; nút **Điều chuyển** sang Cơ sở B;
+1. Đăng nhập `owner@preschool.local` → bộ chọn trường trên header có "Tất cả trường", Trường A, B, C; **Hôm nay**,
+   **Hộp duyệt**, **Báo cáo** gộp số liệu các trường đang chọn. `0900000002` chỉ thấy Trường D.
+2. Đăng nhập `0900000005` (giáo viên) → bộ chọn bị khóa ở Trường A.
+3. Nhân sự (`owner@preschool.local`, chọn Trường A): **Nhân sự › Thêm nhân viên** → **Quét CCCD** (ảnh mặt trước có
+   mã QR) → lưu → hồ sơ mở ra; tab **Hợp đồng & quyết định** tải hợp đồng PDF; nút **Điều chuyển** sang Trường B;
    tab **Lịch sử** có 2 giai đoạn công tác. File nằm trên MinIO console http://localhost:9001
    (`preschool` / `preschool-secret`).
-4. Tài liệu (`0900000004`, hiệu trưởng A): **Tài liệu › Ban hành văn bản**, bật "Yêu cầu xác nhận đã đọc" →
+4. Tài liệu (`0900000004`, phó hiệu trưởng A): **Tài liệu › Ban hành văn bản**, bật "Yêu cầu xác nhận đã đọc" →
    giáo viên `0900000005` thấy chuông thông báo và mục **Của tôi › Văn bản cần đọc** → **Tôi đã đọc** → hiệu
    trưởng tải lại trang văn bản thấy tỷ lệ đã đọc tăng.
 5. Tự phục vụ: giáo viên vào **Hồ sơ của tôi › Đổi SĐT, địa chỉ** → hiệu trưởng duyệt ở **Nhân sự › Đề xuất cập
-   nhật**. Tài khoản đăng nhập quản lý ở **Quản trị › Tài khoản** (chủ chuỗi, văn phòng điều hành).
+   nhật**. Tài khoản đăng nhập quản lý ở **Quản trị › Tài khoản** (hiệu trưởng; phó hiệu trưởng được giao nhóm
+   chức năng theo từng trường).
 6. Bấm **Quên mật khẩu?** ở trang đăng nhập, nhập `0900000008` → mở Mailpit http://localhost:8025 xem email,
    bấm link để đặt mật khẩu mới (tài khoản này sẽ đổi mật khẩu; seed không tự đặt lại).
 7. Thư viện component (chỉ dev): http://localhost:8080/dev/ui. Xem trước menu các giai đoạn chưa làm:

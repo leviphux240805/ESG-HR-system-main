@@ -77,7 +77,7 @@ class FileTests extends ApiTestSupport {
 		User teacherA = data.user(RoleCode.TEACHER, schoolA);
 		String fileId = uploadReady(teacherA, PDF);
 		User principalB = data.user(RoleCode.PRINCIPAL, schoolB);
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(schoolA, schoolB);
 
 		call(principalB, get("/api/v1/files/" + fileId + "/download-url"), null).andExpect(status().isNotFound());
 		call(principalB, post("/api/v1/files/" + fileId + "/complete"), null).andExpect(status().isNotFound());
@@ -152,7 +152,7 @@ class FileTests extends ApiTestSupport {
 	@Test
 	void schoolOfFileFollowsScope() throws Exception {
 		User teacherA = data.user(RoleCode.TEACHER, schoolA);
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(schoolA, schoolB);
 
 		requestUpload(teacherA, schoolB.getId(), "a.pdf", "application/pdf", PDF.length)
 			.andExpect(status().isForbidden());

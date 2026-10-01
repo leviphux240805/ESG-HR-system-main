@@ -2,20 +2,20 @@ import { describe, expect, it } from "vitest";
 import { roleRowErrors, toAccountRoles } from "./roles";
 
 describe("roleRowErrors", () => {
-  it("kiểm tra phạm vi và dòng trùng", () => {
+  it("bắt buộc trường, nhóm chức năng cho phó hiệu trưởng, không trùng dòng", () => {
     expect(
       roleRowErrors([
-        { role: "TEACHER", schoolId: "a" },
-        { role: "PRINCIPAL", schoolId: "" },
-        { role: "CHAIN_ADMIN", schoolId: "a" },
-        { role: "ACCOUNTANT", schoolId: "" },
-        { role: "TEACHER", schoolId: "a" },
-        { role: "", schoolId: "" },
+        { role: "TEACHER", schoolId: "a", functionGroups: [] },
+        { role: "NURSE", schoolId: "", functionGroups: [] },
+        { role: "VICE_PRINCIPAL", schoolId: "a", functionGroups: [] },
+        { role: "VICE_PRINCIPAL", schoolId: "b", functionGroups: ["HR"] },
+        { role: "TEACHER", schoolId: "a", functionGroups: [] },
+        { role: "", schoolId: "", functionGroups: [] },
       ]),
     ).toEqual([
       null,
-      "Chọn cơ sở cho vai trò này",
-      "Vai trò này chỉ gán toàn chuỗi",
+      "Chọn trường cho vai trò này",
+      "Chọn ít nhất một nhóm chức năng",
       null,
       "Trùng với dòng phía trên",
       "Chọn vai trò",
@@ -24,10 +24,15 @@ describe("roleRowErrors", () => {
 });
 
 describe("toAccountRoles", () => {
-  it("toàn chuỗi không gửi schoolId", () => {
-    expect(toAccountRoles([{ role: "ACCOUNTANT", schoolId: "" }, { role: "NURSE", schoolId: "b" }])).toEqual([
-      { role: "ACCOUNTANT", schoolId: undefined },
-      { role: "NURSE", schoolId: "b" },
+  it("chỉ phó hiệu trưởng gửi nhóm chức năng", () => {
+    expect(
+      toAccountRoles([
+        { role: "VICE_PRINCIPAL", schoolId: "a", functionGroups: ["HR", "REPORTS"] },
+        { role: "NURSE", schoolId: "b", functionGroups: ["HR"] },
+      ]),
+    ).toEqual([
+      { role: "VICE_PRINCIPAL", schoolId: "a", functionGroups: ["HR", "REPORTS"] },
+      { role: "NURSE", schoolId: "b", functionGroups: undefined },
     ]);
   });
 });

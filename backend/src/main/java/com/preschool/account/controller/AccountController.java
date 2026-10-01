@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Quản lý tài khoản đăng nhập (chủ chuỗi, văn phòng điều hành). */
+/** Quản lý tài khoản đăng nhập (hiệu trưởng). */
 @RestController
 @RequestMapping("/api/v1/accounts")
 @Tag(name = "Tài khoản")

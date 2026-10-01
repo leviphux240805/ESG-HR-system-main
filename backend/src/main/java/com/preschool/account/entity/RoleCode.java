@@ -1,29 +1,11 @@
 package com.preschool.account.entity;
 
-/** 8 vai trò theo docs/thiet-ke.md, mục "Vai trò và phân quyền". */
+/**
+ * 7 vai trò theo docs/thiet-ke.md, mục "Vai trò và phân quyền". Vai trò nào cũng gán theo từng trường; hiệu trưởng là
+ * vai trò cao nhất, phó hiệu trưởng giới hạn thêm theo {@link FunctionGroup}.
+ */
 public enum RoleCode {
 
-	OWNER(Scope.CHAIN),
-	CHAIN_ADMIN(Scope.CHAIN),
-	ACCOUNTANT(Scope.CHAIN_OR_SCHOOL),
-	PRINCIPAL(Scope.SCHOOL),
-	TEACHER(Scope.SCHOOL),
-	NURSE(Scope.SCHOOL),
-	KITCHEN(Scope.SCHOOL),
-	STAFF(Scope.SCHOOL);
-
-	public enum Scope {
-		CHAIN, CHAIN_OR_SCHOOL, SCHOOL
-	}
-
-	private final Scope scope;
-
-	RoleCode(Scope scope) {
-		this.scope = scope;
-	}
-
-	public Scope scope() {
-		return scope;
-	}
+	PRINCIPAL, VICE_PRINCIPAL, ACCOUNTANT, TEACHER, NURSE, KITCHEN, STAFF
 
 }

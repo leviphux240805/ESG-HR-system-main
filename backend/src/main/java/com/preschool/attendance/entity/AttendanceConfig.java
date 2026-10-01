@@ -9,7 +9,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.preschool.common.jpa.BaseEntity;
+import com.preschool.common.jpa.OrganizationEntity;
+import com.preschool.common.jpa.OrganizationFilter;
 import com.preschool.common.jpa.SchoolFilter;
 
 import jakarta.persistence.Column;
@@ -24,15 +25,16 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 
 /**
- * Cấu hình chấm công của cơ sở ({@code schoolId} rỗng = mặc định toàn chuỗi), có hiệu lực từ {@code effectiveFrom}.
+ * Cấu hình chấm công của cơ sở ({@code schoolId} rỗng = mặc định của tổ chức), có hiệu lực từ {@code effectiveFrom}.
  * Chỉ thêm bản mới, không sửa đè (quy tắc 5). Cột giờ ghi thẳng dạng LocalTime ({@code LocalTimeJdbcType}), không qua
  * múi giờ JDBC UTC của Hibernate vốn làm lệch giờ trong ngày.
  */
 @Entity
 @Table(name = "attendance_configs")
+@Filter(name = OrganizationFilter.NAME)
 @Filter(name = SchoolFilter.NAME)
 @Immutable
-public class AttendanceConfig extends BaseEntity {
+public class AttendanceConfig extends OrganizationEntity {
 
 	@Column(name = "school_id")
 	private UUID schoolId;

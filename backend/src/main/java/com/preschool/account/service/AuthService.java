@@ -148,7 +148,7 @@ public class AuthService {
 
 	private static ApiException accountDisabled() {
 		return new ApiException(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED",
-				"Tài khoản đã bị khóa. Vui lòng liên hệ văn phòng điều hành.");
+				"Tài khoản đã bị khóa. Vui lòng liên hệ hiệu trưởng.");
 	}
 
 	private static ApiException refreshInvalid() {

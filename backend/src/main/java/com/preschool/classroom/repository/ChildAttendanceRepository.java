@@ -16,6 +16,10 @@ public interface ChildAttendanceRepository extends JpaRepository<ChildAttendance
 
 	List<ChildAttendance> findBySchoolIdAndAttendDate(UUID schoolId, LocalDate attendDate);
 
+	List<ChildAttendance> findByClassIdInAndAttendDate(Collection<UUID> classIds, LocalDate attendDate);
+
+	boolean existsByClassId(UUID classId);
+
 	Optional<ChildAttendance> findByChildIdAndAttendDate(UUID childId, LocalDate attendDate);
 
 	List<ChildAttendance> findByChildIdInAndAttendDateBetween(Collection<UUID> childIds, LocalDate from, LocalDate to);

@@ -132,7 +132,6 @@ export interface ChildDetail extends ChildFields {
   schoolName: string;
   enrolledOn: string;
   attendance: { present: number; excused: number; absent: number; recent: { date: string; mark: ChildMark }[] };
-  latestMeasurement?: Measurement & { status: string[] };
   balance: number;
 }
 
@@ -184,109 +183,4 @@ export interface TaskFields {
   dueDate: string;
   assigneeIds: string[];
   checklist?: string[];
-}
-
-// ---- Học phí ----
-
-export type InvoiceStatus = "PAID" | "PARTIAL" | "UNPAID";
-
-export interface InvoiceItem {
-  id: string;
-  code: string;
-  childId: string;
-  childName: string;
-  className: string;
-  month: string;
-  total: number;
-  paid: number;
-  balance: number;
-  status: InvoiceStatus;
-  dueDate: string;
-  overdue: boolean;
-}
-
-export interface InvoiceDetail extends InvoiceItem {
-  guardianName: string;
-  guardianPhone: string;
-  lines: { name: string; amount: number }[];
-  payments: { id: string; date: string; amount: number; method: "CASH" | "TRANSFER" }[];
-}
-
-export interface FeeSummary {
-  month: string;
-  total: number;
-  collected: number;
-  outstanding: number;
-  counts: Record<InvoiceStatus, number>;
-}
-
-export interface DebtItem {
-  childId: string;
-  childName: string;
-  className: string;
-  guardianName: string;
-  guardianPhone: string;
-  months: string[];
-  balance: number;
-}
-
-// ---- Thực đơn, cân đo ----
-
-export interface DayMenu {
-  date: string;
-  breakfast: string;
-  lunch: string[];
-  snack: string;
-}
-
-export interface WeekMenu {
-  id: string;
-  weekStart: string;
-  days: DayMenu[];
-}
-
-export interface Measurement {
-  id: string;
-  childId: string;
-  date: string;
-  heightCm: number;
-  weightKg: number;
-}
-
-export interface GrowthRow {
-  childId: string;
-  fullName: string;
-  gender: Gender;
-  ageMonths: number;
-  latest?: Measurement;
-  status: string[];
-}
-
-/** Đường tham chiếu WHO (xấp xỉ) theo tháng tuổi: -2SD, trung vị, +2SD */
-export interface ReferencePoint {
-  ageMonths: number;
-  low: number;
-  median: number;
-  high: number;
-}
-
-export interface GrowthChart {
-  child: { id: string; fullName: string; gender: Gender; dob: string; className: string };
-  measurements: (Measurement & { ageMonths: number })[];
-  weightRef: ReferencePoint[];
-  heightRef: ReferencePoint[];
-  status: string[];
-}
-
-// ---- Báo cáo ----
-
-export interface Dashboard {
-  attendanceByDay: { date: string; rate: number }[];
-  attendanceByClass: { className: string; rate: number }[];
-  feesByMonth: { month: string; collected: number; outstanding: number }[];
-  enrollmentByAge: { ageGroup: AgeGroup; count: number }[];
-  nutrition: { label: string; count: number }[];
-  staffLeaveByMonth: { month: string; days: number }[];
-  tasks: { status: TaskStatus; count: number }[];
-  kpis: { children: number; staff: number; attendanceRate: number; collectionRate: number };
 }

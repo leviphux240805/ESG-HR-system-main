@@ -61,9 +61,9 @@ class AttendanceApiTests extends ApiTestSupport {
 		// Cấu hình giống bản cũ: vào 07:30, nghỉ trưa 11:30–13:00, T7 nửa buổi, ân hạn 15 phút, muộn nhẹ 3 lần
 		for (School school : List.of(schoolA, schoolB)) {
 			jdbc.update("""
-					INSERT INTO attendance_configs (school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
+					INSERT INTO attendance_configs (organization_id, school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
 					  late_grace_minutes, max_late_count_allowed, working_weekdays, half_day_weekdays, annual_leave_days)
-					VALUES (?, '2020-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5,6}', '{6}', 12)""",
+					SELECT organization_id, id, '2020-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5,6}', '{6}', 12 FROM schools WHERE id = ?""",
 					school.getId());
 		}
 		for (String code : List.of("101", "102", "103", "104", "105", "106", "107")) {

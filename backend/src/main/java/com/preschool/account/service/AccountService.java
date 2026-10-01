@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.preschool.account.entity.RoleAssignment;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.account.repository.UserRepository;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Tạo và cấu hình tài khoản đăng nhập (do văn phòng điều hành/chủ chuỗi thực hiện). */
+/** Tạo và cấu hình tài khoản đăng nhập (do hiệu trưởng thực hiện). */
 @Service
 public class AccountService {
 
@@ -33,15 +34,12 @@ public class AccountService {
 		this.passwordResetService = passwordResetService;
 	}
 
-	public record Grant(RoleCode role, UUID schoolId) {
-	}
-
 	/**
 	 * Tạo tài khoản với mật khẩu ngẫu nhiên không ai biết, gắn hồ sơ nhân viên (nếu có), gán vai trò và gửi email
 	 * mời tự đặt mật khẩu.
 	 */
 	@Transactional(propagation = Propagation.MANDATORY)
-	public User create(String email, String phone, String fullName, UUID staffId, List<Grant> grants) {
+	public User create(String email, String phone, String fullName, UUID staffId, List<RoleAssignment> grants) {
 		if (email == null || email.isBlank()) {
 			throw ApiException.badRequest("ACCOUNT_EMAIL_REQUIRED", "Cần email để tạo tài khoản đăng nhập.");
 		}
@@ -60,33 +58,38 @@ public class AccountService {
 
 		User user = new User(email, phone, fullName, passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
 		user.linkStaff(staffId);
-		grants.forEach(g -> user.addRole(g.role(), g.schoolId()));
+		grants.forEach(user::addRole);
 		users.save(user);
 		passwordResetService.sendInvite(user);
 		return user;
 	}
 
-	/** Phạm vi vai trò đúng thiết kế và cơ sở nằm trong phạm vi của người gán. */
-	public void validateGrants(List<Grant> grants) {
+	/**
+	 * Vai trò gán được: mọi vai trò trừ hiệu trưởng (bên vận hành gán), ở trường người gán làm hiệu trưởng; phó hiệu
+	 * trưởng cần ít nhất một nhóm chức năng.
+	 */
+	public void validateGrants(List<RoleAssignment> grants) {
 		if (grants.isEmpty()) {
 			throw ApiException.badRequest("ROLE_REQUIRED", "Cần gán ít nhất một vai trò.");
 		}
 		SchoolScope scope = SchoolScope.require();
-		for (Grant grant : grants) {
-			boolean ok = switch (grant.role().scope()) {
-				case CHAIN -> grant.schoolId() == null;
-				case SCHOOL -> grant.schoolId() != null;
-				case CHAIN_OR_SCHOOL -> true;
-			};
-			if (!ok) {
-				throw ApiException.badRequest("ROLE_SCOPE_INVALID", grant.role().scope() == RoleCode.Scope.CHAIN
-						? "Vai trò này chỉ gán cho toàn chuỗi."
-						: "Vai trò này phải gắn với một cơ sở.");
+		for (RoleAssignment grant : grants) {
+			if (grant.role() == RoleCode.PRINCIPAL) {
+				throw ApiException.forbidden("PRINCIPAL_ROLE_FORBIDDEN",
+						"Vai trò hiệu trưởng do bên vận hành gán, hoặc tự có khi tạo trường mới.");
 			}
-			if (grant.schoolId() != null && !scope.access().canAccess(grant.schoolId())) {
-				throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn không có quyền gán vai trò ở cơ sở này.");
+			if (!isPrincipalAt(scope, grant.schoolId())) {
+				throw ApiException.forbidden("SCHOOL_FORBIDDEN", "Bạn chỉ gán được vai trò ở trường mình làm hiệu trưởng.");
+			}
+			if (grant.role() == RoleCode.VICE_PRINCIPAL && grant.groups().isEmpty()) {
+				throw ApiException.badRequest("FUNCTION_GROUP_REQUIRED", "Phó hiệu trưởng cần ít nhất một nhóm chức năng.");
 			}
 		}
+	}
+
+	static boolean isPrincipalAt(SchoolScope scope, UUID schoolId) {
+		return schoolId != null && scope.access().canAccess(schoolId)
+				&& scope.access().hasRole(RoleCode.PRINCIPAL, schoolId);
 	}
 
 }

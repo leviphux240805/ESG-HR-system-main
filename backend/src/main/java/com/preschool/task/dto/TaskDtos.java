@@ -40,7 +40,7 @@ public final class TaskDtos {
 
 	/** Bộ lọc của danh sách việc (tham số query). */
 	public record TaskQuery(
-			@Schema(description = "Lọc theo cơ sở; bỏ trống = mọi cơ sở trong phạm vi, gồm cả việc toàn chuỗi") UUID schoolId,
+			@Schema(description = "Lọc theo cơ sở; bỏ trống = mọi cơ sở trong phạm vi, gồm cả việc cả tổ chức") UUID schoolId,
 			Status status,
 			Priority priority,
 			@Schema(description = "Chỉ việc giao cho nhân viên này") UUID assigneeStaffId,
@@ -52,7 +52,7 @@ public final class TaskDtos {
 
 	public record TaskItem(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
-			@Schema(description = "Rỗng = việc toàn chuỗi") UUID schoolId,
+			@Schema(description = "Rỗng = việc cả tổ chức") UUID schoolId,
 			String schoolName,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String title,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) Priority priority,
@@ -110,7 +110,7 @@ public final class TaskDtos {
 	}
 
 	public record CreateTaskRequest(
-			@Schema(description = "Bỏ trống = việc toàn chuỗi (văn phòng điều hành)") UUID schoolId,
+			@Schema(description = "Bỏ trống = việc cả tổ chức (hiệu trưởng)") UUID schoolId,
 			@NotBlank @Size(max = 300) String title,
 			@Size(max = 5000) String description,
 			@NotNull Priority priority,

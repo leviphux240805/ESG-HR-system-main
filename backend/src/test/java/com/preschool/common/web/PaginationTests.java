@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.TestData;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.school.entity.Holiday;
@@ -34,7 +35,7 @@ class PaginationTests extends ApiTestSupport {
 
 	@Test
 	void pageSizeIsClampedAndResponseHasStandardShape() throws Exception {
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(data.school());
 
 		mvc.perform(get("/api/v1/test-paging/holidays?page=0&size=500").header(HttpHeaders.AUTHORIZATION, bearer(owner)))
 			.andExpect(status().isOk())
@@ -50,12 +51,12 @@ class PaginationTests extends ApiTestSupport {
 		School schoolA = data.school();
 		School schoolB = data.school();
 		for (int i = 0; i < 3; i++) {
-			holidays.save(new Holiday(schoolB.getId(), randomDate(), "Nghỉ B " + i, true));
+			holidays.save(TestData.inDefaultOrg(new Holiday(schoolB.getId(), randomDate(), "Nghỉ B " + i, true)));
 		}
-		holidays.save(new Holiday(schoolA.getId(), randomDate(), "Nghỉ A", true));
-		User owner = data.user(RoleCode.OWNER, null);
+		holidays.save(TestData.inDefaultOrg(new Holiday(schoolA.getId(), randomDate(), "Nghỉ A", true)));
+		User owner = data.principal(schoolA, schoolB);
 
-		// Chủ chuỗi chọn Cơ sở A: tổng số không tính 3 dòng của B (dòng dùng chung vẫn tính)
+		// Hiệu trưởng chọn trường A: tổng số không tính 3 dòng của B (dòng dùng chung của tổ chức vẫn tính)
 		String body = mvc
 			.perform(get("/api/v1/test-paging/holidays?size=1").header(HttpHeaders.AUTHORIZATION, bearer(owner))
 				.header("X-School-Id", schoolA.getId().toString()))
@@ -64,6 +65,7 @@ class PaginationTests extends ApiTestSupport {
 			.andReturn().getResponse().getContentAsString();
 		long scopedTotal = JsonPath.<Number>read(body, "$.totalElements").longValue();
 		long allForA = holidays.findAll().stream()
+			.filter(h -> h.getOrganizationId().equals(TestData.DEFAULT_ORG))
 			.filter(h -> h.getSchoolId() == null || h.getSchoolId().equals(schoolA.getId()))
 			.count();
 		assertThat(scopedTotal).isEqualTo(allForA);
@@ -71,7 +73,7 @@ class PaginationTests extends ApiTestSupport {
 
 	@Test
 	void meExposesStaffLink() throws Exception {
-		User owner = data.user(RoleCode.OWNER, null);
+		User owner = data.principal(data.school());
 
 		mvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, bearer(owner)))
 			.andExpect(status().isOk())

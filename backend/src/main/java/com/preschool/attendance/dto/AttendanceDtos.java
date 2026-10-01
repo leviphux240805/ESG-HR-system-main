@@ -73,7 +73,7 @@ public final class AttendanceDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID schoolId,
 			@Schema(description = "Rỗng = chưa khóa") LockInfo lock,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean canManage,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Mở khóa: văn phòng điều hành") boolean canUnlock,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Mở khóa: hiệu trưởng") boolean canUnlock,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<DayInfo> days,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<StaffRow> staff,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) int discrepancyCount) {

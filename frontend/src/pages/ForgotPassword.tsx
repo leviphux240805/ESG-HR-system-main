@@ -37,7 +37,7 @@ export default function ForgotPassword() {
             Nếu tài khoản tồn tại, email hướng dẫn đặt lại mật khẩu đã được gửi. Link có hiệu lực trong 30 phút.
           </p>
           <p className="text-sm text-muted-foreground">
-            Không nhận được email? Kiểm tra hộp thư rác hoặc liên hệ văn phòng điều hành.
+            Không nhận được email? Kiểm tra hộp thư rác hoặc liên hệ hiệu trưởng.
           </p>
         </div>
       ) : (

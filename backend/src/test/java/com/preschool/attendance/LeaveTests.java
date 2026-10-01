@@ -14,6 +14,7 @@ import java.util.Map;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.notification.repository.NotificationRepository;
@@ -60,14 +61,14 @@ class LeaveTests extends ApiTestSupport {
 		teacherStaff = data.staff(schoolA, Position.TEACHER);
 		teacher = data.userForStaff(RoleCode.TEACHER, schoolA, teacherStaff);
 		principalStaff = data.staff(schoolA, Position.MANAGER);
-		principalA = data.userForStaff(RoleCode.PRINCIPAL, schoolA, principalStaff);
+		principalA = data.link(data.vicePrincipal(schoolA, FunctionGroup.HR), principalStaff);
 		principalB = data.user(RoleCode.PRINCIPAL, schoolB);
-		admin = data.user(RoleCode.CHAIN_ADMIN, null);
+		admin = data.principal(schoolA, schoolB);
 		for (School school : List.of(schoolA, schoolB)) {
 			jdbc.update("""
-					INSERT INTO attendance_configs (school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
+					INSERT INTO attendance_configs (organization_id, school_id, effective_from, shift_start, shift_end, lunch_start, lunch_end,
 					  late_grace_minutes, max_late_count_allowed, working_weekdays, half_day_weekdays, annual_leave_days)
-					VALUES (?, '2020-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5,6}', '{6}', 12)""",
+					SELECT organization_id, id, '2020-01-01', '07:30', '17:00', '11:30', '13:00', 15, 3, '{1,2,3,4,5,6}', '{6}', 12 FROM schools WHERE id = ?""",
 					school.getId());
 		}
 	}
@@ -132,7 +133,7 @@ class LeaveTests extends ApiTestSupport {
 
 	@Test
 	void workingDaysSkipWeekendHolidayAndHalfDaySaturday() throws Exception {
-		jdbc.update("INSERT INTO holidays (school_id, holiday_date, name) VALUES (?, '2026-11-09', 'Lễ trường')",
+		jdbc.update("INSERT INTO holidays (organization_id, school_id, holiday_date, name) SELECT organization_id, id, '2026-11-09', 'Lễ trường' FROM schools WHERE id = ?",
 				schoolA.getId());
 		// T6 6/11 (1) + T7 7/11 (0,5) + CN 8/11 (0) + T2 9/11 lễ (0) = 1,5
 		String id = JsonPath.read(request(teacher, "K", "2026-11-06", "2026-11-09", false)
@@ -169,7 +170,7 @@ class LeaveTests extends ApiTestSupport {
 	}
 
 	@Test
-	void principalLeaveIsApprovedByChainAdminAndBulkApprovalReportsFailures() throws Exception {
+	void vicePrincipalLeaveIsApprovedByPrincipalAndBulkApprovalReportsFailures() throws Exception {
 		String own = create(principalA, "P", "2026-11-17", "2026-11-17", false);
 		as(principalA, post("/api/v1/leave-requests/" + own + "/approve"), schoolA.getId())
 			.andExpect(status().isForbidden());
