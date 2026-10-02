@@ -1,5 +1,5 @@
 import type { components } from "@/api/schema";
-import { newId } from "./router";
+import { MockError, newId } from "./router";
 
 type StoredFile = components["schemas"]["FileResponse"];
 
@@ -18,6 +18,6 @@ export function fileMeta(id: string): StoredFile | undefined {
 
 export function fileUrl(id: string): string {
   const stored = files.get(id);
-  if (!stored) throw new Error("Tệp không còn trong bản demo (đã tải lại trang).");
+  if (!stored) throw new MockError(404, "Tệp không còn trong bản demo (file chỉ giữ tới khi tải lại trang).");
   return stored.url;
 }

@@ -18,7 +18,7 @@ endpoint trong `frontend/openapi.json`).
 | 5 | Chấm công, nghỉ phép | `/cham-cong`, `/cham-cong/cau-hinh`, `/nghi-phep`, `/cua-toi/cham-cong` | Có | Có | — | Xong |
 | 6 | Công việc (đính kèm) | `/cong-viec` | Có | Có | — | Xong |
 | 7 | Hôm nay, Hộp duyệt | `/hom-nay`, `/hop-duyet` | Có | Có | — | Xong |
-| 8 | Học phí, thu chi | `/hoc-phi/phieu-thu`, `/hoc-phi/cong-no`, `/thu-chi`, `/hoc-phi/bieu-phi`, `/hoc-phi/khoan-thu`, tab Học phí ở `/tre/:id` | Gần đủ | Có | Mock: PDF phiếu thu (đang trả 501) | Chưa |
+| 8 | Học phí, thu chi | `/hoc-phi/phieu-thu`, `/hoc-phi/cong-no`, `/thu-chi`, `/hoc-phi/bieu-phi`, `/hoc-phi/khoan-thu`, tab Học phí ở `/tre/:id` | Có | Có | — | Xong |
 | 9 | Lương | (chưa có trang) | Không | Không (chỉ có bảng V8) | API tính lương, duyệt, phiếu lương; trang bảng lương + phiếu lương của tôi; mock; xuất Excel bảng lương ở Báo cáo đang rỗng | Chưa |
 | 10 | Thực đơn, sức khỏe | `/thuc-don`, `/thuc-don/mon-an`, `/suc-khoe/can-do`, `/suc-khoe/so-theo-doi`, tab Sức khỏe ở `/tre/:id` | Gần đủ | Có | Mock: file kết quả khám; API số suất ăn theo sĩ số (`/menus/{id}/portions`) | Chưa |
 | 11 | Báo cáo | `/bao-cao` | Có | Có | Xuất bảng lương phụ thuộc module Lương | Chưa |
@@ -36,4 +36,7 @@ endpoint trong `frontend/openapi.json`).
   công theo ngày hiệu lực (ngày làm việc, nửa buổi, ân hạn, phép năm dùng cho bảng công và phép còn lại), ngày lễ thêm
   được (chung hoặc riêng trường, ngày lễ quốc gia cố định), import máy chấm công (khớp mã chấm công, tự điền X, sai
   lệch thiếu giờ vào/ra, mã không khớp), file đính kèm đơn nghỉ. E2E: thêm `gridCell` cuộn lưới ảo hóa tới ô cần tìm.
+- 2026-10-03: Học phí, thu chi xong. Mock: PDF phiếu thu (vẽ phiếu bằng canvas, nhúng JPEG vào một trang PDF A5 viết
+  tay, không thêm thư viện; chữ tiếng Việt đủ dấu), xem chứng từ thu chi qua kho file demo. Lỗi "tệp không còn" của
+  kho file demo trả 404 có thông điệp thay vì lỗi chung.
 

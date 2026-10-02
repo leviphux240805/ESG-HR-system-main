@@ -1,6 +1,8 @@
 import * as XLSX from "xlsx";
 import type { components } from "@/api/schema";
 import { db, type InvoiceRec } from "../db";
+import { fileUrl } from "../files";
+import { invoicePdf } from "../pdf";
 import { amountPaid, balanceOf, generate, isOpen, issue, pay, refreshStatus, toRow } from "../finance";
 import { type Ctx, FileBody, MockError, matches, newId, notFound, nowIso, on, paginate } from "../router";
 import { today } from "./common";
@@ -358,6 +360,14 @@ on("GET", "/invoices/{id}", (ctx) => {
   return detail(ctx, requireInvoice(ctx));
 });
 
+on("GET", "/invoices/{id}/pdf", (ctx) => {
+  requireView(ctx);
+  if (typeof document === "undefined") throw new MockError(501, "Cần trình duyệt để tạo PDF.");
+  const inv = requireInvoice(ctx);
+  const school = db().schools.find((s) => s.id === inv.schoolId)?.name ?? "";
+  return new FileBody(invoicePdf(detail(ctx, inv), school), "application/pdf");
+});
+
 on("POST", "/invoices/{id}/issue", (ctx) => {
   requireManage(ctx);
   const inv = requireInvoice(ctx);
@@ -574,5 +584,5 @@ on("GET", "/cash-entries/{id}/file-url", (ctx) => {
   requireView(ctx);
   const entry = db().cashEntries.find((e) => e.id === ctx.params.id && e.schoolId === ctx.schoolId);
   if (!entry?.fileId) notFound("chứng từ");
-  throw new MockError(501, "Bản demo chưa hỗ trợ xem file đính kèm.");
+  return { url: fileUrl(entry.fileId), expiresAt: new Date(Date.now() + 5 * 60_000).toISOString() };
 });
