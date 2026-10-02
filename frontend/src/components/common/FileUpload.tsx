@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FILE_ACCEPT, MAX_FILE_MB, openFile, type StoredFile, uploadFile, validateFile } from "@/api";
 import { errorMessage } from "@/api";
+import { useFileUploader } from "@/hooks/useFileUploader";
 import { cn } from "@/lib/utils";
 
 interface BaseProps {
@@ -142,39 +143,18 @@ export function MultiFileUpload({
   className,
 }: MultiFileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const { upload, progress, uploading } = useFileUploader({ schoolId, maxSizeMb });
 
   const handleSelect = async (list: FileList | null) => {
     const files = Array.from(list ?? []);
     if (inputRef.current) inputRef.current.value = "";
     if (files.length === 0) return;
-
-    const valid: File[] = [];
-    for (const file of files) {
-      const problem = validateFile(file, maxSizeMb);
-      if (problem) toast.error(problem);
-      else valid.push(file);
-    }
-    if (valid.length === 0) return;
-
-    const uploaded: StoredFile[] = [];
-    setProgress({ done: 0, total: valid.length });
-    for (const file of valid) {
-      try {
-        uploaded.push(await uploadFile(file, schoolId));
-      } catch (error) {
-        toast.error(`"${file.name}": ${errorMessage(error)}`);
-      }
-      setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
-    }
-    setProgress(null);
+    const uploaded = await upload(files);
     if (uploaded.length > 0) {
       onChange([...value, ...uploaded]);
       toast.success(`Đã tải lên ${uploaded.length} tệp.`);
     }
   };
-
-  const uploading = progress !== null;
 
   return (
     <div className={cn("space-y-2", className)}>

@@ -225,4 +225,35 @@ class ChildAttendanceApiTests extends ApiTestSupport {
 		mark(teacher, schoolA, today, both()).andExpect(status().isOk());
 	}
 
+	@Test
+	void monthlyRollBookShowsMarksTotalsAndPermissions() throws Exception {
+		mark(teacher, schoolA, today, both()).andExpect(status().isOk());
+		String month = today.toString().substring(0, 7);
+		String an = "$.rows[?(@.fullName=='An')]";
+		as(principalA, get("/api/v1/classes/" + classId + "/attendance/month?month=" + month), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.rows[*].fullName", org.hamcrest.Matchers.containsInAnyOrder("An", "Bình")))
+			.andExpect(jsonPath(an + ".cells['%s']".formatted(today)).value("PRESENT"))
+			.andExpect(jsonPath(an + ".present").value(1))
+			.andExpect(jsonPath("$.rows[?(@.fullName=='Bình')].notes['%s']".formatted(today)).value("Ốm"))
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].present".formatted(today)).value(1))
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].excused".formatted(today)).value(1))
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].editable".formatted(today)).value(true));
+		as(accountantA, get("/api/v1/classes/" + classId + "/attendance/month?month=" + month), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].editable".formatted(today)).value(false));
+		as(principalB, get("/api/v1/classes/" + classId + "/attendance/month?month=" + month), schoolB.getId())
+			.andExpect(status().isNotFound());
+		as(teacher, get("/api/v1/classes/" + otherClassId + "/attendance/month?month=" + month), schoolA.getId())
+			.andExpect(status().isNotFound());
+		as(principalA, get("/api/v1/classes/" + classId + "/attendance/month?month=2026-13"), schoolA.getId())
+			.andExpect(status().isBadRequest());
+		as(principalA, get("/api/v1/classes/" + classId + "/attendance/month/export?month=" + month), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+				.string("Content-Type", org.hamcrest.Matchers.startsWith("application/vnd.openxmlformats")));
+		as(principalB, get("/api/v1/classes/" + classId + "/attendance/month/export?month=" + month), schoolB.getId())
+			.andExpect(status().isNotFound());
+	}
+
 }

@@ -113,7 +113,7 @@ export function Header({ menuOpen, onMenuOpenChange: setMenuOpen }: { menuOpen: 
   const current = findNavItem(location.pathname);
 
   return (
-    <header className="sticky top-0 z-40 bg-card border-b border-border px-2 sm:px-4 md:px-6 py-2 md:py-3">
+    <header className="sticky top-0 z-40 print:hidden bg-card border-b border-border px-2 sm:px-4 md:px-6 py-2 md:py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           {/* Điện thoại: menu mở từ thanh điều hướng dưới; ở đây chỉ còn logo */}

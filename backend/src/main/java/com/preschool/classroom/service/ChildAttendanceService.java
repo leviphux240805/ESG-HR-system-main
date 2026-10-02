@@ -235,7 +235,7 @@ public class ChildAttendanceService {
 	}
 
 	/** Lý do không được điểm danh lớp này vào ngày này; rỗng = được. */
-	private ApiException editBlock(SchoolClass c, LocalDate date, boolean locked) {
+	ApiException editBlock(SchoolClass c, LocalDate date, boolean locked) {
 		boolean manager = access.canManage(c.getSchoolId());
 		boolean teacher = access.isTeacherAt(c.getSchoolId()) && access.myClassIds().contains(c.getId());
 		if (!manager && !teacher) {

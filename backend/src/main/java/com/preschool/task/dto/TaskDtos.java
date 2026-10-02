@@ -82,7 +82,7 @@ public final class TaskDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String userName,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String body,
-			FileRef file,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<FileRef> files,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant createdAt) {
 	}
 
@@ -138,7 +138,8 @@ public final class TaskDtos {
 	public record ChecklistToggleRequest(@NotNull Boolean done) {
 	}
 
-	public record CommentRequest(@NotBlank @Size(max = 2000) String body, UUID fileId) {
+	public record CommentRequest(@Size(max = 2000) String body,
+			@Schema(description = "Tối đa 10 file, mỗi file ≤ 10MB") @Size(max = 10) List<@NotNull UUID> fileIds) {
 	}
 
 	public record AttachmentRequest(@NotNull UUID fileId) {

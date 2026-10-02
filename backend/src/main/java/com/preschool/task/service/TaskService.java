@@ -51,9 +51,11 @@ import com.preschool.task.entity.TaskAssignee;
 import com.preschool.task.entity.TaskAttachment;
 import com.preschool.task.entity.TaskChecklistItem;
 import com.preschool.task.entity.TaskComment;
+import com.preschool.task.entity.TaskCommentFile;
 import com.preschool.task.repository.TaskAssigneeRepository;
 import com.preschool.task.repository.TaskAttachmentRepository;
 import com.preschool.task.repository.TaskChecklistItemRepository;
+import com.preschool.task.repository.TaskCommentFileRepository;
 import com.preschool.task.repository.TaskCommentRepository;
 import com.preschool.task.repository.TaskRepository;
 
@@ -84,6 +86,9 @@ public class TaskService {
 
 	static final String AUDIT_ENTITY = "task";
 
+	/** Giới hạn mỗi file đính kèm công việc (nhỏ hơn giới hạn chung của kho file). */
+	static final long MAX_FILE_BYTES = 10L * 1024 * 1024;
+
 	/** Trường được phép sắp xếp (tham số sort không chạm tới trường khác của entity). */
 	private static final Set<String> SORTABLE = Set.of("dueAt", "priority", "status", "title", "createdAt");
 
@@ -96,6 +101,8 @@ public class TaskService {
 	private final TaskChecklistItemRepository checklist;
 
 	private final TaskCommentRepository comments;
+
+	private final TaskCommentFileRepository commentFiles;
 
 	private final TaskAttachmentRepository attachments;
 
@@ -120,13 +127,15 @@ public class TaskService {
 	private final Clock clock;
 
 	public TaskService(TaskRepository tasks, TaskAssigneeRepository assignees, TaskChecklistItemRepository checklist,
-			TaskCommentRepository comments, TaskAttachmentRepository attachments, StaffRepository staffRepo,
+			TaskCommentRepository comments, TaskCommentFileRepository commentFiles, TaskAttachmentRepository attachments,
+			StaffRepository staffRepo,
 			UserRepository users, SchoolRepository schools, FileService fileService, NotificationService notifications,
 			AuditService audit, AuditLogRepository auditLogs, TaskAccess access, JsonMapper jsonMapper, Clock clock) {
 		this.tasks = tasks;
 		this.assignees = assignees;
 		this.checklist = checklist;
 		this.comments = comments;
+		this.commentFiles = commentFiles;
 		this.attachments = attachments;
 		this.staffRepo = staffRepo;
 		this.users = users;
@@ -177,11 +186,10 @@ public class TaskService {
 			.toList();
 		List<TaskComment> rows = comments.findByTaskIdOrderByCreatedAt(id);
 		Map<UUID, String> names = userNames(rows.stream().map(TaskComment::getUserId).toList());
-		Map<UUID, StoredFile> commentFiles = fileService
-			.findForModule(rows.stream().map(TaskComment::getFileId).filter(Objects::nonNull).distinct().toList());
+		Map<UUID, List<FileRef>> filesByComment = commentFileRefs(rows.stream().map(TaskComment::getId).toList());
 		List<CommentDto> commentDtos = rows.stream()
 			.map(c -> new CommentDto(c.getId(), names.getOrDefault(c.getUserId(), ""), c.getBody(),
-					ref(commentFiles.get(c.getFileId())), c.getCreatedAt()))
+					filesByComment.getOrDefault(c.getId(), List.of()), c.getCreatedAt()))
 			.toList();
 		List<TaskAttachment> attachmentRows = attachments.findByTaskId(id);
 		Map<UUID, StoredFile> files = fileService
@@ -213,7 +221,7 @@ public class TaskService {
 			checklist.save(new TaskChecklistItem(schoolId, task.getId(), content.trim(), order++));
 		}
 		for (UUID fileId : distinct(request.attachmentFileIds())) {
-			attachments.save(new TaskAttachment(schoolId, task.getId(), fileService.requireAttachable(fileId).getId()));
+			attachments.save(new TaskAttachment(schoolId, task.getId(), requireTaskFile(fileId).getId()));
 		}
 		audit.record(AUDIT_ENTITY, task.getId(), Action.CREATE, null, snapshot(task));
 		notifyAssigned(task, members);
@@ -313,22 +321,26 @@ public class TaskService {
 	}
 
 	@Transactional
-	public CommentDto comment(UUID id, String body, UUID fileId) {
+	public CommentDto comment(UUID id, String body, List<UUID> fileIds) {
 		Task task = findVisible(id);
-		UUID storedFile = fileId == null ? null : fileService.requireAttachable(fileId).getId();
-		TaskComment saved = comments
-			.saveAndFlush(new TaskComment(task.getSchoolId(), id, access.myUserId(), body.trim(), storedFile));
-		notifyOthers(task, "Bình luận mới trong việc: " + task.getTitle(), body.trim(), "task-comment:" + saved.getId());
-		Map<UUID, StoredFile> files = fileService.findForModule(storedFile == null ? List.of() : List.of(storedFile));
+		String text = body == null ? "" : body.trim();
+		List<StoredFile> files = distinct(fileIds).stream().map(this::requireTaskFile).toList();
+		if (text.isEmpty() && files.isEmpty()) {
+			throw ApiException.badRequest("COMMENT_EMPTY", "Nhập nội dung hoặc đính kèm file.");
+		}
+		TaskComment saved = comments.saveAndFlush(new TaskComment(task.getSchoolId(), id, access.myUserId(), text, null));
+		files.forEach(f -> commentFiles.save(new TaskCommentFile(task.getSchoolId(), saved.getId(), f.getId())));
+		notifyOthers(task, "Bình luận mới trong việc: " + task.getTitle(),
+				text.isEmpty() ? "Đã gửi %d file".formatted(files.size()) : text, "task-comment:" + saved.getId());
 		return new CommentDto(saved.getId(), userNames(List.of(saved.getUserId())).getOrDefault(saved.getUserId(), ""),
-				saved.getBody(), ref(files.get(storedFile)), saved.getCreatedAt());
+				saved.getBody(), files.stream().map(TaskService::ref).toList(), saved.getCreatedAt());
 	}
 
 	@Transactional
 	public AttachmentDto attach(UUID id, UUID fileId) {
 		Task task = findVisible(id);
 		requireOpen(task);
-		StoredFile file = fileService.requireAttachable(fileId);
+		StoredFile file = requireTaskFile(fileId);
 		if (attachments.findByTaskId(id).stream().anyMatch(a -> a.getFileId().equals(file.getId()))) {
 			throw ApiException.conflict("TASK_FILE_DUPLICATE", "Tệp này đã được đính kèm.");
 		}
@@ -353,7 +365,10 @@ public class TaskService {
 	public DownloadUrlResponse fileUrl(UUID id, UUID fileId, boolean inline) {
 		findVisible(id);
 		boolean belongs = attachments.findByTaskId(id).stream().anyMatch(a -> a.getFileId().equals(fileId))
-				|| comments.findByTaskIdOrderByCreatedAt(id).stream().anyMatch(c -> fileId.equals(c.getFileId()));
+				|| commentFiles
+					.findByCommentIdIn(comments.findByTaskIdOrderByCreatedAt(id).stream().map(TaskComment::getId).toList())
+					.stream()
+					.anyMatch(f -> f.getFileId().equals(fileId));
 		if (!belongs) {
 			throw ApiException.notFound("Không tìm thấy tệp của việc này.");
 		}
@@ -645,6 +660,27 @@ public class TaskService {
 			map.put("dueAt", task.getDueAt().toString());
 		}
 		return map;
+	}
+
+	/** File đính kèm công việc: đã upload xong và không quá 10MB. */
+	private StoredFile requireTaskFile(UUID fileId) {
+		StoredFile file = fileService.requireAttachable(fileId);
+		if (file.getSizeBytes() > MAX_FILE_BYTES) {
+			throw ApiException.badRequest("TASK_FILE_TOO_LARGE", "Mỗi file đính kèm công việc tối đa 10MB.");
+		}
+		return file;
+	}
+
+	private Map<UUID, List<FileRef>> commentFileRefs(List<UUID> commentIds) {
+		if (commentIds.isEmpty()) {
+			return Map.of();
+		}
+		List<TaskCommentFile> links = commentFiles.findByCommentIdIn(commentIds);
+		Map<UUID, StoredFile> files = fileService.findForModule(links.stream().map(TaskCommentFile::getFileId).distinct().toList());
+		return links.stream()
+			.filter(l -> files.containsKey(l.getFileId()))
+			.collect(java.util.stream.Collectors.groupingBy(TaskCommentFile::getCommentId,
+					java.util.stream.Collectors.mapping(l -> ref(files.get(l.getFileId())), java.util.stream.Collectors.toList())));
 	}
 
 	private static FileRef ref(StoredFile file) {

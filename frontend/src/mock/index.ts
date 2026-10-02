@@ -20,3 +20,4 @@ configureDb(() => generateDb(new Date()), () => iso(new Date()));
 
 export { getSessionRole, mockFetch, setSessionRole } from "./router";
 export { resetDb } from "./db";
+export { fileUrl, storeFile } from "./files";

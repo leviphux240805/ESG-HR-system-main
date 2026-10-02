@@ -2,6 +2,7 @@ package com.preschool.staff.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.preschool.common.jobs.SchedulingConfig;
 import com.preschool.account.entity.UserRole;
 import com.preschool.account.repository.UserRepository;
 import com.preschool.account.entity.RoleAssignment;
@@ -58,6 +60,9 @@ import org.springframework.transaction.annotation.Transactional;
 /** Hồ sơ nhân viên: danh sách, tóm tắt, xem, tạo (kèm tài khoản), sửa. Mọi thay đổi ghi audit_logs. */
 @Service
 public class StaffService {
+
+	/** Ngày nghiệp vụ tính theo giờ Việt Nam (đồng hồ hệ thống là UTC). */
+	private static final ZoneId VN = ZoneId.of(SchedulingConfig.ZONE);
 
 	/** Số ngày trước khi hết hạn thì cảnh báo. */
 	public static final int EXPIRY_WARNING_DAYS = 30;
@@ -149,7 +154,7 @@ public class StaffService {
 		requireSchoolInScope(schoolId);
 		Map<Position, Long> byPosition = new EnumMap<>(Position.class);
 		staffRepo.countActiveByPosition(schoolId).forEach(p -> byPosition.put(p.getPosition(), p.getTotal()));
-		LocalDate today = LocalDate.now(clock);
+		LocalDate today = LocalDate.now(clock.withZone(VN));
 		long expiring = expiryQuery.count(scopedSchools(schoolId), today, today.plusDays(EXPIRY_WARNING_DAYS), null);
 		long total = byPosition.values().stream().mapToLong(Long::longValue).sum();
 		return new StaffSummary(total, byPosition, expiring);
@@ -164,7 +169,7 @@ public class StaffService {
 		if (within < 1 || within > 365) {
 			throw ApiException.badRequest("WITHIN_INVALID", "Khoảng thời gian phải từ 1 đến 365 ngày.");
 		}
-		LocalDate today = LocalDate.now(clock);
+		LocalDate today = LocalDate.now(clock.withZone(VN));
 		Set<UUID> schoolIds = scopedSchools(schoolId);
 		long total = expiryQuery.count(schoolIds, today, today.plusDays(within), kind);
 		Map<UUID, String> names = schoolNames();
@@ -355,7 +360,7 @@ public class StaffService {
 				predicates.add(cb.or(any.toArray(Predicate[]::new)));
 			}
 			if (filter.contractExpiring()) {
-				LocalDate today = LocalDate.now(clock);
+				LocalDate today = LocalDate.now(clock.withZone(VN));
 				Subquery<UUID> sub = query.subquery(UUID.class);
 				var c = sub.from(StaffContract.class);
 				sub.select(c.get("staffId"))

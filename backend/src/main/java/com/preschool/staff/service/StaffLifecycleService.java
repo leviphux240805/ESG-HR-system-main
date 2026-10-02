@@ -3,6 +3,7 @@ package com.preschool.staff.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.preschool.common.jobs.SchedulingConfig;
 import com.preschool.account.entity.User;
 import com.preschool.account.repository.RefreshTokenRepository;
 import com.preschool.account.repository.UserRepository;
@@ -61,6 +63,9 @@ import tools.jackson.databind.json.JsonMapper;
  */
 @Service
 public class StaffLifecycleService {
+
+	/** Ngày nghiệp vụ tính theo giờ Việt Nam (đồng hồ hệ thống là UTC). */
+	private static final ZoneId VN = ZoneId.of(SchedulingConfig.ZONE);
 
 	private static final Logger log = LoggerFactory.getLogger(StaffLifecycleService.class);
 
@@ -219,7 +224,7 @@ public class StaffLifecycleService {
 				request.effectiveDate(), decisionFileId, blankToNull(request.note())));
 
 		UUID fromSchool = staff.getSchoolId();
-		boolean immediate = !request.effectiveDate().isAfter(LocalDate.now(clock));
+		boolean immediate = !request.effectiveDate().isAfter(LocalDate.now(clock.withZone(VN)));
 		if (immediate) {
 			staff.setSchoolId(request.schoolId());
 		}
@@ -280,7 +285,7 @@ public class StaffLifecycleService {
 		Staff staff = staffService.find(staffId);
 		access.requireView(staff);
 		boolean salaryVisible = access.canViewSalary(staff);
-		LocalDate today = LocalDate.now(clock);
+		LocalDate today = LocalDate.now(clock.withZone(VN));
 
 		Map<UUID, String> schoolNames = schools.findAll().stream()
 			.collect(Collectors.toMap(School::getId, School::getName));
@@ -323,7 +328,7 @@ public class StaffLifecycleService {
 	}
 
 	private List<SalaryConfigDto> toSalaryDtos(List<StaffSalaryConfig> configs) {
-		LocalDate today = LocalDate.now(clock);
+		LocalDate today = LocalDate.now(clock.withZone(VN));
 		UUID currentId = configs.stream()
 			.filter(c -> !c.getEffectiveFrom().isAfter(today))
 			.max((a, b) -> a.getEffectiveFrom().compareTo(b.getEffectiveFrom()))

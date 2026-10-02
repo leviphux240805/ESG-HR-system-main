@@ -958,6 +958,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/classes/{id}/attendance/month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sổ điểm danh tháng: trẻ × ngày, tổng theo trẻ và theo ngày */
+        get: operations["rollBook"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/attendance/month/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xuất Excel sổ điểm danh tháng */
+        get: operations["exportRollBook"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/classes/{id}/attendance/unlock": {
         parameters: {
             query?: never;
@@ -3512,15 +3546,15 @@ export interface components {
             body: string;
             /** Format: date-time */
             createdAt: string;
-            file?: components["schemas"]["FileRef"];
+            files: components["schemas"]["FileRef"][];
             /** Format: uuid */
             id: string;
             userName: string;
         };
         CommentRequest: {
-            body: string;
-            /** Format: uuid */
-            fileId?: string;
+            body?: string;
+            /** @description Tối đa 10 file, mỗi file ≤ 10MB */
+            fileIds?: string[];
         };
         ConfigDto: {
             annualLeaveDays: number;
@@ -5014,6 +5048,72 @@ export interface components {
             role: "PRINCIPAL" | "VICE_PRINCIPAL" | "ACCOUNTANT" | "TEACHER" | "NURSE" | "KITCHEN" | "STAFF";
             /** Format: uuid */
             schoolId: string;
+        };
+        RollBook: {
+            /** Format: uuid */
+            classId: string;
+            className: string;
+            days: components["schemas"]["RollBookDay"][];
+            /**
+             * Format: date
+             * @description Ngày đầu tháng
+             */
+            month: string;
+            rows: components["schemas"]["RollBookRow"][];
+            /** Format: uuid */
+            schoolId: string;
+        };
+        RollBookDay: {
+            /** Format: int32 */
+            absent: number;
+            /** Format: date */
+            date: string;
+            /** @description Người xem sửa được ngày này */
+            editable: boolean;
+            /** Format: int32 */
+            excused: number;
+            /** @description Tên ngày lễ */
+            holiday?: string;
+            /** @description Đã chốt điểm danh */
+            locked: boolean;
+            /** Format: int32 */
+            present: number;
+            schoolDay: boolean;
+            /**
+             * Format: int32
+             * @description 1 = thứ Hai … 7 = Chủ nhật
+             */
+            weekday: number;
+        };
+        RollBookRow: {
+            /** Format: int32 */
+            absent: number;
+            /**
+             * Format: date
+             * @description Ngày đầu thuộc lớp trong tháng
+             */
+            activeFrom: string;
+            /**
+             * Format: date
+             * @description Ngày cuối thuộc lớp trong tháng
+             */
+            activeTo: string;
+            cells: {
+                [key: string]: "PRESENT" | "EXCUSED" | "ABSENT";
+            };
+            /** Format: uuid */
+            childId: string;
+            code: string;
+            /** Format: int32 */
+            excused: number;
+            fullName: string;
+            notes: {
+                [key: string]: string;
+            };
+            /** Format: int32 */
+            present: number;
+            /** @description Tỷ lệ chuyên cần %: có mặt / số ngày học đã qua khi trẻ thuộc lớp */
+            rate: number;
         };
         RollCall: {
             /** @description Người xem được điểm danh/sửa lúc này */
@@ -8352,6 +8452,80 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RollCall"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    rollBook: {
+        parameters: {
+            query: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RollBook"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    exportRollBook: {
+        parameters: {
+            query: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */

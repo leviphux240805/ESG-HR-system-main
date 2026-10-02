@@ -12,6 +12,9 @@ export type TaskPriority = TaskItem["priority"];
 export type CreateTaskRequest = S["CreateTaskRequest"];
 export type UpdateTaskRequest = S["UpdateTaskRequest"];
 
+/** Giới hạn mỗi file đính kèm công việc (backend kiểm tra lại). */
+export const TASK_FILE_MAX_MB = 10;
+
 /** Cột Kanban (việc đã hủy không hiện trên bảng). */
 export const TASK_COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "NEW", label: "Mới" },
@@ -75,8 +78,21 @@ export async function changeStatus(id: string, status: TaskStatus) {
   return unwrap(await api.PATCH("/api/v1/tasks/{id}/status", { params: { path: { id } }, body: { status } }));
 }
 
-export async function addComment(id: string, body: string) {
-  return unwrap(await api.POST("/api/v1/tasks/{id}/comments", { params: { path: { id } }, body: { body } }));
+export async function addComment(id: string, body: string, fileIds: string[] = []) {
+  return unwrap(await api.POST("/api/v1/tasks/{id}/comments", { params: { path: { id } }, body: { body, fileIds } }));
+}
+
+export async function attachTaskFile(id: string, fileId: string) {
+  return unwrap(await api.POST("/api/v1/tasks/{id}/attachments", { params: { path: { id } }, body: { fileId } }));
+}
+
+export async function detachTaskFile(id: string, attachmentId: string) {
+  return unwrap(await api.DELETE("/api/v1/tasks/{id}/attachments/{attachmentId}", { params: { path: { id, attachmentId } } }));
+}
+
+/** Link ký có hạn để xem (inline) hoặc tải file của việc. */
+export async function taskFileUrl(id: string, fileId: string, inline: boolean) {
+  return unwrap(await api.GET("/api/v1/tasks/{id}/files/{fileId}/download-url", { params: { path: { id, fileId }, query: { inline } } })).url;
 }
 
 export async function toggleChecklist(id: string, itemId: string, done: boolean) {

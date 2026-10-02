@@ -1,23 +1,18 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { memo, useCallback } from "react";
 import { AlertTriangle } from "lucide-react";
-import { useIsMobile } from "@/hooks/useMobile";
+import { type GridTotal, MonthGrid } from "@/components/common/MonthGrid";
 import { cn } from "@/lib/utils";
 import type { DayInfo, MonthSheet, SheetCell, StaffRow } from "@/api";
-import { codeTone, formatDays, WEEKDAY_SHORT } from "./codes";
+import { codeTone, formatDays } from "./codes";
 
-const NAME_WIDTH = 208;
-// Điện thoại: cột tên hẹp để thấy nhiều ngày hơn
-const NAME_WIDTH_MOBILE = 120;
-const DAY_WIDTH = 40;
-const TOTAL_WIDTH = 60;
-const ROW_HEIGHT = 40;
-const TOTALS = [
-  { key: "totalWork", label: "Công" },
-  { key: "paidLeave", label: "Phép" },
-  { key: "unpaidLeave", label: "K.lương" },
-  { key: "lateCount", label: "Muộn" },
-] as const;
+const TOTALS: GridTotal<StaffRow>[] = (
+  [
+    { key: "totalWork", label: "Công" },
+    { key: "paidLeave", label: "Phép" },
+    { key: "unpaidLeave", label: "K.lương" },
+    { key: "lateCount", label: "Muộn" },
+  ] as const
+).map((t) => ({ ...t, value: (row: StaffRow) => formatDays(Number(row.totals[t.key])) }));
 
 function dayBackground(day: DayInfo): string {
   if (day.holiday) return "bg-red-50";
@@ -62,135 +57,46 @@ const GridCell = memo(function GridCell({ staffId, staffName, date, cell, backgr
   );
 });
 
-const Row = memo(function Row({
-  row,
-  days,
-  backgrounds,
-  nameWidth,
-  onOpen,
-}: {
-  row: StaffRow;
-  days: DayInfo[];
-  backgrounds: string[];
-  nameWidth: number;
-  onOpen: (staffId: string, date: string) => void;
-}) {
-  return (
-    <>
-      <div
-        className="sticky left-0 z-10 flex flex-col justify-center border-r border-b bg-background px-2 min-w-0"
-        style={{ width: nameWidth }}
-      >
+/** Bảng công nhân viên × ngày. Ngày ngoài thời gian thuộc cơ sở (điều chuyển giữa tháng) gạch chéo. */
+export function AttendanceGrid({ sheet, onOpen }: { sheet: MonthSheet; onOpen: (staffId: string, date: string) => void }) {
+  const renderName = useCallback(
+    (row: StaffRow, compact: boolean) => (
+      <>
         <span className="truncate text-sm font-medium">{row.fullName}</span>
         <span className="truncate text-xs text-muted-foreground">
           {row.staffCode}
-          {row.machineCode && nameWidth === NAME_WIDTH ? ` · máy ${row.machineCode}` : ""}
+          {row.machineCode && !compact ? ` · máy ${row.machineCode}` : ""}
         </span>
-      </div>
-      {days.map((day, i) => (
-        <div key={day.date} style={{ width: DAY_WIDTH }}>
-          <GridCell
-            staffId={row.staffId}
-            staffName={row.fullName}
-            date={day.date}
-            cell={row.cells[day.date]}
-            background={backgrounds[i]}
-            inRange={day.date >= row.activeFrom && day.date <= row.activeTo}
-            onOpen={onOpen}
-          />
-        </div>
-      ))}
-      {TOTALS.map((t) => (
-        <div
-          key={t.key}
-          className="flex items-center justify-center border-r border-b text-sm tabular-nums"
-          style={{ width: TOTAL_WIDTH }}
-        >
-          {formatDays(Number(row.totals[t.key]))}
-        </div>
-      ))}
-    </>
+      </>
+    ),
+    [],
   );
-});
-
-/**
- * Lưới bảng công nhân viên × ngày. Hàng ảo hóa (chỉ vẽ hàng đang thấy), tiêu đề dính trên, cột tên dính trái; ô
- * `memo` nên sửa một ô không vẽ lại cả lưới. Ngày ngoài thời gian thuộc cơ sở (điều chuyển giữa tháng) gạch chéo.
- */
-export function AttendanceGrid({ sheet, onOpen }: { sheet: MonthSheet; onOpen: (staffId: string, date: string) => void }) {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: sheet.staff.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 8,
-  });
-  const nameWidth = useIsMobile() ? NAME_WIDTH_MOBILE : NAME_WIDTH;
-  const width = nameWidth + sheet.days.length * DAY_WIDTH + TOTALS.length * TOTAL_WIDTH;
-  const backgrounds = useMemo(() => sheet.days.map(dayBackground), [sheet.days]);
-  const open = useCallback((staffId: string, date: string) => onOpen(staffId, date), [onOpen]);
-
-  // Tháng hiện tại: cuộn để cột hôm nay nằm gần mép phải, thấy được các ngày đã qua
-  useEffect(() => {
-    const el = parentRef.current;
-    const index = sheet.days.findIndex((d) => d.date === new Date().toLocaleDateString("sv-SE"));
-    if (!el || index < 0) return;
-    const visibleDays = Math.floor((el.clientWidth - nameWidth) / DAY_WIDTH);
-    el.scrollLeft = Math.max(0, (index + 2 - visibleDays) * DAY_WIDTH);
-  }, [sheet.month, sheet.days, nameWidth]);
+  const renderCell = useCallback(
+    (row: StaffRow, day: DayInfo, background: string) => (
+      <GridCell
+        staffId={row.staffId}
+        staffName={row.fullName}
+        date={day.date}
+        cell={row.cells[day.date]}
+        background={background}
+        inRange={day.date >= row.activeFrom && day.date <= row.activeTo}
+        onOpen={onOpen}
+      />
+    ),
+    [onOpen],
+  );
 
   return (
-    <div
-      ref={parentRef}
-      className="relative overflow-auto rounded-md border h-[calc(100dvh-17rem)] min-h-[20rem]"
-      role="grid"
-      aria-label="Bảng công tháng"
-      aria-rowcount={sheet.staff.length + 1}
-    >
-      <div style={{ width, height: virtualizer.getTotalSize() + 48 }} className="relative">
-        <div className="sticky top-0 z-20 flex bg-background" style={{ width, height: 48 }} role="row">
-          <div
-            className="sticky left-0 z-30 flex items-end border-r border-b bg-background px-2 pb-1 text-xs font-medium text-muted-foreground"
-            style={{ width: nameWidth }}
-          >
-            Nhân viên
-          </div>
-          {sheet.days.map((day, i) => (
-            <div
-              key={day.date}
-              title={day.holiday ?? undefined}
-              className={cn(
-                "flex flex-col items-center justify-center border-r border-b text-xs",
-                backgrounds[i],
-                day.holiday && "text-red-600",
-              )}
-              style={{ width: DAY_WIDTH }}
-            >
-              <span className="font-semibold">{Number(day.date.slice(8))}</span>
-              <span className="text-[0.65rem] text-muted-foreground">{WEEKDAY_SHORT[day.weekday]}</span>
-            </div>
-          ))}
-          {TOTALS.map((t) => (
-            <div
-              key={t.key}
-              className="flex items-center justify-center border-r border-b text-xs font-medium text-muted-foreground"
-              style={{ width: TOTAL_WIDTH }}
-            >
-              {t.label}
-            </div>
-          ))}
-        </div>
-        {virtualizer.getVirtualItems().map((item) => (
-          <div
-            key={sheet.staff[item.index].staffId}
-            role="row"
-            className="absolute left-0 flex"
-            style={{ top: 48 + item.start, height: ROW_HEIGHT, width }}
-          >
-            <Row row={sheet.staff[item.index]} days={sheet.days} backgrounds={backgrounds} nameWidth={nameWidth} onOpen={open} />
-          </div>
-        ))}
-      </div>
-    </div>
+    <MonthGrid
+      label="Bảng công tháng"
+      nameHeader="Nhân viên"
+      rows={sheet.staff}
+      rowKey={(r) => r.staffId}
+      renderName={renderName}
+      days={sheet.days}
+      dayBackground={dayBackground}
+      renderCell={renderCell}
+      totals={TOTALS}
+    />
   );
 }

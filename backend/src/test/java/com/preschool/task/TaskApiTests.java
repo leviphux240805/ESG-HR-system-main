@@ -52,6 +52,9 @@ class TaskApiTests extends ApiTestSupport {
 
 	User principalB;
 
+	@org.springframework.beans.factory.annotation.Autowired
+	org.springframework.jdbc.core.JdbcTemplate jdbc;
+
 	User admin;
 
 	@BeforeEach
@@ -224,6 +227,41 @@ class TaskApiTests extends ApiTestSupport {
 			.andExpect(jsonPath("$.assignees[0].staffId").value(cookStaff.getId().toString()));
 		as(teacher, get("/api/v1/tasks/" + id), schoolA.getId()).andExpect(status().isNotFound());
 		as(cook, get("/api/v1/me/tasks")).andExpect(jsonPath("$[0].id").value(id));
+	}
+
+	@Test
+	void commentsAndTaskCarryMultipleFilesWithinLimits() throws Exception {
+		String id = JsonPath.read(create(principalA, schoolA, "Việc có file", teacherStaff).andReturn()
+			.getResponse().getContentAsString(), "$.id");
+		String photo = uploadPdf(teacher, "anh-lop.pdf");
+		String report = uploadPdf(teacher, "bao-cao.pdf");
+
+		comment(teacher, id, "{\"body\":\"  \"}").andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.code").value("COMMENT_EMPTY"));
+		comment(teacher, id, "{\"fileIds\":[\"%s\",\"%s\"]}".formatted(photo, report)).andExpect(status().isCreated())
+			.andExpect(jsonPath("$.files.length()").value(2))
+			.andExpect(jsonPath("$.files[0].sizeBytes").isNumber());
+		String attachment = uploadPdf(principalA, "ke-hoach.pdf");
+		as(principalA, post("/api/v1/tasks/" + id + "/attachments").contentType(MediaType.APPLICATION_JSON)
+			.content("{\"fileId\":\"%s\"}".formatted(attachment)), schoolA.getId()).andExpect(status().isCreated());
+
+		as(principalA, get("/api/v1/tasks/" + id), schoolA.getId()).andExpect(status().isOk())
+			.andExpect(jsonPath("$.comments[0].files[*].originalName", hasItem("bao-cao.pdf")))
+			.andExpect(jsonPath("$.attachments[0].file.originalName").value("ke-hoach.pdf"));
+		as(principalA, get("/api/v1/tasks/" + id + "/files/" + report + "/download-url"), schoolA.getId())
+			.andExpect(status().isOk());
+		as(principalB, get("/api/v1/tasks/" + id + "/files/" + report + "/download-url"), schoolB.getId())
+			.andExpect(status().isNotFound());
+
+		String big = uploadPdf(teacher, "qua-lon.pdf");
+		jdbc.update("UPDATE files SET size_bytes = ? WHERE id = ?::uuid", 11L * 1024 * 1024, big);
+		comment(teacher, id, "{\"body\":\"File lớn\",\"fileIds\":[\"%s\"]}".formatted(big))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("TASK_FILE_TOO_LARGE"));
+	}
+
+	private ResultActions comment(User user, String taskId, String body) throws Exception {
+		return as(user, post("/api/v1/tasks/" + taskId + "/comments").contentType(MediaType.APPLICATION_JSON).content(body),
+				schoolA.getId());
 	}
 
 }

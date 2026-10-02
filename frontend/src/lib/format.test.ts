@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatDateTime, formatMoney, formatMonth, formatTime } from "./format";
+import { formatBytes, formatDate, formatDateTime, formatMoney, formatMonth, formatTime } from "./format";
 
 // Intl dùng khoảng trắng không ngắt (U+00A0) trước ký hiệu ₫
 const NBSP = " ";
@@ -59,5 +59,13 @@ describe("formatMonth", () => {
     expect(formatMonth("2026-12-01")).toBe("Tháng 12/2026");
     expect(formatMonth("2026-09-30T20:30:00Z")).toBe("Tháng 10/2026");
     expect(formatMonth(null)).toBe("");
+  });
+});
+
+describe("formatBytes", () => {
+  it("B, KB, MB tiếng Việt", () => {
+    expect(formatBytes(900)).toBe("900 B");
+    expect(formatBytes(850 * 1024)).toBe("850 KB");
+    expect(formatBytes(2.45 * 1024 * 1024)).toBe("2,5 MB");
   });
 });

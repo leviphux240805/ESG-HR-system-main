@@ -1,6 +1,7 @@
 import type { components } from "@/api/schema";
 import { db, type TaskRec, type TaskStatus } from "../db";
 import { type Ctx, MockError, matches, newId, notFound, nowIso, on, paginate, requireBgh } from "../router";
+import { fileMeta, fileUrl } from "../files";
 import { notify, schoolStaff, staffName, today } from "./common";
 
 type S = components["schemas"];
@@ -41,14 +42,27 @@ function toItem(t: TaskRec, ctx: Ctx): S["TaskItem"] {
   };
 }
 
+/** Thông tin file trong kho demo; file mất sau khi tải lại trang thì bỏ qua. */
+const refs = (ids: string[] = []): S["FileRef"][] =>
+  ids.flatMap((id) => {
+    const f = fileMeta(id);
+    return f ? [{ id: f.id, originalName: f.originalName, mimeType: f.mimeType, sizeBytes: f.sizeBytes }] : [];
+  });
+
+function requireFiles(ids: string[] = []) {
+  if (ids.length > 10) throw new MockError(400, "Tối đa 10 file mỗi lần.");
+  for (const f of refs(ids)) if (f.sizeBytes > 10 * 1024 * 1024) throw new MockError(400, "Mỗi file đính kèm công việc tối đa 10MB.");
+  return ids;
+}
+
 function toDetail(t: TaskRec, ctx: Ctx): S["TaskDetail"] {
   return {
     task: toItem(t, ctx),
     description: t.description || undefined,
     assignee: t.assigneeIds.includes(ctx.user.staff.id),
     checklist: t.checklist,
-    comments: t.comments.map((c) => ({ id: c.id, userName: c.author, body: c.body, createdAt: c.at })),
-    attachments: [],
+    comments: t.comments.map((c) => ({ id: c.id, userName: c.author, body: c.body, createdAt: c.at, files: refs(c.files) })),
+    attachments: (t.attachments ?? []).flatMap((a) => refs([a.fileId]).map((file) => ({ id: a.id, file }))),
     history: [],
   };
 }
@@ -103,6 +117,7 @@ on("POST", "/tasks", (ctx) => {
     createdAt: nowIso(),
     checklist: (body.checklist ?? []).filter((c) => c.trim()).map((content) => ({ id: newId(), content: content.trim(), done: false })),
     comments: [],
+    attachments: requireFiles(body.attachmentFileIds).map((fileId) => ({ id: newId(), fileId })),
   };
   db().tasks.push(task);
   for (const id of task.assigneeIds) notify(id, "Bạn được giao việc mới", task.title, "/cong-viec");
@@ -137,11 +152,32 @@ on("PATCH", "/tasks/{id}/status", (ctx) => {
 
 on("POST", "/tasks/{id}/comments", (ctx) => {
   const task = requireTask(ctx);
-  const body = ctx.body?.body?.trim();
-  if (!body) throw new MockError(400, "Nhập nội dung bình luận.");
-  const comment = { id: newId(), author: ctx.user.staff.fullName, body, at: nowIso() };
+  const req = (ctx.body ?? {}) as S["CommentRequest"];
+  const body = req.body?.trim() ?? "";
+  const files = requireFiles(req.fileIds);
+  if (!body && !files.length) throw new MockError(400, "Nhập nội dung hoặc đính kèm file.");
+  const comment = { id: newId(), author: ctx.user.staff.fullName, body, at: nowIso(), files };
   task.comments.push(comment);
-  return { id: comment.id, userName: comment.author, body, createdAt: comment.at };
+  return { id: comment.id, userName: comment.author, body, createdAt: comment.at, files: refs(files) };
+});
+
+on("POST", "/tasks/{id}/attachments", (ctx) => {
+  const task = requireTask(ctx);
+  const [fileId] = requireFiles([ctx.body?.fileId]);
+  const attachment = { id: newId(), fileId };
+  (task.attachments ??= []).push(attachment);
+  return { id: attachment.id, file: refs([fileId])[0] };
+});
+
+on("DELETE", "/tasks/{id}/attachments/{attachmentId}", (ctx) => {
+  requireBgh(ctx);
+  const task = requireTask(ctx);
+  task.attachments = (task.attachments ?? []).filter((a) => a.id !== ctx.params.attachmentId);
+});
+
+on("GET", "/tasks/{id}/files/{fileId}/download-url", (ctx) => {
+  requireTask(ctx);
+  return { url: fileUrl(ctx.params.fileId), expiresAt: new Date(Date.now() + 5 * 60_000).toISOString() };
 });
 
 on("PUT", "/tasks/{id}/checklist/{itemId}", (ctx) => {

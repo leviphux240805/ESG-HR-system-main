@@ -3,8 +3,9 @@ import type { components } from "@/api/schema";
 import { POSITION_LABELS } from "@/features/staff/labels";
 import { db, type DemoDB, type StaffRec } from "../db";
 import { addDays } from "../dates";
-import { type Ctx, FileBody, MockError, matches, newId, notFound, on, paginate, requireBgh } from "../router";
-import { today } from "./common";
+import { fileMeta, fileUrl } from "../files";
+import { type Ctx, FileBody, MockError, matches, newId, notFound, nowIso, on, paginate, requireBgh } from "../router";
+import { notify, today } from "./common";
 
 type S = components["schemas"];
 
@@ -17,10 +18,10 @@ function toDetail(s: StaffRec, ctx: Ctx): S["StaffDetail"] {
     permissions: {
       canEdit: isPrincipal(ctx) || self,
       canTerminate: isPrincipal(ctx) && !self,
-      canTransfer: false,
-      // Hiệu trưởng xem lương là cấu hình, mặc định tắt
-      canViewSalary: false,
-      canManageSalary: false,
+      // Hiệu trưởng toàn quyền ở các trường được gán, kể cả lương; điều chuyển khi có từ 2 trường
+      canTransfer: isPrincipal(ctx) && !self && s.status === "ACTIVE" && ctx.user.schoolIds.length > 1,
+      canViewSalary: isPrincipal(ctx),
+      canManageSalary: isPrincipal(ctx),
       isSelf: self,
     },
   };
@@ -120,10 +121,73 @@ on("GET", "/staff/expiring-documents", (ctx) => {
   return paginate(expiringItems(ctx, Number(ctx.query.get("within") ?? 30)).filter((i) => !kind || i.kind === kind), ctx.query);
 });
 
+// ---- Đề xuất cập nhật hồ sơ (liên hệ, ngân hàng) ----
+
+const changeRequests = () => (db().changeRequests ??= []);
+
+/** Ngân hàng chỉ kế toán/hiệu trưởng duyệt; liên hệ do BGH duyệt. Không tự duyệt đề xuất của mình. */
+const canReview = (ctx: Ctx, r: S["ChangeRequestDto"]) =>
+  r.status === "PENDING" && r.staffId !== ctx.user.staff.id && ctx.schoolIds.includes(r.schoolId) && (r.kind === "BANK" ? isPrincipal(ctx) : ctx.user.isBgh);
+
+const BANK_FIELDS = ["bankName", "bankAccountNo", "bankAccountHolder"];
+
 on("GET", "/staff/change-requests", (ctx) => {
   requireBgh(ctx);
-  return paginate([], ctx.query);
+  const status = ctx.query.get("status");
+  const list = changeRequests()
+    .filter((r) => ctx.schoolIds.includes(r.schoolId) && (!status || r.status === status) && (r.kind === "CONTACT" || isPrincipal(ctx)))
+    .map((r) => ({ ...r, canReview: canReview(ctx, r) }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return paginate(list, ctx.query);
 });
+
+on("GET", "/me/change-requests", (ctx) => changeRequests().filter((r) => r.staffId === ctx.user.staff.id).map((r) => ({ ...r, canReview: false })));
+
+on("POST", "/me/change-requests", (ctx) => {
+  const staff = ctx.user.staff;
+  const changes = Object.entries((ctx.body?.changes ?? {}) as Record<string, string>).map(([field, to]) => ({
+    field,
+    from: String((staff as Record<string, unknown>)[field] ?? ""),
+    to,
+  }));
+  if (!changes.length) throw new MockError(400, "Chưa có thay đổi nào.");
+  const kind = changes.every((c) => BANK_FIELDS.includes(c.field)) ? "BANK" : "CONTACT";
+  if (changeRequests().some((r) => r.staffId === staff.id && r.kind === kind && r.status === "PENDING"))
+    throw new MockError(409, "Bạn đang có đề xuất cùng loại chờ duyệt.");
+  const request: S["ChangeRequestDto"] = {
+    id: newId(),
+    staffId: staff.id,
+    staffCode: staff.staffCode,
+    staffName: staff.fullName,
+    schoolId: staff.schoolId,
+    schoolName: staff.schoolName,
+    kind,
+    status: "PENDING",
+    changes,
+    createdAt: nowIso(),
+    canReview: false,
+  };
+  changeRequests().push(request);
+  return request;
+});
+
+function review(ctx: Ctx, approve: boolean) {
+  const r = changeRequests().find((x) => x.id === ctx.params.id && ctx.schoolIds.includes(x.schoolId));
+  if (!r) notFound("đề xuất");
+  if (!canReview(ctx, r)) throw new MockError(403, "Bạn không duyệt được đề xuất này.");
+  const note: string | undefined = ctx.body?.note?.trim();
+  if (!approve && !note) throw new MockError(400, "Vui lòng nhập lý do từ chối.");
+  if (approve) {
+    const staff = db().staff.find((x) => x.id === r.staffId);
+    if (staff) Object.assign(staff, Object.fromEntries(r.changes.map((c) => [c.field, c.to])));
+  }
+  Object.assign(r, { status: approve ? "APPROVED" : "REJECTED", reviewNote: note, reviewedAt: nowIso(), reviewerName: ctx.user.staff.fullName });
+  notify(r.staffId, approve ? "Đề xuất cập nhật hồ sơ đã được duyệt" : "Đề xuất cập nhật hồ sơ bị từ chối", note ?? "", "/cua-toi/ho-so");
+  return { ...r, canReview: false };
+}
+
+on("POST", "/staff/change-requests/{id}/approve", (ctx) => review(ctx, true));
+on("POST", "/staff/change-requests/{id}/reject", (ctx) => review(ctx, false));
 
 on("GET", "/staff/export", (ctx) => {
   const rows = filtered(ctx).map((s) => ({
@@ -185,27 +249,96 @@ on("POST", "/staff/{staffId}/terminate", (ctx) => {
   return toDetail(s, ctx);
 });
 
+const assignments = (s: StaffRec) =>
+  ((db().assignments ??= {})[s.id] ??= [{ id: `${s.id}-a`, schoolId: s.schoolId, schoolName: s.schoolName, fromDate: s.startDate, toDate: s.endDate, pending: false }]);
+const salaryConfigs = (staffId: string) => ((db().salaryConfigs ??= {})[staffId] ??= []);
+const documents = (staffId: string) => ((db().staffDocuments ??= {})[staffId] ??= []);
+
+const fileRef = (fileId: string): S["FileRef"] => {
+  const f = fileMeta(fileId);
+  if (!f) throw new MockError(400, "Tệp chưa tải lên xong.");
+  return { id: f.id, originalName: f.originalName, mimeType: f.mimeType, sizeBytes: f.sizeBytes };
+};
+
+function requireSalary(ctx: Ctx, staffId: string) {
+  const s = requireStaff(ctx, staffId);
+  if (!toDetail(s, ctx).permissions.canViewSalary) throw new MockError(403, "Bạn không có quyền xem lương.");
+  return s;
+}
+
 on("GET", "/staff/{staffId}/history", (ctx) => {
   const s = requireStaff(ctx, ctx.params.staffId);
-  return {
-    assignments: [{ id: `${s.id}-a`, schoolId: s.schoolId, schoolName: s.schoolName, fromDate: s.startDate, toDate: s.endDate, pending: false }],
-    events: [],
-    salaryConfigs: [],
-  };
+  return { assignments: assignments(s), events: [], salaryConfigs: toDetail(s, ctx).permissions.canViewSalary ? salaryConfigs(s.id) : [] };
 });
 
-on("GET", "/staff/{staffId}/salary-configs", () => []);
-on("GET", "/staff/{staffId}/documents", (ctx) => (requireStaff(ctx, ctx.params.staffId), []));
-on("GET", "/staff/{staffId}/files/{fileId}/download-url", () => {
-  throw new MockError(404, "Bản demo không lưu file thật.");
+on("GET", "/staff/{staffId}/salary-configs", (ctx) => salaryConfigs(requireSalary(ctx, ctx.params.staffId).id));
+
+on("POST", "/staff/{staffId}/salary-configs", (ctx) => {
+  const s = requireSalary(ctx, ctx.params.staffId);
+  const body = ctx.body as S["SalaryConfigRequest"];
+  if (!body?.effectiveFrom) throw new MockError(400, "Vui lòng chọn ngày hiệu lực.");
+  const list = salaryConfigs(s.id);
+  if (list.some((c) => c.effectiveFrom === body.effectiveFrom)) throw new MockError(409, "Đã có cấu hình lương hiệu lực từ ngày này.");
+  const config: S["SalaryConfigDto"] = { ...body, allowances: body.allowances ?? {}, id: newId(), createdAt: nowIso(), createdByName: ctx.user.staff.fullName, current: false };
+  list.push(config);
+  const current = list.filter((c) => c.effectiveFrom <= today()).sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
+  list.forEach((c) => (c.current = c === current));
+  return config;
 });
 
-on("GET", "/document-types", () => [
+on("PUT", "/staff/{staffId}/bank", (ctx) => {
+  const s = requireSalary(ctx, ctx.params.staffId);
+  Object.assign(s, ctx.body as S["BankRequest"]);
+  return toDetail(s, ctx);
+});
+
+on("POST", "/staff/{staffId}/transfer", (ctx) => {
+  const s = requireStaff(ctx, ctx.params.staffId);
+  if (!toDetail(s, ctx).permissions.canTransfer) throw new MockError(403, "Bạn không có quyền điều chuyển nhân viên này.");
+  const body = ctx.body as S["TransferRequest"];
+  const target = db().schools.find((x) => x.id === body.schoolId && ctx.user.schoolIds.includes(x.id));
+  if (!target || target.id === s.schoolId) throw new MockError(400, "Chọn trường mới khác trường hiện tại.");
+  const list = assignments(s);
+  const pending = body.effectiveDate > today();
+  const current = list.find((a) => !a.toDate);
+  if (current && !pending) current.toDate = body.effectiveDate;
+  list.push({ id: newId(), schoolId: target.id, schoolName: target.name, fromDate: body.effectiveDate, note: body.note, pending, decisionFile: body.decisionFileId ? fileRef(body.decisionFileId) : undefined });
+  if (!pending) Object.assign(s, { schoolId: target.id, schoolName: target.name });
+  return toDetail(s, ctx);
+});
+
+on("GET", "/staff/{staffId}/documents", (ctx) => documents(requireStaff(ctx, ctx.params.staffId).id));
+
+on("POST", "/staff/{staffId}/documents", (ctx) => {
+  const s = requireEdit(ctx, ctx.params.staffId);
+  const body = ctx.body as S["StaffDocumentRequest"];
+  const type = DOCUMENT_TYPES.find((t) => t.id === body.documentTypeId);
+  if (!type) throw new MockError(400, "Loại giấy tờ không hợp lệ.");
+  const doc: S["StaffDocumentDto"] = { id: newId(), type, file: fileRef(body.fileId), issuedDate: body.issuedDate, expiryDate: body.expiryDate, note: body.note, uploadedAt: nowIso(), current: true };
+  const list = documents(s.id);
+  list.filter((d) => d.type.id === type.id).forEach((d) => (d.current = false));
+  list.unshift(doc);
+  return doc;
+});
+
+on("DELETE", "/staff/{staffId}/documents/{documentId}", (ctx) => {
+  const s = requireEdit(ctx, ctx.params.staffId);
+  (db().staffDocuments ??= {})[s.id] = documents(s.id).filter((d) => d.id !== ctx.params.documentId);
+});
+
+on("GET", "/staff/{staffId}/files/{fileId}/download-url", (ctx) => {
+  requireStaff(ctx, ctx.params.staffId);
+  return { url: fileUrl(ctx.params.fileId), expiresAt: new Date(Date.now() + 5 * 60_000).toISOString() };
+});
+
+const DOCUMENT_TYPES: S["DocumentTypeDto"][] = [
   { id: "dt-cccd", code: "CCCD", name: "Căn cước công dân", category: "IDENTITY", hasExpiry: true },
   { id: "dt-sk", code: "GKSK", name: "Giấy khám sức khỏe", category: "HEALTH", hasExpiry: true },
   { id: "dt-bang", code: "BANG", name: "Bằng tốt nghiệp", category: "EDUCATION", hasExpiry: false },
   { id: "dt-qd", code: "QD", name: "Quyết định tuyển dụng", category: "DECISION", hasExpiry: false },
-]);
+];
+
+on("GET", "/document-types", () => DOCUMENT_TYPES);
 
 // Hợp đồng, chứng chỉ, đào tạo, người phụ thuộc: cùng một kiểu CRUD
 type Collection = "contracts" | "certificates" | "trainings" | "dependents";

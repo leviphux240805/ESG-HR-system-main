@@ -34,6 +34,13 @@ public interface ClassEnrollmentRepository extends JpaRepository<ClassEnrollment
 			where e.classId = :classId and e.fromDate <= :date and (e.toDate is null or e.toDate >= :date)""")
 	List<ClassEnrollment> findInClassOn(@Param("classId") UUID classId, @Param("date") LocalDate date);
 
+	/** Các đợt học của lớp giao với khoảng [from, to] (sổ điểm danh tháng). */
+	@Query("""
+			select e from ClassEnrollment e
+			where e.classId = :classId and e.fromDate <= :to and (e.toDate is null or e.toDate >= :from)""")
+	List<ClassEnrollment> findInClassBetween(@Param("classId") UUID classId, @Param("from") LocalDate from,
+			@Param("to") LocalDate to);
+
 	/** Các đợt học của cơ sở giao với khoảng [from, to] (để sinh phiếu thu theo tháng). */
 	@Query("""
 			select e from ClassEnrollment e

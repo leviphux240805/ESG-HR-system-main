@@ -114,7 +114,7 @@ public class TaskController {
 	@ResponseStatus(HttpStatus.CREATED)
 	@Operation(summary = "Bình luận (kèm tệp nếu có)")
 	public CommentDto comment(@PathVariable UUID id, @Valid @RequestBody CommentRequest request) {
-		return tasks.comment(id, request.body(), request.fileId());
+		return tasks.comment(id, request.body(), request.fileIds());
 	}
 
 	@PostMapping("/tasks/{id}/attachments")

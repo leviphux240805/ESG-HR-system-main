@@ -71,7 +71,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="sidebar-gradient hidden md:block w-60 h-screen fixed top-0 left-0 z-10">
+    <aside className="sidebar-gradient hidden md:block print:hidden w-60 h-screen fixed top-0 left-0 z-10">
       <SidebarContent />
     </aside>
   );

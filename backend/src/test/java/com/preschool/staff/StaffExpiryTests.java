@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDate;
 
 import com.jayway.jsonpath.JsonPath;
+import com.preschool.TestData;
 import com.preschool.ApiTestSupport;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
@@ -41,7 +42,7 @@ class StaffExpiryTests extends ApiTestSupport {
 
 	Staff staffB;
 
-	LocalDate today = LocalDate.now();
+	LocalDate today = LocalDate.now(TestData.VN);
 
 	@BeforeEach
 	void setUpExpiring() {

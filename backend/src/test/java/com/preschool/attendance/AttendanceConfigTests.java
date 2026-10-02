@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.jayway.jsonpath.JsonPath;
+import com.preschool.TestData;
 import com.preschool.ApiTestSupport;
 import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
@@ -62,12 +63,12 @@ class AttendanceConfigTests extends ApiTestSupport {
 
 	@Test
 	void viceManagesOwnSchoolConfigAndLatestEffectiveVersionApplies() throws Exception {
-		String today = LocalDate.now().toString();
+		String today = LocalDate.now(TestData.VN).toString();
 		createConfig(viceA, schoolA.getId(), "2020-01-01", "07:00", "[6]").andExpect(status().isCreated())
 			.andExpect(jsonPath("$.shiftStart").value("07:00:00"))
 			.andExpect(jsonPath("$.halfDayWeekdays[0]").value(6));
 		createConfig(viceA, schoolA.getId(), today, "07:15", "[]").andExpect(status().isCreated());
-		createConfig(viceA, schoolA.getId(), LocalDate.now().plusDays(30).toString(), "08:00", "[]")
+		createConfig(viceA, schoolA.getId(), LocalDate.now(TestData.VN).plusDays(30).toString(), "08:00", "[]")
 			.andExpect(status().isCreated());
 		// Trùng ngày hiệu lực
 		createConfig(viceA, schoolA.getId(), today, "07:15", "[]").andExpect(status().isConflict())

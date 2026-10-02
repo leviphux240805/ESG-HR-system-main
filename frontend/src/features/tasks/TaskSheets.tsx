@@ -16,7 +16,25 @@ import { errorMessage } from "@/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SelectField, TextAreaField, TextField } from "@/features/staff/profile/fields";
-import { addComment, changeStatus, createTask, PRIORITY, TASK_COLUMNS, type TaskItem, toggleChecklist, updateTask, useAssignees, useTask } from "@/api";
+import {
+  addComment,
+  attachTaskFile,
+  changeStatus,
+  createTask,
+  detachTaskFile,
+  getDownloadUrl,
+  PRIORITY,
+  type StoredFile,
+  TASK_COLUMNS,
+  TASK_FILE_MAX_MB,
+  type TaskItem,
+  taskFileUrl,
+  toggleChecklist,
+  updateTask,
+  useAssignees,
+  useTask,
+} from "@/api";
+import { AttachmentDropzone, AttachmentList } from "@/components/common/Attachments";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { POSITION_LABELS } from "@/features/staff/labels";
 import { ErrorState, PageSkeleton } from "@/components/common/States";
@@ -55,8 +73,13 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
   const { schoolId } = useCurrentSchool();
   const assignees = useAssignees();
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: toValues(task) });
+  // File đính kèm khi giao việc mới; việc đã có thì thêm/gỡ file ở trang chi tiết
+  const [files, setFiles] = useState<StoredFile[]>([]);
   useEffect(() => {
-    if (open) form.reset(toValues(task));
+    if (open) {
+      form.reset(toValues(task));
+      setFiles([]);
+    }
   }, [open, task, form]);
 
   return (
@@ -70,7 +93,13 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
       onSubmit={async (v) => {
         const common = { title: v.title, description: v.description || undefined, priority: v.priority, dueAt: dueAt(v.dueDate), assigneeStaffIds: v.assigneeIds };
         if (task) await updateTask(task.id, common);
-        else await createTask({ ...common, schoolId: schoolId ?? undefined, checklist: v.checklist.split("\n").filter((l) => l.trim()) });
+        else
+          await createTask({
+            ...common,
+            schoolId: schoolId ?? undefined,
+            checklist: v.checklist.split("\n").filter((l) => l.trim()),
+            attachmentFileIds: files.map((f) => f.id),
+          });
         await invalidate(queryClient);
       }}
     >
@@ -105,6 +134,20 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
         )}
       />
       {!task && (
+        <AttachmentDropzone maxSizeMb={TASK_FILE_MAX_MB} schoolId={schoolId ?? undefined} onFiles={(added) => setFiles((prev) => [...prev, ...added])}>
+          {(button) => (
+            <div className="space-y-2 rounded-lg border border-dashed p-3">
+              <p className="text-sm font-medium">Tệp đính kèm</p>
+              <AttachmentList files={files} loadUrl={(id) => getDownloadUrl(id)} onRemove={(f) => setFiles((prev) => prev.filter((x) => x.id !== f.id))} />
+              <div className="flex flex-wrap items-center gap-2">
+                {button}
+                <span className="text-xs text-muted-foreground">Ảnh, PDF, Word, Excel; tối đa {TASK_FILE_MAX_MB}MB/file. Có thể kéo thả vào đây.</span>
+              </div>
+            </div>
+          )}
+        </AttachmentDropzone>
+      )}
+      {!task && (
         <FormField
           control={form.control}
           name="checklist"
@@ -129,7 +172,9 @@ export function TaskDetailSheet({ taskId, onClose, onEdit }: { taskId: string | 
   const detail = query.data;
   const task = detail?.task;
   const [comment, setComment] = useState("");
+  const [pending, setPending] = useState<StoredFile[]>([]);
   const [busy, setBusy] = useState(false);
+  const loadUrl = (fileId: string, inline: boolean) => taskFileUrl(taskId!, fileId, inline);
 
   const run = async (action: () => Promise<unknown>, success?: string) => {
     setBusy(true);
@@ -202,6 +247,27 @@ export function TaskDetailSheet({ taskId, onClose, onEdit }: { taskId: string | 
               </div>
             )}
 
+            <AttachmentDropzone maxSizeMb={TASK_FILE_MAX_MB} disabled={busy} onFiles={(added) => run(() => Promise.all(added.map((f) => attachTaskFile(task.id, f.id))), "Đã đính kèm.")}>
+              {(button) => (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">Tệp đính kèm</p>
+                    {button}
+                  </div>
+                  {detail.attachments.length === 0 && <p className="text-sm text-muted-foreground">Chưa có tệp. Kéo thả file vào đây để đính kèm.</p>}
+                  <AttachmentList
+                    files={detail.attachments.map((a) => a.file)}
+                    loadUrl={loadUrl}
+                    onRemove={
+                      task.canEdit
+                        ? (f) => run(() => detachTaskFile(task.id, detail.attachments.find((a) => a.file.id === f.id)!.id), "Đã gỡ tệp.")
+                        : undefined
+                    }
+                  />
+                </div>
+              )}
+            </AttachmentDropzone>
+
             <div className="space-y-2">
               <p className="text-sm font-medium">Trao đổi</p>
               {detail.comments.length === 0 && <p className="text-sm text-muted-foreground">Chưa có bình luận.</p>}
@@ -211,22 +277,37 @@ export function TaskDetailSheet({ taskId, onClose, onEdit }: { taskId: string | 
                     <p>
                       <span className="font-medium">{c.userName}</span> <span className="text-xs text-muted-foreground">{formatDateTime(c.createdAt)}</span>
                     </p>
-                    <p className="whitespace-pre-line">{c.body}</p>
+                    {c.body && <p className="whitespace-pre-line">{c.body}</p>}
+                    <AttachmentList files={c.files} loadUrl={loadUrl} className="mt-2" />
                   </li>
                 ))}
               </ul>
-              <form
-                className="flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (comment.trim()) run(() => addComment(task.id, comment).then(() => setComment("")));
-                }}
-              >
-                <Textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Viết bình luận…" aria-label="Bình luận" />
-                <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={busy || !comment.trim()} aria-label="Gửi bình luận">
-                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                </Button>
-              </form>
+              <AttachmentDropzone maxSizeMb={TASK_FILE_MAX_MB} disabled={busy} onFiles={(added) => setPending((prev) => [...prev, ...added].slice(0, 10))}>
+                {(button) => (
+                  <form
+                    className="space-y-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (comment.trim() || pending.length)
+                        run(() =>
+                          addComment(task.id, comment, pending.map((f) => f.id)).then(() => {
+                            setComment("");
+                            setPending([]);
+                          }),
+                        );
+                    }}
+                  >
+                    <div className="flex gap-2">
+                      <Textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Viết bình luận, kéo thả file vào đây…" aria-label="Bình luận" />
+                      <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={busy || (!comment.trim() && !pending.length)} aria-label="Gửi bình luận">
+                        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <AttachmentList files={pending} loadUrl={(id) => getDownloadUrl(id)} onRemove={(f) => setPending((prev) => prev.filter((x) => x.id !== f.id))} />
+                    {button}
+                  </form>
+                )}
+              </AttachmentDropzone>
             </div>
           </div>
         )}

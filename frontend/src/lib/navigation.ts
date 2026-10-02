@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { matchPath } from "react-router-dom";
-import { Baby, BarChart3, Building2, BookOpen, CalendarCheck, CalendarOff, ClipboardCheck, Clock, HeartPulse, Inbox, ListChecks, ListTodo, type LucideIcon, Receipt, Ruler, UtensilsCrossed, School, Soup, Sun, Tags, UserCog, Users, Wallet } from "lucide-react";
+import { Baby, BarChart3, Building2, BookOpen, BookOpenCheck, CalendarCheck, CalendarOff, ClipboardCheck, Clock, HeartPulse, Inbox, ListChecks, ListTodo, type LucideIcon, Receipt, Ruler, UtensilsCrossed, School, Soup, Sun, Tags, UserCog, Users, Wallet } from "lucide-react";
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. Bản demo: mở mọi mục đã có trang. */
@@ -39,6 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       // Đầu nhóm: trang mặc định của giáo viên
       { path: "/diem-danh", label: "Điểm danh", icon: ClipboardCheck, phase: 1, permission: view("classes"), page: () => import("@/pages/children/RollCallPage") },
+      { path: "/so-diem-danh", label: "Sổ điểm danh", icon: BookOpenCheck, phase: 1, permission: view("classes"), page: () => import("@/pages/children/RollBookPage") },
       { path: "/lop-hoc", label: "Lớp học", icon: School, phase: 1, permission: view("classes"), page: () => import("@/pages/classes/ClassesPage") },
       { path: "/tre", label: "Hồ sơ trẻ", icon: Baby, phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildrenPage") },
     ],

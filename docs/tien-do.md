@@ -99,6 +99,19 @@ chấm công bị ẩn; upload file trả "Bản demo chưa hỗ trợ". Việc 
     0h–7h giờ VN (điều chuyển "hôm nay" chưa áp dụng khi ngày của DB còn là hôm trước: lỗi thật, cần sửa).
   - Tiếp theo: chủ dự án commit; sửa lỗi ngày VN/UTC ở điều chuyển và hạn giấy tờ; bổ sung thống kê đi học của trẻ
     nếu cần.
+- Sổ điểm danh + file đính kèm công việc (2026-10-03, chưa commit).
+  - Sổ điểm danh `/so-diem-danh`: API `GET /classes/{id}/attendance/month` + `/month/export` (`RollBookService`), sửa ô
+    qua `PUT /classes/{id}/attendance` (giữ quyền, giờ báo ăn, ngày đã chốt chỉ xem). Lưới chung `MonthGrid` (trang
+    Chấm công dùng lại), hàng tổng theo ngày, in A4 ngang (`@page landscape`, ẩn menu khi in). Tỷ lệ chuyên cần = có
+    mặt / số ngày học đã qua khi trẻ thuộc lớp.
+  - File công việc: V16 `task_comment_files` (bình luận nhiều file, tối đa 10; dữ liệu `file_id` cũ đã chép sang);
+    giới hạn 10MB/file kiểm tra ở backend; `AttachmentDropzone` (nút + kéo thả) và `AttachmentList` (thumbnail ảnh,
+    chip tên + dung lượng, xem/tải qua `FilePreviewDialog`); `useFileUploader` dùng chung với `MultiFileUpload`.
+    Bản demo lưu file bằng blob URL (`mock/files.ts`, mất khi tải lại trang) nên mọi ô upload chạy được ở chế độ mock.
+  - Kiểm tra: backend 226/228 (2 test lệch ngày VN/UTC như trên); `npm test` (97), lint, build, build:demo xanh; e2e
+    `rollbook-attachments.spec.ts` 2/2, `school-day.spec.ts` 4/4. `attendance.spec.ts` (import máy chấm công) đỏ vì dữ
+    liệu dev tích lũy nhiều nhân viên do e2e tạo, hàng cần tìm nằm ngoài vùng lưới đang vẽ (cần reset DB dev hoặc tìm
+    theo tên).
 
 ## Giai đoạn hiện tại: 3 – Chấm công, nghỉ phép, công việc (đang làm)
 
@@ -274,3 +287,6 @@ công, lương cũ.
 ### Việc tiếp theo
 
 1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1 + khung giao diện.
+- Hoàn thiện bản demo thành sản phẩm thật (2026-10-03): bảng theo dõi ở `docs/hoan-thien.md`. Xong: Nhân sự (mock đủ
+  endpoint, sửa lệch ngày VN/UTC). Backend 228/228. Tiếp theo: Chấm công, nghỉ phép.
+

@@ -24,6 +24,9 @@ public class TestData {
 
 	public static final String PASSWORD = "Matkhau@123";
 
+	/** Ngày nghiệp vụ theo giờ Việt Nam, như backend (đồng hồ hệ thống là UTC). */
+	public static final java.time.ZoneId VN = java.time.ZoneId.of(com.preschool.common.jobs.SchedulingConfig.ZONE);
+
 	/** Tổ chức mặc định (V13): có sẵn danh mục khối, khoản thu, danh mục thu chi. */
 	public static final UUID DEFAULT_ORG = UUID.fromString("00000000-0000-0000-0000-0000000000f0");
 

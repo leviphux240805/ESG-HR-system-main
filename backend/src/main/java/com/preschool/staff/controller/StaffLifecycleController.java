@@ -2,10 +2,12 @@ package com.preschool.staff.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+import com.preschool.common.jobs.SchedulingConfig;
 import com.preschool.staff.dto.StaffActionDtos.BankRequest;
 import com.preschool.staff.dto.StaffActionDtos.SalaryConfigDto;
 import com.preschool.staff.dto.StaffActionDtos.SalaryConfigRequest;
@@ -46,6 +48,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/staff")
 @Tag(name = "Nhân sự")
 public class StaffLifecycleController {
+
+	/** Ngày nghiệp vụ tính theo giờ Việt Nam (đồng hồ hệ thống là UTC). */
+	private static final ZoneId VN = ZoneId.of(SchedulingConfig.ZONE);
 
 	private static final MediaType XLSX = MediaType
 		.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -108,7 +113,7 @@ public class StaffLifecycleController {
 			@RequestParam(defaultValue = "false") boolean contractExpiring,
 			@RequestParam(required = false) List<UUID> ids) {
 		byte[] body = exportService.export(new ListFilter(q, schoolId, position, status, contractExpiring), ids);
-		String fileName = "Danh sách nhân sự " + DateTimeFormatter.ofPattern("dd-MM-yyyy").format(LocalDate.now())
+		String fileName = "Danh sách nhân sự " + DateTimeFormatter.ofPattern("dd-MM-yyyy").format(LocalDate.now(VN))
 				+ ".xlsx";
 		return ResponseEntity.ok()
 			.contentType(XLSX)

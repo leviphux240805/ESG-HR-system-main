@@ -66,6 +66,21 @@ describe("API giả", () => {
     expect(after.some((i) => i.id === leave.id)).toBe(false);
   });
 
+  it("sổ điểm danh tháng: lưới trẻ × ngày, tổng theo ngày; tháng sai báo 400", async () => {
+    setSessionRole("principal");
+    const school = db().schools[0].id;
+    const cls = db().classes.find((c) => c.schoolId === school)!;
+    const month = new Date().toISOString().slice(0, 7);
+    type Book = { days: { date: string; schoolDay: boolean; present: number }[]; rows: { childId: string; present: number }[] };
+    const { status, data } = await call<Book>("GET", `/classes/${cls.id}/attendance/month?month=${month}`, undefined, school);
+    expect(status).toBe(200);
+    expect(data.rows.length).toBe(db().children.filter((c) => c.classId === cls.id).length);
+    expect(data.days.length).toBeGreaterThanOrEqual(28);
+    const totalByDay = data.days.reduce((s, d) => s + d.present, 0);
+    expect(totalByDay).toBe(data.rows.reduce((s, r) => s + r.present, 0));
+    expect((await call("GET", `/classes/${cls.id}/attendance/month?month=2026-13`, undefined, school)).status).toBe(400);
+  });
+
   it("phân công người thay xóa cảnh báo lớp thiếu người", async () => {
     setSessionRole("principal");
     const school = db().schools[0].id;
@@ -78,6 +93,29 @@ describe("API giả", () => {
     expect((await call("POST", "/substitutions", { classId: short.id, absentStaffId: absent.staffId, staffId: substitute.staffId }, school)).status).toBe(204);
     const { data: again } = await call<{ classes: { id: string; shortStaffed: boolean }[] }>("GET", "/today", undefined, school);
     expect(again.classes.find((c) => c.id === short.id)!.shortStaffed).toBe(false);
+  });
+
+  it("nhân sự: đề xuất đổi SĐT được duyệt thì hồ sơ cập nhật; điều chuyển sang trường khác", async () => {
+    setSessionRole("teacher");
+    const teacher = db().users.teacher.staffId;
+    const school = db().staff.find((s) => s.id === teacher)!.schoolId;
+    const submitted = await call<{ id: string; kind: string }>("POST", "/me/change-requests", { changes: { phone: "0987654321" } }, school);
+    expect(submitted.data.kind).toBe("CONTACT");
+    expect((await call("POST", `/staff/change-requests/${submitted.data.id}/approve`, {}, school)).status).toBe(403);
+
+    setSessionRole("principal");
+    expect((await call("POST", `/staff/change-requests/${submitted.data.id}/reject`, {}, school)).status).toBe(400);
+    expect((await call("POST", `/staff/change-requests/${submitted.data.id}/approve`, {}, school)).status).toBe(200);
+    expect(db().staff.find((s) => s.id === teacher)!.phone).toBe("0987654321");
+
+    const other = db().schools.find((s) => s.id !== school)!;
+    const staff = db().staff.find((s) => s.schoolId === school && ![teacher, db().users.principal.staffId].includes(s.id) && s.status === "ACTIVE")!;
+    const today = new Date().toLocaleDateString("sv-SE");
+    const moved = await call<{ schoolId: string }>("POST", `/staff/${staff.id}/transfer`, { schoolId: other.id, effectiveDate: today }, school);
+    expect(moved.data, JSON.stringify(moved)).toMatchObject({ schoolId: other.id });
+    const history = await call<{ assignments: { schoolId: string; toDate?: string }[] }>("GET", `/staff/${staff.id}/history`, undefined, other.id);
+    expect(history.data.assignments.map((a) => a.schoolId)).toEqual([school, other.id]);
+    resetDb(); // trả dữ liệu mẫu cho các test sau
   });
 
   it("nhân sự: BGH chỉ thấy cơ sở đang chọn, giáo viên không xem danh sách", async () => {

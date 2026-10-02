@@ -3827,6 +3827,117 @@
         "tags" : [ "Điểm danh trẻ" ]
       }
     },
+    "/api/v1/classes/{id}/attendance/month" : {
+      "get" : {
+        "operationId" : "rollBook",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "example" : "2026-09",
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RollBook"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Sổ điểm danh tháng: trẻ × ngày, tổng theo trẻ và theo ngày",
+        "tags" : [ "Điểm danh trẻ" ]
+      }
+    },
+    "/api/v1/classes/{id}/attendance/month/export" : {
+      "get" : {
+        "operationId" : "exportRollBook",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "example" : "2026-09",
+          "in" : "query",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xuất Excel sổ điểm danh tháng",
+        "tags" : [ "Điểm danh trẻ" ]
+      }
+    },
     "/api/v1/classes/{id}/attendance/unlock" : {
       "post" : {
         "operationId" : "unlock",
@@ -13147,8 +13258,11 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "file" : {
-            "$ref" : "#/components/schemas/FileRef"
+          "files" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FileRef"
+            }
           },
           "id" : {
             "type" : "string",
@@ -13158,7 +13272,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "body", "createdAt", "id", "userName" ]
+        "required" : [ "body", "createdAt", "files", "id", "userName" ]
       },
       "CommentRequest" : {
         "type" : "object",
@@ -13168,12 +13282,17 @@
             "maxLength" : 2000,
             "minLength" : 0
           },
-          "fileId" : {
-            "type" : "string",
-            "format" : "uuid"
+          "fileIds" : {
+            "type" : "array",
+            "description" : "Tối đa 10 file, mỗi file ≤ 10MB",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
           }
-        },
-        "required" : [ "body" ]
+        }
       },
       "ConfigDto" : {
         "type" : "object",
@@ -16841,6 +16960,137 @@
           }
         },
         "required" : [ "functionGroups", "role", "schoolId" ]
+      },
+      "RollBook" : {
+        "type" : "object",
+        "properties" : {
+          "classId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "className" : {
+            "type" : "string"
+          },
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RollBookDay"
+            }
+          },
+          "month" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ngày đầu tháng"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RollBookRow"
+            }
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "classId", "className", "days", "month", "rows", "schoolId" ]
+      },
+      "RollBookDay" : {
+        "type" : "object",
+        "properties" : {
+          "absent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "editable" : {
+            "type" : "boolean",
+            "description" : "Người xem sửa được ngày này"
+          },
+          "excused" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "holiday" : {
+            "type" : "string",
+            "description" : "Tên ngày lễ"
+          },
+          "locked" : {
+            "type" : "boolean",
+            "description" : "Đã chốt điểm danh"
+          },
+          "present" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "schoolDay" : {
+            "type" : "boolean"
+          },
+          "weekday" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "1 = thứ Hai … 7 = Chủ nhật"
+          }
+        },
+        "required" : [ "absent", "date", "editable", "excused", "locked", "present", "schoolDay", "weekday" ]
+      },
+      "RollBookRow" : {
+        "type" : "object",
+        "properties" : {
+          "absent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "activeFrom" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ngày đầu thuộc lớp trong tháng"
+          },
+          "activeTo" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ngày cuối thuộc lớp trong tháng"
+          },
+          "cells" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string",
+              "enum" : [ "PRESENT", "EXCUSED", "ABSENT" ]
+            }
+          },
+          "childId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "excused" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "present" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rate" : {
+            "type" : "number",
+            "description" : "Tỷ lệ chuyên cần %: có mặt / số ngày học đã qua khi trẻ thuộc lớp"
+          }
+        },
+        "required" : [ "absent", "activeFrom", "activeTo", "cells", "childId", "code", "excused", "fullName", "notes", "present", "rate" ]
       },
       "RollCall" : {
         "type" : "object",

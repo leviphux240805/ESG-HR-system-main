@@ -105,7 +105,9 @@ export interface TaskRec {
   createdById: string;
   createdAt: string;
   checklist: { id: string; content: string; done: boolean }[];
-  comments: { id: string; author: string; body: string; at: string }[];
+  /** id file đính kèm (kho file demo) */
+  comments: { id: string; author: string; body: string; at: string; files?: string[] }[];
+  attachments?: { id: string; fileId: string }[];
 }
 
 export interface InvoiceRec {
@@ -174,6 +176,11 @@ export interface DemoDB {
   users: Record<DemoRole, { staffId: string; grants: { role: string; schoolId: string; functionGroups?: string[] }[] }>;
   staff: StaffRec[];
   contracts: Record<string, S["ContractDto"][]>;
+  /** Thêm sau khi có dữ liệu demo cũ: khởi tạo rỗng khi dùng lần đầu (`??=`). */
+  staffDocuments?: Record<string, S["StaffDocumentDto"][]>;
+  salaryConfigs?: Record<string, S["SalaryConfigDto"][]>;
+  assignments?: Record<string, S["AssignmentDto"][]>;
+  changeRequests?: S["ChangeRequestDto"][];
   certificates: Record<string, S["CertificateDto"][]>;
   trainings: Record<string, S["TrainingDto"][]>;
   dependents: Record<string, S["DependentDto"][]>;

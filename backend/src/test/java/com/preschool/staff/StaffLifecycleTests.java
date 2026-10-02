@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 
+import com.preschool.TestData;
 import com.preschool.ApiTestSupport;
 import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
@@ -87,7 +88,7 @@ class StaffLifecycleTests extends ApiTestSupport {
 	@Test
 	void immediateTransferMovesVisibilityAndKeepsHistory() throws Exception {
 		String decision = uploadPdf(admin, "qd-dieu-chuyen.pdf");
-		LocalDate today = LocalDate.now();
+		LocalDate today = LocalDate.now(TestData.VN);
 
 		as(admin, post(transferUrl()).contentType(MediaType.APPLICATION_JSON)
 			.content(transferJson(schoolB, today, decision))).andExpect(status().isOk())
@@ -111,7 +112,7 @@ class StaffLifecycleTests extends ApiTestSupport {
 
 	@Test
 	void futureTransferIsAppliedByDailyJob() throws Exception {
-		LocalDate effective = LocalDate.now().plusDays(10);
+		LocalDate effective = LocalDate.now(TestData.VN).plusDays(10);
 		as(admin, post(transferUrl()).contentType(MediaType.APPLICATION_JSON)
 			.content(transferJson(schoolB, effective, null))).andExpect(status().isOk())
 			.andExpect(jsonPath("$.schoolId").value(schoolA.getId().toString()));
@@ -130,10 +131,10 @@ class StaffLifecycleTests extends ApiTestSupport {
 	void principalCannotTransferButCanTerminateWhichLocksLogin() throws Exception {
 		User staffUser = data.userForStaff(RoleCode.TEACHER, schoolA, staffA);
 		as(principalA, post(transferUrl()).contentType(MediaType.APPLICATION_JSON)
-			.content(transferJson(schoolB, LocalDate.now(), null))).andExpect(status().isForbidden());
+			.content(transferJson(schoolB, LocalDate.now(TestData.VN), null))).andExpect(status().isForbidden());
 
 		as(principalA, post("/api/v1/staff/" + staffA.getId() + "/terminate").contentType(MediaType.APPLICATION_JSON)
-			.content("{\"endDate\":\"%s\",\"reason\":\"Nghỉ theo nguyện vọng\"}".formatted(LocalDate.now())))
+			.content("{\"endDate\":\"%s\",\"reason\":\"Nghỉ theo nguyện vọng\"}".formatted(LocalDate.now(TestData.VN))))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.status").value("TERMINATED"));
 

@@ -1,5 +1,6 @@
 import { api, unwrap } from "./client";
 import { ApiError } from "./errors";
+import { IS_DEMO } from "./source";
 import type { components } from "./schema";
 
 export type StoredFile = components["schemas"]["FileResponse"];
@@ -42,6 +43,7 @@ export async function openFile(fileId: string) {
  * Nội dung file không đi qua backend.
  */
 export async function uploadFile(file: File, schoolId?: string): Promise<StoredFile> {
+  if (IS_DEMO) return (await import("@/mock")).storeFile(file, schoolId);
   const upload = unwrap(
     await api.POST("/api/v1/files/upload-url", {
       body: { fileName: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size, schoolId },
@@ -62,5 +64,6 @@ export async function uploadFile(file: File, schoolId?: string): Promise<StoredF
 
 /** Link tải có hạn (vài phút); mở ngay sau khi nhận. */
 export async function getDownloadUrl(fileId: string): Promise<string> {
+  if (IS_DEMO) return (await import("@/mock")).fileUrl(fileId);
   return unwrap(await api.GET("/api/v1/files/{id}/download-url", { params: { path: { id: fileId } } })).url;
 }

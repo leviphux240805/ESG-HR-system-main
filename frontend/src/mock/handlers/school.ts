@@ -1,8 +1,9 @@
 import type { components } from "@/api/schema";
 import { db, type ChildMark, type ChildRec, type ClassRec } from "../db";
-import { isSchoolDay } from "../dates";
+import { holidayName, isSchoolDay, monthDays, weekday } from "../dates";
 import { type Ctx, MockError, matches, newId, notFound, on, paginate, requireBgh } from "../router";
 import { approveLeave, approvedLeaveOn, notify, rejectLeave, schoolStaff, staffById, staffName, today } from "./common";
+import { sheetFile } from "./reports";
 
 type S = components["schemas"];
 type Status = S["MarkRow"]["status"];
@@ -344,4 +345,77 @@ on("PUT", "/classes/{id}/attendance", (ctx) => {
     else delete db().childNotes[key];
   }
   return rollCall(ctx, cls, date);
+});
+
+// ---- Sổ điểm danh tháng ----
+
+const CODE: Record<ChildMark, string> = { P: "C", E: "P", A: "K" };
+
+function rollBook(ctx: Ctx): S["RollBook"] {
+  const cls = requireClass(ctx, ctx.params.id);
+  const month = ctx.query.get("month") ?? "";
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new MockError(400, "Tháng không hợp lệ (định dạng yyyy-MM).");
+  const now = today();
+  const dates = monthDays(month);
+  const kids = db().children.filter((c) => c.classId === cls.id && c.enrolledOn <= dates[dates.length - 1]);
+  const pastSchoolDays = dates.filter((d) => isSchoolDay(d) && d <= now);
+  const days: S["RollBookDay"][] = dates.map((date) => {
+    const marks = db().childAttendance[date] ?? {};
+    const count = (m: ChildMark) => kids.filter((k) => marks[k.id] === m).length;
+    return {
+      date,
+      weekday: weekday(date),
+      schoolDay: isSchoolDay(date),
+      holiday: holidayName(date),
+      locked: false,
+      editable: isSchoolDay(date) && date <= now && (ctx.user.isBgh || date === now),
+      present: count("P"),
+      excused: count("E"),
+      absent: count("A"),
+    };
+  });
+  const rows: S["RollBookRow"][] = kids.map((k) => {
+    const activeFrom = k.enrolledOn > dates[0] ? k.enrolledOn : dates[0];
+    const cells: Record<string, Status> = {};
+    const notes: Record<string, string> = {};
+    for (const date of dates) {
+      const mark = db().childAttendance[date]?.[k.id];
+      if (mark) cells[date] = STATUS[mark];
+      const note = db().childNotes[`${k.id}|${date}`];
+      if (note) notes[date] = note;
+    }
+    const values = Object.values(cells);
+    const present = values.filter((v) => v === "PRESENT").length;
+    const expected = pastSchoolDays.filter((d) => d >= activeFrom).length;
+    return {
+      childId: k.id,
+      code: k.code,
+      fullName: k.fullName,
+      activeFrom,
+      activeTo: dates[dates.length - 1],
+      cells,
+      notes,
+      present,
+      excused: values.filter((v) => v === "EXCUSED").length,
+      absent: values.filter((v) => v === "ABSENT").length,
+      rate: expected ? Math.round((present * 1000) / expected) / 10 : 0,
+    };
+  });
+  return { classId: cls.id, className: cls.name, schoolId: cls.schoolId, month: `${month}-01`, days, rows: rows.sort((a, b) => a.fullName.localeCompare(b.fullName, "vi")) };
+}
+
+on("GET", "/classes/{id}/attendance/month", rollBook);
+
+on("GET", "/classes/{id}/attendance/month/export", (ctx) => {
+  const book = rollBook(ctx);
+  const mark = (s?: Status) => (s ? CODE[MARK[s]] : "");
+  return sheetFile(
+    `Sổ điểm danh lớp ${book.className} tháng ${book.month.slice(5, 7)}/${book.month.slice(0, 4)}`,
+    "Sổ điểm danh",
+    ["Mã trẻ", "Họ tên", ...book.days.map((d) => String(Number(d.date.slice(8)))), "Có mặt", "P", "K", "Chuyên cần (%)"],
+    [
+      ...book.rows.map((r) => [r.code, r.fullName, ...book.days.map((d) => mark(r.cells[d.date])), r.present, r.excused, r.absent, r.rate]),
+      ["", "Có mặt theo ngày", ...book.days.map((d) => (d.schoolDay ? d.present : "")), "", "", "", ""],
+    ],
+  );
 });

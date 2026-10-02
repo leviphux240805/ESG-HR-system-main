@@ -20,12 +20,18 @@ export type TodaySummary = S["TodaySummary"];
 export type TodayClass = S["TodayClass"];
 export type ApprovalItem = S["ApprovalItem"];
 export type ApprovalType = ApprovalItem["type"];
+export type RollBook = S["RollBook"];
+export type RollBookDay = S["RollBookDay"];
+export type RollBookRow = S["RollBookRow"];
 
 export const ATTENDANCE_LABELS: Record<ChildAttendanceStatus, string> = {
   PRESENT: "Có mặt",
   EXCUSED: "Vắng có phép",
   ABSENT: "Vắng không phép",
 };
+
+/** Ký hiệu trong sổ điểm danh: C có mặt, P vắng có phép, K vắng không phép. */
+export const ATTENDANCE_CODES: Record<ChildAttendanceStatus, string> = { PRESENT: "C", EXCUSED: "P", ABSENT: "K" };
 
 export const CHILD_STATUS: Record<ChildStatus, StatusMeta> = {
   STUDYING: { label: "Đang học", tone: "success" },
@@ -106,4 +112,20 @@ export function useRollCall(classId: string | undefined, date: string) {
 
 export async function saveRollCall(classId: string, body: S["MarkRequest"]) {
   return unwrap(await api.PUT("/api/v1/classes/{id}/attendance", { params: { path: { id: classId } }, body }));
+}
+
+// ---- Sổ điểm danh tháng ----
+
+export function useRollBook(classId: string | undefined, month: string) {
+  const { queryKey } = useCurrentSchool();
+  return useQuery({
+    queryKey: queryKey("roll-call", "month", classId, month),
+    queryFn: async () => unwrap(await api.GET("/api/v1/classes/{id}/attendance/month", { params: { path: { id: classId! }, query: { month } } })),
+    enabled: !!classId,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function exportRollBook(classId: string, month: string) {
+  return api.GET("/api/v1/classes/{id}/attendance/month/export", { params: { path: { id: classId }, query: { month } }, parseAs: "blob" });
 }

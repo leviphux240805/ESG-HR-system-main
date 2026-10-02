@@ -107,3 +107,10 @@ export function formatLongDate(value: string | null | undefined): string {
   const weekday = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getDay();
   return `${WEEKDAYS[weekday]}, ${m[3]}/${m[2]}/${m[1]}`;
 }
+
+/** Dung lượng file: "850 KB", "2,4 MB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} MB`;
+}
