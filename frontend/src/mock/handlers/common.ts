@@ -1,7 +1,8 @@
 import { CODE_LABELS, type AttendanceCode } from "@/features/attendance/codes";
 import { POSITION_LABELS } from "@/features/staff/labels";
 import { db, type LeaveRec, type StaffRec } from "../db";
-import { iso, isWorkDay, range } from "../dates";
+import { isWorkingDay } from "../attendanceConfig";
+import { iso, range } from "../dates";
 import { type Ctx, MockError, newId, nowIso } from "../router";
 
 export const today = () => iso(new Date());
@@ -50,7 +51,7 @@ export function approveLeave(leave: LeaveRec, ctx: Ctx, note?: string) {
   if (leave.status !== "PENDING") throw new MockError(409, "Đơn đã được xử lý.");
   if (leave.staffId === ctx.user.staff.id) throw new MockError(403, "Bạn không tự duyệt đơn của mình.");
   for (const date of range(leave.fromDate, leave.toDate)) {
-    if (!isWorkDay(date)) continue;
+    if (!isWorkingDay(leave.schoolId, date)) continue;
     if (isLocked(leave.schoolId, date.slice(0, 7))) throw new MockError(409, "Tháng này đã khóa công, không duyệt được.");
   }
   leave.status = "APPROVED";
@@ -59,7 +60,7 @@ export function approveLeave(leave: LeaveRec, ctx: Ctx, note?: string) {
   leave.reviewNote = note || undefined;
   const days = (db().staffDays[leave.staffId] ??= {});
   for (const date of range(leave.fromDate, leave.toDate)) {
-    if (isWorkDay(date)) days[date] = leave.halfDay ? `1/2${leave.leaveCode}` : leave.leaveCode;
+    if (isWorkingDay(leave.schoolId, date)) days[date] = leave.halfDay ? `1/2${leave.leaveCode}` : leave.leaveCode;
   }
   notify(leave.staffId, "Đơn nghỉ đã được duyệt", `${leaveLabel(leave.leaveCode, leave.halfDay)} · ${leave.fromDate}`, "/nghi-phep");
 }

@@ -82,6 +82,7 @@ export interface LeaveRec {
   reviewNote?: string;
   reviewedAt?: string;
   reviewerName?: string;
+  fileId?: string;
 }
 
 export interface SubstitutionRec {
@@ -181,6 +182,9 @@ export interface DemoDB {
   salaryConfigs?: Record<string, S["SalaryConfigDto"][]>;
   assignments?: Record<string, S["AssignmentDto"][]>;
   changeRequests?: S["ChangeRequestDto"][];
+  attendanceConfigs?: S["ConfigDto"][];
+  /** Ngày lễ thêm trong bản demo (ngày lễ quốc gia cố định ở dates.ts) */
+  customHolidays?: { id: string; date: string; name: string; schoolId?: string }[];
   certificates: Record<string, S["CertificateDto"][]>;
   trainings: Record<string, S["TrainingDto"][]>;
   dependents: Record<string, S["DependentDto"][]>;
@@ -243,6 +247,11 @@ let todayFn: () => string = () => "";
 export function configureDb(generate: () => DemoDB, today: () => string) {
   generator = generate;
   todayFn = today;
+}
+
+/** Dữ liệu hiện tại nếu đã nạp (dùng trong lúc đang sinh dữ liệu, tránh gọi đệ quy `db()`). */
+export function peekDb(): DemoDB | null {
+  return current;
 }
 
 export function db(): DemoDB {

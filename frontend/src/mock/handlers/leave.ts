@@ -1,13 +1,14 @@
 import type { components } from "@/api/schema";
+import { configAt, isWorkingDay } from "../attendanceConfig";
 import { db, type LeaveRec } from "../db";
-import { isWorkDay, range } from "../dates";
+import { fileMeta, fileUrl } from "../files";
+import { range } from "../dates";
 import { workDaysBetween } from "../seed";
 import { type Ctx, MockError, newId, notFound, nowIso, on, paginate, requireBgh } from "../router";
 import { approveLeave, isLocked, notify, rejectLeave, schoolStaff, staffById } from "./common";
 
 type LeaveRequestDto = components["schemas"]["LeaveRequestDto"];
 
-const ANNUAL_DAYS = 12;
 
 function toDto(l: LeaveRec, ctx: Ctx): LeaveRequestDto {
   const staff = staffById(l.staffId);
@@ -30,6 +31,7 @@ function toDto(l: LeaveRec, ctx: Ctx): LeaveRequestDto {
     reviewNote: l.reviewNote,
     reviewedAt: l.reviewedAt,
     reviewerName: l.reviewerName,
+    file: l.fileId && fileMeta(l.fileId) ? (({ id, originalName, mimeType, sizeBytes }) => ({ id, originalName, mimeType, sizeBytes }))(fileMeta(l.fileId)!) : undefined,
     canCancel: own && l.status === "PENDING",
     canReview: ctx.user.isBgh && !own && l.status === "PENDING",
   };
@@ -46,7 +48,9 @@ function balance(staffId: string, year: number) {
   const mine = db().leaves.filter((l) => l.staffId === staffId && l.leaveCode === "P" && l.fromDate.startsWith(String(year)));
   const usedDays = mine.filter((l) => l.status === "APPROVED").reduce((s, l) => s + l.days, 0);
   const pendingDays = mine.filter((l) => l.status === "PENDING").reduce((s, l) => s + l.days, 0);
-  return { year, annualDays: ANNUAL_DAYS, usedDays, pendingDays, remaining: ANNUAL_DAYS - usedDays };
+  const school = staffById(staffId)?.schoolId ?? "";
+  const annualDays = configAt(school, `${year}-12-31`).annualLeaveDays;
+  return { year, annualDays, usedDays, pendingDays, remaining: annualDays - usedDays };
 }
 
 on("GET", "/me/leave-requests", (ctx) =>
@@ -59,7 +63,7 @@ on("GET", "/me/leave-requests", (ctx) =>
 on("GET", "/me/leave-balance", (ctx) => balance(ctx.user.staff.id, Number(ctx.query.get("year") ?? new Date().getFullYear())));
 
 on("POST", "/me/leave-requests", (ctx) => {
-  const { leaveCode, fromDate, toDate, halfDay, reason } = ctx.body ?? {};
+  const { leaveCode, fromDate, toDate, halfDay, reason, fileId } = ctx.body ?? {};
   if (!leaveCode || !fromDate || !toDate) throw new MockError(400, "Vui lòng nhập đủ loại nghỉ và thời gian.");
   if (toDate < fromDate) throw new MockError(400, "Ngày kết thúc phải sau ngày bắt đầu.");
   if (!reason?.trim()) throw new MockError(400, "Vui lòng nhập lý do.");
@@ -69,7 +73,7 @@ on("POST", "/me/leave-requests", (ctx) => {
   if (db().leaves.some((l) => l.staffId === staffId && ["PENDING", "APPROVED"].includes(l.status) && l.fromDate <= toDate && l.toDate >= fromDate)) {
     throw new MockError(409, "Bạn đã có đơn nghỉ trùng thời gian này.");
   }
-  if (range(fromDate, toDate).some((d) => isWorkDay(d) && isLocked(ctx.user.staff.schoolId, d.slice(0, 7)))) {
+  if (range(fromDate, toDate).some((d) => isWorkingDay(ctx.user.staff.schoolId, d) && isLocked(ctx.user.staff.schoolId, d.slice(0, 7)))) {
     throw new MockError(409, "Tháng này đã khóa công, không xin nghỉ được.");
   }
   if (leaveCode === "P") {
@@ -88,6 +92,7 @@ on("POST", "/me/leave-requests", (ctx) => {
     reason: reason.trim(),
     status: "PENDING",
     createdAt: nowIso(),
+    fileId,
   };
   db().leaves.push(leave);
   for (const s of schoolStaff(leave.schoolId).filter((s) => s.position === "MANAGER")) {
@@ -156,4 +161,10 @@ on("GET", "/leave-requests/calendar", (ctx) => {
       toDate: l.toDate,
       attendanceCode: l.halfDay ? `1/2${l.leaveCode}` : l.leaveCode,
     }));
+});
+
+on("GET", "/leave-requests/{id}/file-url", (ctx) => {
+  const leave = db().leaves.find((l) => l.id === ctx.params.id && (l.staffId === ctx.user.staff.id || (ctx.user.isBgh && ctx.schoolIds.includes(l.schoolId))));
+  if (!leave?.fileId) notFound("tệp đính kèm");
+  return { url: fileUrl(leave.fileId), expiresAt: new Date(Date.now() + 5 * 60_000).toISOString() };
 });

@@ -118,6 +118,40 @@ describe("API giả", () => {
     resetDb(); // trả dữ liệu mẫu cho các test sau
   });
 
+  it("chấm công: cấu hình theo ngày hiệu lực, ngày lễ riêng trường, import máy chấm công", async () => {
+    setSessionRole("principal");
+    const school = db().schools[0].id;
+    const overview = await call<{ versions: { effectiveFrom: string }[] }>("GET", `/attendance/configs?schoolId=${school}`, undefined, school);
+    expect(overview.data.versions).toHaveLength(1);
+    const body = { schoolId: school, effectiveFrom: "2026-11-01", shiftStart: "07:00", shiftEnd: "16:30", lunchStart: "11:30", lunchEnd: "13:00", graceMinutes: 10, maxLateAllowed: 3, workingWeekdays: [1, 2, 3, 4, 5], halfDayWeekdays: [], annualLeaveDays: 14 };
+    expect((await call("POST", "/attendance/configs", body, school)).status).toBe(200);
+    expect((await call("POST", "/attendance/configs", body, school)).status).toBe(409);
+
+    const added = await call<{ id: string }[]>("POST", "/holidays", { name: "Ngày hội trường", fromDate: "2026-11-20", schoolId: school }, school);
+    expect(added.data).toHaveLength(1);
+    const sheet = await call<{ days: { date: string; holiday?: string; working: boolean }[] }>("GET", "/attendance/staff?month=2026-11", undefined, school);
+    expect(sheet.data.days.find((d) => d.date === "2026-11-20")!.holiday).toBe("Ngày hội trường");
+    expect(sheet.data.days.find((d) => d.date === "2026-11-07")!.working).toBe(false); // thứ Bảy nghỉ theo cấu hình mới
+    expect((await call("DELETE", `/holidays/${added.data[0].id}`, undefined, school)).status).toBe(204);
+
+    const staff = db().staff.find((s) => s.schoolId === school && s.machineCode)!;
+    const result = await call<{ matchedRows: number; autoFilled: number; discrepancyCount: number; unmatched: { machineCode: string }[] }>(
+      "POST",
+      "/attendance/imports",
+      {
+        month: "2026-11",
+        rows: [
+          { machineCode: staff.machineCode, workDate: "2026-11-02", checkIn: "07:20", checkOut: "16:40" },
+          { machineCode: staff.machineCode, workDate: "2026-11-03", checkIn: "07:05" },
+          { machineCode: "999", workDate: "2026-11-02", checkIn: "07:00", checkOut: "16:30" },
+        ],
+      },
+      school,
+    );
+    expect(result.data).toMatchObject({ matchedRows: 2, autoFilled: 1, discrepancyCount: 1, unmatched: [{ machineCode: "999" }] });
+    resetDb();
+  });
+
   it("nhân sự: BGH chỉ thấy cơ sở đang chọn, giáo viên không xem danh sách", async () => {
     setSessionRole("principal");
     const [a, b] = db().schools;

@@ -1,14 +1,14 @@
 import * as XLSX from "xlsx";
 import type { components } from "@/api/schema";
 import { ATTENDANCE_CODES } from "@/features/attendance/codes";
+import { configAt, configVersions, minutesOf } from "../attendanceConfig";
 import { db, type StaffRec } from "../db";
-import { holidayName, monthDays, weekday } from "../dates";
-import { type Ctx, FileBody, MockError, nowIso, on, requireBgh } from "../router";
+import { holidayName, monthDays, nationalHoliday, range, weekday } from "../dates";
+import { type Ctx, FileBody, MockError, newId, nowIso, on, requireBgh } from "../router";
 import { isLocked } from "./common";
 
 type S = components["schemas"];
 
-const GRACE_MINUTES = 15;
 const key = (staffId: string, date: string) => `${staffId}|${date}`;
 
 function requireMonth(month: string | null): string {
@@ -16,14 +16,15 @@ function requireMonth(month: string | null): string {
   return month;
 }
 
-function days(month: string): S["DayInfo"][] {
+function days(schoolId: string, month: string): S["DayInfo"][] {
   return monthDays(month).map((date) => {
     const w = weekday(date);
-    return { date, weekday: w, working: w <= 6, halfDay: w === 6, holiday: holidayName(date) };
+    const cfg = configAt(schoolId, date);
+    return { date, weekday: w, working: cfg.workingWeekdays.includes(w), halfDay: cfg.halfDayWeekdays.includes(w), holiday: holidayName(date, schoolId) };
   });
 }
 
-function cellOf(staffId: string, date: string): S["Cell"] | undefined {
+function cellOf(staffId: string, date: string, grace: number): S["Cell"] | undefined {
   const code = db().staffDays[staffId]?.[date];
   const disc = db().discrepancies[key(staffId, date)];
   if (!code && !disc) return undefined;
@@ -32,7 +33,7 @@ function cellOf(staffId: string, date: string): S["Cell"] | undefined {
   return {
     code,
     lateMinutes: late,
-    countedLate: late > GRACE_MINUTES,
+    countedLate: late > grace,
     discrepancy: !!disc,
     source: leave ? "LEAVE" : "MACHINE",
     note: db().cellNotes[key(staffId, date)],
@@ -79,7 +80,7 @@ export function totals(cells: Record<string, S["Cell"]>): S["Totals"] {
 function row(s: StaffRec, month: string): S["StaffRow"] {
   const cells: Record<string, S["Cell"]> = {};
   for (const date of monthDays(month)) {
-    const cell = cellOf(s.id, date);
+    const cell = cellOf(s.id, date, configAt(s.schoolId, date).graceMinutes);
     if (cell) cells[date] = cell;
   }
   const last = monthDays(month).pop()!;
@@ -106,7 +107,7 @@ function sheet(ctx: Ctx, month: string): S["MonthSheet"] {
   return {
     month,
     schoolId: ctx.schoolId,
-    days: days(month),
+    days: days(ctx.schoolId, month),
     staff,
     discrepancyCount: staff.reduce((n, r) => n + Object.values(r.cells).filter((c) => c.discrepancy).length, 0),
     lock,
@@ -116,7 +117,7 @@ function sheet(ctx: Ctx, month: string): S["MonthSheet"] {
 }
 
 function detail(ctx: Ctx, s: StaffRec, date: string): S["CellDetail"] {
-  const cell = cellOf(s.id, date);
+  const cell = cellOf(s.id, date, configAt(s.schoolId, date).graceMinutes);
   const disc = db().discrepancies[key(s.id, date)];
   const machine = cell?.code === "X" || disc;
   const seed = (Number(s.machineCode) * 31 + Number(date.slice(8))) % 17;
@@ -248,10 +249,108 @@ on("GET", "/me/attendance", (ctx) => {
     staffId: r.staffId,
     fullName: r.fullName,
     month,
-    days: days(month),
+    days: days(ctx.user.staff.schoolId, month),
     cells: r.cells,
     totals: r.totals,
     locked: isLocked(ctx.user.staff.schoolId, month),
   } satisfies S["MySheet"];
+});
+
+// ---- Cấu hình chấm công, ngày lễ ----
+
+on("GET", "/attendance/configs", (ctx): S["ConfigOverview"] => {
+  requireBgh(ctx);
+  const schoolId = ctx.query.get("schoolId") ?? ctx.schoolId;
+  if (!ctx.schoolIds.includes(schoolId)) throw new MockError(403, "Bạn không có quyền với trường này.");
+  const versions = configVersions(schoolId);
+  return { canManage: true, effective: configAt(schoolId, new Date().toLocaleDateString("sv-SE")), versions };
+});
+
+on("POST", "/attendance/configs", (ctx) => {
+  requireBgh(ctx);
+  const body = ctx.body as S["CreateConfigRequest"];
+  const schoolId = body.schoolId ?? ctx.schoolId;
+  if (!ctx.schoolIds.includes(schoolId)) throw new MockError(403, "Bạn không có quyền với trường này.");
+  if (minutesOf(body.shiftEnd) <= minutesOf(body.shiftStart)) throw new MockError(400, "Giờ tan ca phải sau giờ vào ca.");
+  if (!body.workingWeekdays?.length) throw new MockError(400, "Chọn ít nhất một ngày làm việc.");
+  if (configVersions(schoolId).some((c) => c.effectiveFrom === body.effectiveFrom)) throw new MockError(409, "Đã có cấu hình hiệu lực từ ngày này.");
+  const config: S["ConfigDto"] = { ...body, id: newId(), schoolId };
+  db().attendanceConfigs!.push(config);
+  return config;
+});
+
+on("GET", "/holidays", (ctx): S["HolidayDto"][] => {
+  const year = Number(ctx.query.get("year") ?? new Date().getFullYear());
+  const national = range(`${year}-01-01`, `${year}-12-31`)
+    .filter((d) => nationalHoliday(d))
+    .map((date) => ({ id: `nat-${date}`, date, name: nationalHoliday(date)!, canManage: false }));
+  const custom = (db().customHolidays ?? [])
+    .filter((h) => h.date.startsWith(`${year}-`) && (!h.schoolId || ctx.schoolIds.includes(h.schoolId)))
+    .map((h) => ({ ...h, schoolName: db().schools.find((x) => x.id === h.schoolId)?.name, canManage: h.schoolId ? ctx.user.isBgh : ctx.user.role === "principal" }));
+  return [...national, ...custom].sort((a, b) => a.date.localeCompare(b.date));
+});
+
+on("POST", "/holidays", (ctx): S["HolidayDto"][] => {
+  const body = ctx.body as S["CreateHolidayRequest"];
+  if (body.schoolId ? !ctx.user.isBgh || !ctx.schoolIds.includes(body.schoolId) : ctx.user.role !== "principal")
+    throw new MockError(403, "Bạn không có quyền thêm ngày lễ này.");
+  if (!body.name?.trim()) throw new MockError(400, "Vui lòng nhập tên ngày lễ.");
+  const to = body.toDate ?? body.fromDate;
+  if (to < body.fromDate) throw new MockError(400, "Ngày kết thúc phải sau ngày bắt đầu.");
+  const list = (db().customHolidays ??= []);
+  const added = range(body.fromDate, to)
+    .filter((date) => !nationalHoliday(date) && !list.some((h) => h.date === date && h.schoolId === body.schoolId))
+    .map((date) => ({ id: newId(), date, name: body.name.trim(), schoolId: body.schoolId }));
+  list.push(...added);
+  return added.map((h) => ({ ...h, canManage: true }));
+});
+
+on("DELETE", "/holidays/{id}", (ctx) => {
+  const h = db().customHolidays?.find((x) => x.id === ctx.params.id);
+  if (!h) throw new MockError(ctx.params.id.startsWith("nat-") ? 403 : 404, ctx.params.id.startsWith("nat-") ? "Ngày lễ quốc gia không xóa được." : "Không tìm thấy ngày lễ.");
+  if (h.schoolId ? !ctx.user.isBgh : ctx.user.role !== "principal") throw new MockError(403, "Bạn không có quyền xóa ngày lễ này.");
+  db().customHolidays = db().customHolidays!.filter((x) => x.id !== h.id);
+});
+
+// ---- Import máy chấm công (đối soát rút gọn của bản demo) ----
+
+on("POST", "/attendance/imports", (ctx): S["ImportResult"] => {
+  requireBgh(ctx);
+  const { month, rows } = ctx.body as S["ImportRequest"];
+  requireMonth(month);
+  requireOpen(ctx, month);
+  const byCode = new Map(members(ctx, month).filter((s) => s.machineCode).map((s) => [s.machineCode!, s]));
+  const unmatched = new Map<string, S["UnmatchedCode"]>();
+  const staffIds = new Set<string>();
+  let matched = 0;
+  let autoFilled = 0;
+  let discrepancies = 0;
+  for (const row of rows) {
+    const s = byCode.get(row.machineCode);
+    if (!s) {
+      const u = unmatched.get(row.machineCode) ?? { machineCode: row.machineCode, name: row.name, rows: 0 };
+      u.rows += 1;
+      unmatched.set(row.machineCode, u);
+      continue;
+    }
+    matched += 1;
+    staffIds.add(s.id);
+    const cfg = configAt(s.schoolId, row.workDate);
+    const k = key(s.id, row.workDate);
+    const existing = db().staffDays[s.id]?.[row.workDate];
+    if (row.checkIn && /^\d{1,2}:\d{2}/.test(row.checkIn)) {
+      db().late[k] = Math.max(0, minutesOf(row.checkIn.padStart(5, "0")) - minutesOf(cfg.shiftStart));
+    }
+    if (row.checkIn && row.checkOut) {
+      if (!existing || existing === "X") {
+        setCode(s.id, row.workDate, "X");
+        autoFilled += 1;
+      }
+    } else if (row.checkIn || row.checkOut) {
+      db().discrepancies[k] = { reason: row.checkIn ? "Thiếu giờ ra" : "Thiếu giờ vào", suggested: "X" };
+      discrepancies += 1;
+    }
+  }
+  return { batchId: newId(), rowCount: rows.length, matchedRows: matched, staffCount: staffIds.size, autoFilled, discrepancyCount: discrepancies, unmatched: [...unmatched.values()] };
 });
 

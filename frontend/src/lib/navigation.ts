@@ -103,6 +103,7 @@ export interface SubRoute {
 
 export const SUB_ROUTES: SubRoute[] = [
   { path: "/tre/:id", label: "Chi tiết", parent: "/tre", phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildProfilePage") },
+  { path: "/cham-cong/cau-hinh", label: "Cấu hình chấm công", parent: "/cham-cong", phase: 1, permission: manage("attendance"), page: () => import("@/pages/attendance/AttendanceConfigPage") },
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 1, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
   { path: "/nhan-su/de-xuat", label: "Đề xuất cập nhật hồ sơ", parent: "/nhan-su", phase: 1, permission: view("staff"), page: () => import("@/pages/staff/ChangeRequestsPage") },
   { path: "/nhan-su/giay-to-het-han", label: "Giấy tờ sắp hết hạn", parent: "/nhan-su", phase: 1, permission: view("staff"), page: () => import("@/pages/staff/StaffExpiringPage") },

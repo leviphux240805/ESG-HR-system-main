@@ -1,3 +1,5 @@
+import { peekDb } from "./db";
+
 /** Ngày dạng "yyyy-MM-dd" theo giờ máy (mock không dùng UTC để "hôm nay" khớp người xem). */
 export function iso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -55,8 +57,17 @@ const HOLIDAYS: Record<string, string> = {
   "09-02": "Quốc khánh",
 };
 
-export function holidayName(date: string): string | undefined {
+/** Ngày lễ quốc gia cố định (mm-dd → tên). */
+export function nationalHoliday(date: string): string | undefined {
   return HOLIDAYS[date.slice(5)];
+}
+
+/** Tên ngày lễ: quốc gia hoặc ngày lễ thêm trong bản demo (chung, hoặc riêng trường `schoolId`). */
+export function holidayName(date: string, schoolId?: string): string | undefined {
+  return (
+    nationalHoliday(date) ??
+    peekDb()?.customHolidays?.find((h) => h.date === date && (!h.schoolId || h.schoolId === schoolId))?.name
+  );
 }
 
 /** Ngày trẻ đi học: thứ Hai–thứ Sáu, trừ ngày lễ. */

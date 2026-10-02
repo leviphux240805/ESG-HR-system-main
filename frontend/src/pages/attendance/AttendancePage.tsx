@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/common/States";
 import { ExportButton } from "@/components/common/ExportButton";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { exportMonth, IS_DEMO } from "@/api";
+import { exportMonth } from "@/api";
+import { useCan } from "@/hooks/useCan";
 import { ApiError } from "@/api";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { formatDateTime } from "@/lib/format";
@@ -26,6 +27,7 @@ export default function AttendancePage() {
   const month = isMonth(monthParam) ? monthParam : currentMonth();
   const { isAllSchools, canChooseAll } = useCurrentSchool();
   const needSchool = canChooseAll && isAllSchools;
+  const canConfigure = useCan("manage", "attendance");
   const sheet = useMonthSheet(month, !needSchool);
   const [target, setTarget] = useState<{ staffId: string; date: string } | null>(null);
   const [dialog, setDialog] = useState<"import" | "review" | null>(null);
@@ -58,8 +60,7 @@ export default function AttendancePage() {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-            {/* Bản demo chưa có trang cấu hình, import máy chấm công */}
-            {!IS_DEMO && (
+            {canConfigure && (
               <Button asChild variant="outline" className="min-h-11">
                 <Link to="/cham-cong/cau-hinh">
                   <Settings2 className="w-4 h-4 mr-2" /> Cấu hình
@@ -110,7 +111,7 @@ export default function AttendancePage() {
             )}
             <span className="text-muted-foreground">{data.staff.length} nhân viên</span>
             <div className="ml-auto flex flex-wrap gap-2">
-              {data.canManage && !locked && !IS_DEMO && (
+              {data.canManage && !locked && (
                 <Button className="min-h-11" onClick={() => setDialog("import")}>
                   <FileUp className="w-4 h-4 mr-2" /> Import máy chấm công
                 </Button>

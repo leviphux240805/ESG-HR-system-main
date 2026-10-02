@@ -15,7 +15,7 @@ endpoint trong `frontend/openapi.json`).
 | 2 | Trường | `/truong` | Có | Có | — | Xong |
 | 3 | Nhân sự | `/nhan-su`, `/nhan-su/moi`, `/nhan-su/:id`, `/nhan-su/de-xuat`, `/nhan-su/giay-to-het-han` | Có | Có | — (trang "Hồ sơ của tôi" xem dòng Tài liệu) | Xong |
 | 4 | Lớp, trẻ, điểm danh, sổ điểm danh | `/lop-hoc`, `/tre`, `/tre/:id`, `/diem-danh`, `/so-diem-danh` | Có | Có | (Tùy chọn) thống kê đi học 30 ngày ở hồ sơ trẻ | Xong |
-| 5 | Chấm công, nghỉ phép | `/cham-cong`, `/nghi-phep`, `/cua-toi/cham-cong` (+ `/cham-cong/cau-hinh` có trang nhưng chưa vào menu) | Một phần | Có | Mock: cấu hình chấm công, ngày lễ, import máy chấm công, file đơn nghỉ; route trang cấu hình | Chưa |
+| 5 | Chấm công, nghỉ phép | `/cham-cong`, `/cham-cong/cau-hinh`, `/nghi-phep`, `/cua-toi/cham-cong` | Có | Có | — | Xong |
 | 6 | Công việc (đính kèm) | `/cong-viec` | Có | Có | — | Xong |
 | 7 | Hôm nay, Hộp duyệt | `/hom-nay`, `/hop-duyet` | Có | Có | — | Xong |
 | 8 | Học phí, thu chi | `/hoc-phi/phieu-thu`, `/hoc-phi/cong-no`, `/thu-chi`, `/hoc-phi/bieu-phi`, `/hoc-phi/khoan-thu`, tab Học phí ở `/tre/:id` | Gần đủ | Có | Mock: PDF phiếu thu (đang trả 501) | Chưa |
@@ -31,3 +31,9 @@ endpoint trong `frontend/openapi.json`).
   công tác), đề xuất cập nhật hồ sơ (gửi, duyệt, từ chối); quyền mock theo mô hình mới (hiệu trưởng điều chuyển, xem
   và sửa lương). Backend: ngày nghiệp vụ của nhân sự tính theo giờ Việt Nam (trước đây dùng UTC nên 0h–7h điều chuyển
   "hôm nay" chưa áp dụng, số ngày còn lại của giấy tờ lệch 1); test dùng `TestData.VN`.
+- 2026-10-03: Chấm công, nghỉ phép xong. Route `/cham-cong/cau-hinh` (trang Chấm công đã link tới nhưng thiếu route,
+  nút Cấu hình chỉ hiện với người quản lý); bỏ ẩn nút Cấu hình, Import máy chấm công ở bản demo. Mock: cấu hình chấm
+  công theo ngày hiệu lực (ngày làm việc, nửa buổi, ân hạn, phép năm dùng cho bảng công và phép còn lại), ngày lễ thêm
+  được (chung hoặc riêng trường, ngày lễ quốc gia cố định), import máy chấm công (khớp mã chấm công, tự điền X, sai
+  lệch thiếu giờ vào/ra, mã không khớp), file đính kèm đơn nghỉ. E2E: thêm `gridCell` cuộn lưới ảo hóa tới ô cần tìm.
+

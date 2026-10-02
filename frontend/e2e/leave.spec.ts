@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ACCOUNTS, login } from "./helpers";
+import { ACCOUNTS, login, gridCell } from "./helpers";
 
 /** Một thứ Hai ngẫu nhiên ở năm xa (mỗi lần chạy phép năm mới, không trùng đơn cũ, không vướng tháng đã khóa). */
 function randomMonday() {
@@ -44,7 +44,7 @@ test("giáo viên xin nghỉ phép trên điện thoại, hiệu trưởng duy�
   await desk.getByRole("button", { name: `Duyệt đơn của Giáo Viên A ${day.display}` }).click();
   await expect(desk.getByText("Đã duyệt đơn, bảng công đã cập nhật.")).toBeVisible();
   await desk.goto(`/cham-cong?month=${day.month}`);
-  await expect(desk.getByRole("grid", { name: "Bảng công tháng" }).getByRole("button", { name: `Giáo Viên A ngày ${day.label}: P` })).toBeVisible();
+  await expect(await gridCell(desk.getByRole("grid", { name: "Bảng công tháng" }), `Giáo Viên A ngày ${day.label}: P`)).toBeVisible();
   await desk.close();
 
   await teacher.reload();

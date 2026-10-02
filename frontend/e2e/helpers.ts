@@ -1,4 +1,4 @@
-import { type APIRequestContext, expect, type Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Locator, type Page } from "@playwright/test";
 
 /** Mật khẩu chung của tài khoản seed dev (backend/src/main/resources/db/dev/R__dev_seed.sql). */
 export const SEED_PASSWORD = "Matkhau@123";
@@ -87,3 +87,19 @@ export async function publishDocument(page: Page, title: string, options: { requ
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
   return new URL(page.url()).pathname;
 }
+
+/** Lưới tháng ảo hóa hàng: cuộn dần cho tới khi ô cần tìm được vẽ (dữ liệu dev có thể nhiều nhân viên). */
+export async function gridCell(grid: Locator, name: string): Promise<Locator> {
+  const cell = grid.getByRole("button", { name });
+  await expect(grid).toBeVisible();
+  await grid.evaluate((el) => el.scrollTo(0, 0));
+  for (let i = 0; i < 60 && (await cell.count()) === 0; i++) {
+    const atEnd = await grid.evaluate((el) => {
+      el.scrollBy(0, el.clientHeight * 0.8);
+      return el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    });
+    if (atEnd && (await cell.count()) === 0) await grid.page().waitForTimeout(100);
+  }
+  return cell;
+}
+

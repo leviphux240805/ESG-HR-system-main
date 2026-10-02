@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
-import { ACCOUNTS, login } from "./helpers";
+import { ACCOUNTS, login, gridCell } from "./helpers";
 
 // Seed dev: cấu hình chấm công mặc định toàn chuỗi; Nguyễn Thị Lan (Cơ sở A, mã chấm công 105).
 
@@ -70,13 +70,13 @@ test("import file máy chấm công mẫu, xử lý sai lệch, khóa công, m�
 
   // Ô đủ giờ vào/ra được tự điền X
   const grid = page.getByRole("grid", { name: "Bảng công tháng" });
-  await expect(grid.getByRole("button", { name: "Hiệu Trưởng A ngày 7/9: X" })).toBeVisible();
+  await expect(await gridCell(grid, "Hiệu Trưởng A ngày 7/9: X")).toBeVisible();
 
   await page.getByRole("button", { name: "Khóa công" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Khóa công" }).click();
   await expect(page.getByText("Đã khóa công", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Import máy chấm công" })).toHaveCount(0);
-  await grid.getByRole("button", { name: "Hiệu Trưởng A ngày 7/9: X" }).click();
+  await (await gridCell(grid, "Hiệu Trưởng A ngày 7/9: X")).click();
   await expect(page.getByRole("dialog")).toContainText("Công tháng đã khóa, chỉ xem.");
   await page.keyboard.press("Escape");
 
