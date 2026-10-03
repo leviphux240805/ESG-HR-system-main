@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import * as XLSX from "xlsx";
 import { db } from "./db";
 import { generateDb } from "./seed";
 import { setSessionRole } from "./router";
@@ -10,6 +11,13 @@ async function call<T>(method: string, path: string, body?: unknown, schoolId?: 
   const res = await mockFetch(new Request(`http://localhost/api/v1${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined }));
   const text = await res.text();
   return { status: res.status, data: text ? JSON.parse(text) : undefined };
+}
+
+async function sheetRows(path: string, schoolId: string): Promise<(string | number)[][]> {
+  const res = await mockFetch(new Request(`http://localhost/api/v1${path}`, { headers: { "X-School-Id": schoolId } }));
+  expect(res.status).toBe(200);
+  const book = XLSX.read(await res.arrayBuffer(), { type: "array" });
+  return XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { header: 1 });
 }
 
 describe("dữ liệu demo", () => {
@@ -168,6 +176,27 @@ describe("API giả", () => {
     const mine = await call<{ id: string }[]>("GET", "/me/payslips");
     expect(mine.data.length).toBeGreaterThan(0);
     expect((await call("GET", `/payroll/records/${mine.data[0].id}`)).status).toBe(200);
+  });
+
+  it("báo cáo: xuất bảng lương và bảng công bằng dữ liệu tháng, bảng lương chỉ hiệu trưởng", async () => {
+    const school = db().schools[0].id;
+    const [y, m] = new Date().toISOString().slice(0, 7).split("-").map(Number);
+    const lastMonth = new Date(y, m - 2, 1).toLocaleDateString("sv-SE").slice(0, 7);
+    setSessionRole("principal");
+    const sheet = await call<{ rows: { staffCode: string; netSalary: number }[] }>("GET", `/payroll/periods/${lastMonth}`, undefined, school);
+    const payroll = await sheetRows(`/reports/payroll/export?month=${lastMonth}`, school);
+    expect(payroll[2]).toEqual(["Cơ sở", "Mã NV", "Họ tên", "Ngày công", "Tổng thu nhập", "Bảo hiểm", "Thuế TNCN", "Thực lĩnh", "Trạng thái"]);
+    const first = payroll.find((r) => r[1] === sheet.data.rows[0].staffCode)!;
+    expect(first[7]).toBe(sheet.data.rows[0].netSalary);
+    expect(first[8]).toBe("Đã duyệt");
+    expect(payroll.length - 3).toBe(sheet.data.rows.length);
+
+    const timesheet = await sheetRows(`/reports/staff-attendance/export?month=${lastMonth}`, school);
+    expect(timesheet[2].slice(-5)).toEqual(["Công", "Phép", "Không lương", "Lễ", "Đi muộn"]);
+    expect(timesheet.length - 3).toBeGreaterThan(0);
+
+    setSessionRole("teacher");
+    expect((await call("GET", `/reports/payroll/export?month=${lastMonth}`, undefined, school)).status).toBe(403);
   });
 
   it("nhân sự: BGH chỉ thấy cơ sở đang chọn, giáo viên không xem danh sách", async () => {

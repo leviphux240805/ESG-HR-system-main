@@ -8,7 +8,7 @@ import { payslipPdf } from "../pdf";
 import { type Ctx, FileBody, MockError, newId, notFound, nowIso, on } from "../router";
 import { isLocked, notify, staffById, today } from "./common";
 import { row as timesheetRow } from "./attendance";
-import { sheetFile } from "./reports";
+import { sheetFile } from "../excel";
 
 type S = components["schemas"];
 
@@ -123,6 +123,19 @@ function toRow(r: PayrollRecordRec): S["PayrollRow"] {
     dependentCount: r.dependentCount,
     note: r.note,
   };
+}
+
+const STATUS_LABEL = { DRAFT: "Nháp", APPROVED: "Đã duyệt", PAID: "Đã trả" } as const;
+
+/** Bảng lương tháng dạng Excel cho trang Báo cáo (cùng cột với ReportService.payroll). */
+export function payrollReportFile(ctx: Ctx, month: string) {
+  const period = findPeriod(ctx.schoolId, month);
+  const school = db().schools.find((x) => x.id === ctx.schoolId)?.name ?? "";
+  const rows = (period?.records ?? [])
+    .map(toRow)
+    .sort((a, b) => a.fullName.localeCompare(b.fullName, "vi"))
+    .map((r) => [school, r.staffCode, r.fullName, r.workDays, r.grossSalary, r.insuranceDeduction, r.pit, r.netSalary, STATUS_LABEL[period!.status]]);
+  return sheetFile(`Bảng lương tháng ${month}`, "Bảng lương", ["Cơ sở", "Mã NV", "Họ tên", "Ngày công", "Tổng thu nhập", "Bảo hiểm", "Thuế TNCN", "Thực lĩnh", "Trạng thái"], rows);
 }
 
 function sheet(ctx: Ctx, month: string): S["PayrollSheet"] {

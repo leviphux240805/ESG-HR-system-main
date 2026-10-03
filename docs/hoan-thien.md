@@ -21,7 +21,7 @@ endpoint trong `frontend/openapi.json`).
 | 8 | Học phí, thu chi | `/hoc-phi/phieu-thu`, `/hoc-phi/cong-no`, `/thu-chi`, `/hoc-phi/bieu-phi`, `/hoc-phi/khoan-thu`, tab Học phí ở `/tre/:id` | Có | Có | — | Xong |
 | 9 | Lương | `/luong`, `/cua-toi/phieu-luong` | Có | Có | — (gửi phiếu lương qua email làm khi bật email) | Xong |
 | 10 | Thực đơn, sức khỏe | `/thuc-don`, `/thuc-don/mon-an`, `/suc-khoe/can-do`, `/suc-khoe/so-theo-doi`, tab Sức khỏe ở `/tre/:id` | Có | Có | — | Xong |
-| 11 | Báo cáo | `/bao-cao` | Có | Có | Kiểm tra lại xuất bảng lương (đã có dữ liệu từ module Lương) | Chưa |
+| 11 | Báo cáo | `/bao-cao` | Có | Có | — | Xong |
 | — | Tài liệu (ngoài danh sách) | `/tai-lieu`, `/cua-toi/van-ban`, `/cua-toi/ho-so` (có trang, chưa vào menu demo) | Không | Có | Mock toàn bộ thư viện văn bản, hồ sơ của tôi; route + menu (cần khách duyệt giao diện) | Chưa |
 
 ## Nhật ký
@@ -50,3 +50,7 @@ endpoint trong `frontend/openapi.json`).
   của thực đơn tuần (`DayNutrition.portions`, `portionsFinal`, `portionsEstimated`: chưa điểm danh thì ước theo sĩ
   số đang học, theo khối của thực đơn) thay cho endpoint riêng `/menus/{id}/portions`; trang Thực đơn tuần thêm dòng
   "Số suất" (máy tính) và dòng số suất trên thẻ ngày (điện thoại). Mock: số suất, xem file biên bản khám.
+- 2026-10-03: Báo cáo xong. Backend: Excel bảng lương ở `/reports/payroll/export` thêm cột "Trạng thái" (Nháp/Đã
+  duyệt/Đã trả); `PayrollApiTests` kiểm nội dung file sau khi duyệt. Mock: xuất bảng lương (cùng cột backend, chỉ hiệu
+  trưởng) và bảng công (dùng chung bảng của trang Chấm công) bằng dữ liệu tháng thay cho danh sách tên; hàm Excel
+  dùng chung chuyển sang `mock/excel.ts`.

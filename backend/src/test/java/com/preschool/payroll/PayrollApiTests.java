@@ -143,6 +143,17 @@ class PayrollApiTests extends ApiTestSupport {
 			.andExpect(header().string("Content-Type", startsWith("application/pdf")));
 		call(accountantA, get("/api/v1/payroll/periods/" + MONTH + "/export"), schoolA).andExpect(status().isOk())
 			.andExpect(header().string("Content-Type", startsWith("application/vnd.openxmlformats")));
+		// Báo cáo › xuất bảng lương lấy đúng dữ liệu đã tính, ghi trạng thái
+		byte[] report = call(principalA, get("/api/v1/reports/payroll/export?month=" + MONTH), schoolA)
+			.andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+		try (var book = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(report))) {
+			var xlsx = book.getSheetAt(0);
+			var row = java.util.stream.IntStream.rangeClosed(3, xlsx.getLastRowNum()).mapToObj(xlsx::getRow)
+				.filter(r -> teacherStaff.getStaffCode().equals(r.getCell(1).getStringCellValue()))
+				.findFirst()
+				.orElseThrow();
+			org.assertj.core.api.Assertions.assertThat(row.getCell(8).getStringCellValue()).isEqualTo("Đã duyệt");
+		}
 
 		// Mở lại cần lý do; trả lương cần đã duyệt
 		call(principalA, post("/api/v1/payroll/periods/" + MONTH + "/reopen").contentType(MediaType.APPLICATION_JSON)

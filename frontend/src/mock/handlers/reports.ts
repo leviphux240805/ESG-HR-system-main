@@ -1,10 +1,12 @@
-import * as XLSX from "xlsx";
 import type { components } from "@/api/schema";
 import { db, type MeasurementRec } from "../db";
 import { addDays, monthOf, shiftMonthStr } from "../dates";
 import { balanceOf, isOpen } from "../finance";
-import { type Ctx, FileBody, MockError, on } from "../router";
+import { sheetFile } from "../excel";
+import { type Ctx, MockError, on } from "../router";
+import { timesheetFile } from "./attendance";
 import { schoolStaff, today } from "./common";
+import { payrollReportFile } from "./payroll";
 
 type S = components["schemas"];
 
@@ -123,13 +125,6 @@ on("GET", "/reports/dashboard", (ctx) => {
   return result;
 });
 
-const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-export function sheetFile(title: string, sheetName: string, header: string[], rows: (string | number)[][]) {
-  const book = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([[title], [], header, ...rows]), sheetName);
-  return new FileBody(XLSX.write(book, { type: "array", bookType: "xlsx" }), XLSX_TYPE);
-}
 
 on("GET", "/reports/{name}/export", (ctx) => {
   requireReports(ctx);
@@ -166,13 +161,10 @@ on("GET", "/reports/{name}/export", (ctx) => {
         ),
       );
     case "staff-attendance":
+      return timesheetFile(ctx, month);
     case "payroll":
-      return sheetFile(
-        ctx.params.name === "payroll" ? `Bảng lương tháng ${month}` : `Bảng công tháng ${month}`,
-        ctx.params.name === "payroll" ? "Bảng lương" : "Bảng công",
-        ["Họ tên", "Chức vụ"],
-        schoolStaff(ctx.schoolId).map((s) => [s.fullName, s.position]),
-      );
+      if (ctx.user.role !== "principal") throw new MockError(403, "Bạn không có quyền xuất bảng lương.");
+      return payrollReportFile(ctx, month);
     default:
       throw new MockError(404, "Không có báo cáo này.");
   }

@@ -1,5 +1,10 @@
 # Tiến độ
 
+## Hoàn thiện bản demo thành sản phẩm thật (2026-10-03)
+
+Theo `docs/hoan-thien.md`: 11/11 module đã có API thật và mock cùng dữ liệu (Quyền → Báo cáo). Còn lại: Tài liệu
+(trang có sẵn nhưng chưa vào menu, chưa có mock) – cần khách duyệt giao diện trước khi làm.
+
 ## Nhánh `demo` – bản giới thiệu khách hàng "Mầm Non Việt" (2026-09-30)
 
 Chỉ frontend, API giả trong trình duyệt (`frontend/src/mock`); người dùng chính là ban giám hiệu. Không merge vào

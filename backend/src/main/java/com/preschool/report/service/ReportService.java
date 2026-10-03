@@ -275,21 +275,25 @@ public class ReportService {
 		};
 	}
 
+	/** Bảng lương nháp vẫn xuất được (để rà soát) nhưng ghi rõ trạng thái. */
+	private static final Map<String, String> PAYROLL_STATUS = Map.of("DRAFT", "Nháp", "APPROVED", "Đã duyệt", "PAID", "Đã trả");
+
 	private ExportFile payroll(YearMonth month) {
 		List<UUID> ids = requireSchools(PAYROLL, "Bạn không có quyền xuất bảng lương.");
 		List<List<Object>> rows = jdbc.query("""
 				SELECT sc.name, s.staff_code, s.full_name, r.work_days, r.gross_salary, r.insurance_deduction, r.pit,
-				       r.net_salary
+				       r.net_salary, p.status
 				FROM payroll_records r JOIN payroll_periods p ON p.id = r.period_id
 				JOIN staff s ON s.id = r.staff_id JOIN schools sc ON sc.id = r.school_id
 				WHERE r.school_id IN (:ids) AND p.month = :month ORDER BY sc.name, s.full_name""",
 				params(ids).addValue("month", Date.valueOf(month.atDay(1))),
 				(rs, i) -> List.<Object>of(rs.getString(1), rs.getString(2), rs.getString(3), rs.getBigDecimal(4),
-						rs.getBigDecimal(5), rs.getBigDecimal(6), rs.getBigDecimal(7), rs.getBigDecimal(8)));
+						rs.getBigDecimal(5), rs.getBigDecimal(6), rs.getBigDecimal(7), rs.getBigDecimal(8),
+						PAYROLL_STATUS.getOrDefault(rs.getString(9), rs.getString(9))));
 		byte[] body = ExcelTable.write("Bảng lương", "Bảng lương " + label(month),
 				List.of(new Column("Cơ sở", 22), new Column("Mã NV", 12), new Column("Họ tên", 26),
 						new Column("Ngày công", 11), new Column("Tổng thu nhập", 16), new Column("Bảo hiểm", 14),
-						new Column("Thuế TNCN", 14), new Column("Thực lĩnh", 16)),
+						new Column("Thuế TNCN", 14), new Column("Thực lĩnh", 16), new Column("Trạng thái", 12)),
 				rows);
 		return new ExportFile("bang-luong-" + month + ".xlsx", body);
 	}

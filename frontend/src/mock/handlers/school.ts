@@ -3,7 +3,7 @@ import { db, type ChildMark, type ChildRec, type ClassRec } from "../db";
 import { holidayName, isSchoolDay, monthDays, weekday } from "../dates";
 import { type Ctx, MockError, matches, newId, notFound, on, paginate, requireBgh } from "../router";
 import { approveLeave, approvedLeaveOn, notify, rejectLeave, schoolStaff, staffById, staffName, today } from "./common";
-import { sheetFile } from "./reports";
+import { sheetFile } from "../excel";
 
 type S = components["schemas"];
 type Status = S["MarkRow"]["status"];

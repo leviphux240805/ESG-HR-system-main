@@ -1,10 +1,10 @@
-import * as XLSX from "xlsx";
 import type { components } from "@/api/schema";
 import { ATTENDANCE_CODES } from "@/features/attendance/codes";
 import { configAt, configVersions, minutesOf } from "../attendanceConfig";
 import { db, type StaffRec } from "../db";
 import { holidayName, monthDays, nationalHoliday, range, weekday } from "../dates";
-import { type Ctx, FileBody, MockError, newId, nowIso, on, requireBgh } from "../router";
+import { sheetFile } from "../excel";
+import { type Ctx, MockError, newId, nowIso, on, requireBgh } from "../router";
 import { isLocked } from "./common";
 
 type S = components["schemas"];
@@ -223,11 +223,10 @@ on("POST", "/attendance/months/{month}/unlock", (ctx) => {
   return sheet(ctx, month);
 });
 
-on("GET", "/attendance/months/{month}/export", (ctx) => {
-  requireBgh(ctx);
-  const month = requireMonth(ctx.params.month);
+/** Bảng công tháng dạng Excel (dùng chung cho trang Chấm công và Báo cáo). */
+export function timesheetFile(ctx: Ctx, month: string) {
   const data = sheet(ctx, month);
-  const header = ["Mã NV", "Họ tên", ...data.days.map((d) => Number(d.date.slice(8))), "Công", "Phép", "Không lương", "Lễ", "Đi muộn"];
+  const header = ["Mã NV", "Họ tên", ...data.days.map((d) => String(Number(d.date.slice(8)))), "Công", "Phép", "Không lương", "Lễ", "Đi muộn"];
   const rows = data.staff.map((r) => [
     r.staffCode,
     r.fullName,
@@ -238,9 +237,12 @@ on("GET", "/attendance/months/{month}/export", (ctx) => {
     r.totals.holidayLeave,
     r.totals.lateCount,
   ]);
-  const book = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([[`Bảng công tháng ${month}`], header, ...rows]), "Bảng công");
-  return new FileBody(XLSX.write(book, { type: "array", bookType: "xlsx" }), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  return sheetFile(`Bảng công tháng ${month}`, "Bảng công", header, rows);
+}
+
+on("GET", "/attendance/months/{month}/export", (ctx) => {
+  requireBgh(ctx);
+  return timesheetFile(ctx, requireMonth(ctx.params.month));
 });
 
 on("GET", "/me/attendance", (ctx) => {
