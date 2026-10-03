@@ -2,7 +2,7 @@ spring:
   application:
     name: preschool
   profiles:
-    default: dev
+    default: prod
   config:
     # Cho phép dùng chung file .env ở gốc repo với docker compose
     import: optional:file:../.env[.properties]
@@ -73,3 +73,25 @@ springdoc:
   swagger-ui:
     enabled: ${API_DOCS_ENABLED:false}
     path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "dev & !prod"
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+app:
+  auth:
+    jwt-secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    refresh-cookie-secure: ${COOKIE_SECURE:false}
+  storage:
+    create-bucket: true
+    allow-local-endpoint: true

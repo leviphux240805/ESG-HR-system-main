@@ -43,9 +43,9 @@ npm run demo                                      # build rồi xem thử bản 
 # 1. Hạ tầng: PostgreSQL (5432) + MinIO (9000, console 9001) + Mailpit (SMTP 1025, web 8025)
 docker compose up -d
 
-# 2. Backend: http://localhost:8081 (tự chạy migration + seed dev, tự tạo bucket)
+# 2. Backend: http://localhost:8081 (dev: migration + seed dev, tự tạo bucket)
 cd backend
-./mvnw spring-boot:run          # Windows PowerShell: .\mvnw.cmd spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev  # Windows: .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
 
 # 3. Frontend: http://localhost:8080 (proxy /api sang backend)
 cd frontend
@@ -71,7 +71,7 @@ Mọi tài khoản dùng mật khẩu **`Matkhau@123`**; đăng nhập bằng em
 | Cấp dưỡng | capduong.b@preschool.local | 0900000007 | Trường B |
 | Nhân viên | nhanvien.b@preschool.local | 0900000008 | Trường B |
 
-Seed chỉ nạp ở profile `dev` (mặc định khi chạy `spring-boot:run`). Seed có 12 hồ sơ nhân viên ở trường A, B; các
+Seed chỉ nạp ở profile `dev` hoặc `test`; profile mặc định là `prod`. Chạy lệnh trên để có 12 hồ sơ nhân viên giả ở trường A, B; các
 tài khoản từ `0900000003` tới `0900000008` gắn với một hồ sơ, hai hiệu trưởng không gắn hồ sơ. Nguyễn Thị Lan
 (trường A) có hợp đồng hết hạn sau 20 ngày để thử cảnh báo. Hai tổ chức tách biệt: hiệu trưởng trường D không thấy
 trường, tài khoản, dữ liệu dùng chung của tổ chức kia.
@@ -132,15 +132,14 @@ nếu cách lần chạy trước hơn 1 phút (backend giới hạn 1 yêu cầ
 ## Triển khai thử (Vercel + Render + Neon)
 
 Tạm thời, chưa phải nơi chạy chính thức. Frontend ở Vercel chuyển tiếp `/api/*` sang backend ở Render (`frontend/vercel.json`),
-nên trình duyệt chỉ thấy một origin và cookie refresh vẫn hoạt động. Database ở Neon. Profile `seed` nạp dữ liệu mẫu dev.
+nên trình duyệt chỉ thấy một origin và cookie refresh vẫn hoạt động. Database ở Neon. Render chạy profile `prod`, chỉ nạp migration dữ liệu ba trường PBC và tạo hiệu trưởng bootstrap từ biến môi trường.
 
-> **Production thật:** dùng profile `prod` (mặc định của image Docker), không dùng `seed`: seed tạo tài khoản mẫu với
-> mật khẩu công khai. Swagger/OpenAPI tắt ngoài dev, test; cần xem tạm thì đặt `API_DOCS_ENABLED=true`.
+> **Production:** đặt `BOOTSTRAP_ADMIN_EMAIL` và `BOOTSTRAP_ADMIN_PASSWORD` trong secret manager. Hiệu trưởng được gán ở ba trường PBC và phải đổi mật khẩu lần đầu. Seed tài khoản/trường/nhân sự/trẻ giả chỉ có trong `dev`/`test`. Swagger/OpenAPI tắt ngoài dev, test; cần xem tạm thì đặt `API_DOCS_ENABLED=true`.
 
 1. **Neon:** tạo project ở region Singapore. Lấy host **không có** `-pooler` (Flyway cần kết nối trực tiếp), cùng user
    và mật khẩu.
 2. **Render:** New → Blueprint → chọn repo/nhánh (đọc `render.yaml`). Điền `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`
-   và `FRONTEND_URL` (địa chỉ Vercel). `JWT_SECRET` do Render tự sinh. Nếu tên service khác `preschool-api`, sửa
+   và `FRONTEND_URL` (địa chỉ Vercel). Đặt `BOOTSTRAP_ADMIN_EMAIL` và `BOOTSTRAP_ADMIN_PASSWORD` thành secret riêng cho hiệu trưởng đầu tiên. `JWT_SECRET` do Render tự sinh. Nếu tên service khác `preschool-api`, sửa
    địa chỉ trong `frontend/vercel.json`.
 3. **Vercel:** Root Directory `frontend`, deploy lại. Không đặt `VITE_DATA_SOURCE` (mặc định `api`).
 
@@ -159,8 +158,19 @@ nên trình duyệt chỉ thấy một origin và cookie refresh vẫn hoạt đ
    `render.yaml`, vì gói free của Render chặn các cổng 25/465/587. Chưa có tên miền riêng nên email có thể rơi vào thư rác.
 
 Gói free của Render ngủ sau 15 phút không dùng, lần gọi đầu chờ khoảng 1 phút. Thử nhanh: đăng nhập
-`owner@preschool.local`, tải một file ở Thư viện (kiểm tra R2), rồi bấm "Quên mật khẩu" với một tài khoản có email thật
+email bootstrap sau khi đổi mật khẩu lần đầu, tải một file ở Thư viện (kiểm tra R2), rồi bấm "Quên mật khẩu" với một tài khoản có email thật
 (kiểm tra Brevo). Lỗi gửi email chỉ ghi vào log Render, không báo lên giao diện.
+
+### Xóa dữ liệu seed khỏi database hiện tại
+
+Trước tiên đặt `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` cho đúng database rồi tạo backup; lệnh `pg_dump` sẽ hỏi mật khẩu:
+
+```powershell
+pg_dump -Fc -f .\backup-before-sample-purge.dump -h $env:PGHOST -p $env:PGPORT -U $env:PGUSER $env:PGDATABASE
+.\backend\scripts\purge-sample-data.ps1
+```
+
+Script yêu cầu gõ chính xác `XOA DU LIEU MAU`, chạy transaction và chỉ xóa hai tổ chức seed cũ. Script kiểm tra và giữ nguyên ba trường PBC; có thể chạy lại an toàn.
 
 ## Sự cố thường gặp
 

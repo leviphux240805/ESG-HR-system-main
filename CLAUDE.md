@@ -34,7 +34,7 @@ docs/                thiet-ke.md, tien-do.md
 Cập nhật mục này khi lệnh thay đổi.
 
 - Hạ tầng dev: `docker compose up -d` (PostgreSQL 5432, MinIO 9000/console 9001, Mailpit SMTP 1025/web 8025)
-- Backend: `cd backend && ./mvnw spring-boot:run` (cổng 8081, profile `dev` có seed) · test: `./mvnw test` (cần Docker; đồng thời ghi `frontend/openapi.json`)
+- Backend: `cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` (cổng 8081, seed chỉ ở `dev`/`test`; mặc định `prod`) · test: `./mvnw test` (cần Docker; đồng thời ghi `frontend/openapi.json`)
 - Frontend: `cd frontend && npm install && npm run dev` (cổng 8080, proxy `/api` → 8081) · kiểm tra: `npm test && npm run lint && npm run build && npm run build:demo`
 - Bản demo (dữ liệu giả, không cần backend): `npm run dev:demo`, hoặc `npm run demo` để build và xem thử (`dist-demo/`)
 - E2E: compose + backend đang chạy, rồi `cd frontend && npm run e2e` (Playwright; lần đầu `npx playwright install chromium`)

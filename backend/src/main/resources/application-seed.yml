@@ -1,5 +1,0 @@
-# Server demo (Render + Neon): như môi trường thật nhưng nạp seed dev để đăng nhập thử bằng tài khoản mẫu.
-# KHÔNG dùng cho dữ liệu thật: seed tạo tài khoản mẫu với mật khẩu công khai (Matkhau@123). Production dùng profile prod.
-spring:
-  flyway:
-    locations: classpath:db/migration,classpath:db/dev

@@ -6,6 +6,7 @@ Theo `docs/hoan-thien.md`: 11/11 module đã có API thật và mock cùng dữ 
 (trang có sẵn nhưng chưa vào menu, chưa có mock) – cần khách duyệt giao diện trước khi làm.
 
 Đã thêm mô hình trường chính/phân hiệu và dữ liệu Trường MN Phan Bội Châu cùng hai phân hiệu; bộ chọn và trang Trường hiển thị theo nhóm.
+Đã tách seed theo môi trường: `dev`/`test` dùng dữ liệu mẫu; `prod` chỉ migration PBC và bootstrap hiệu trưởng từ biến môi trường. Có script xác nhận để xóa hai tổ chức mẫu cũ, giữ nguyên ba trường PBC.
 
 ## Kiểm thử trước bàn giao (2026-10-03)
 

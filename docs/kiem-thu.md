@@ -64,8 +64,8 @@ Cách hiểu đang dùng (khớp thiết kế, ghi lại để chủ dự án bi
 | Profile mặc định của image Docker | Đọc cấu hình | **Đã sửa:** chạy image mà quên `SPRING_PROFILES_ACTIVE` thì rơi về profile `dev`, nghĩa là dùng khóa JWT công khai và nạp tài khoản mẫu. Nay Dockerfile đặt mặc định `prod`, bắt buộc `JWT_SECRET` và không nạp seed |
 
 Lưu ý khi lên production thật:
-- Server demo (Render, profile `seed`) có tài khoản mẫu với mật khẩu `Matkhau@123` công khai. **Đã chốt:** profile `seed`
-  chỉ dùng cho server demo; production dùng `prod` (đã ghi trong `application-seed.yml`, README).
+- `dev`/`test` mới nạp dữ liệu mẫu. Production mặc định profile `prod`, chỉ chạy migration dữ liệu ba trường PBC; hiệu trưởng đầu tiên lấy từ `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_PASSWORD` và phải đổi mật khẩu lần đầu.
+- Trước khi xóa dữ liệu seed trên DB đang dùng, tạo backup bằng `pg_dump`; chạy `backend/scripts/purge-sample-data.ps1` và xác nhận `XOA DU LIEU MAU`.
 - `/swagger-ui.html` và `/v3/api-docs`: **đã tắt** ngoài profile dev và test (bật tạm bằng `API_DOCS_ENABLED=true`).
 - Giới hạn đăng nhập lưu trong bộ nhớ nên chỉ đúng khi chạy một instance backend (như Render hiện tại). Chạy nhiều instance
   thì cần chuyển bộ đếm sang DB hoặc Redis.
