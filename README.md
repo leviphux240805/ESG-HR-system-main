@@ -134,6 +134,9 @@ nếu cách lần chạy trước hơn 1 phút (backend giới hạn 1 yêu cầ
 Tạm thời, chưa phải nơi chạy chính thức. Frontend ở Vercel chuyển tiếp `/api/*` sang backend ở Render (`frontend/vercel.json`),
 nên trình duyệt chỉ thấy một origin và cookie refresh vẫn hoạt động. Database ở Neon. Profile `seed` nạp dữ liệu mẫu dev.
 
+> **Production thật:** dùng profile `prod` (mặc định của image Docker), không dùng `seed`: seed tạo tài khoản mẫu với
+> mật khẩu công khai. Swagger/OpenAPI tắt ngoài dev, test; cần xem tạm thì đặt `API_DOCS_ENABLED=true`.
+
 1. **Neon:** tạo project ở region Singapore. Lấy host **không có** `-pooler` (Flyway cần kết nối trực tiếp), cùng user
    và mật khẩu.
 2. **Render:** New → Blueprint → chọn repo/nhánh (đọc `render.yaml`). Điền `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`

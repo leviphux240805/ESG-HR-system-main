@@ -54,7 +54,7 @@ Ma trận quyền theo module. **Trường** = đọc/ghi ở các trường đ�
 | Công việc                     | Trường              | Nhóm           | Mình                   | Mình                      | Mình           | Mình             | Mình           |
 | Chấm công & nghỉ phép         | Trường              | Nhóm           | Xem                    | Mình (xin nghỉ)           | Mình           | Mình             | Mình           |
 | Lớp học, hồ sơ trẻ, điểm danh | Trường              | Nhóm           | Xem                    | Lớp                       | Xem            | Xem (sĩ số)      | —              |
-| Thực đơn & sức khỏe           | Trường              | Nhóm           | —                      | Lớp (cân đo, sổ theo dõi) | Trường         | Trường (thực đơn) | —             |
+| Thực đơn & sức khỏe           | Trường              | Nhóm           | —                      | Lớp (cân đo, sổ theo dõi) + xem thực đơn | Trường | Trường (thực đơn) | —             |
 | Học phí & thu chi             | Trường              | Nhóm           | Trường                 | —                         | —              | —                | —              |
 | Lương & phiếu lương           | Trường              | Nhóm           | Trường                 | Mình                      | Mình           | Mình             | Mình           |
 | Báo cáo & dashboard           | Trường              | Nhóm           | Tài chính              | —                         | —              | —                | —              |
@@ -503,6 +503,7 @@ Giai đoạn 1 gồm:
 | 2026-10-03 | Sổ điểm danh tháng (`/so-diem-danh`, API `.../attendance/month` + xuất Excel; ô chỉ sửa được khi ngày chưa chốt và người xem được điểm danh ngày đó); V16 `task_comment_files`, bình luận nhận `fileIds[]` (tối đa 10), file đính kèm công việc tối đa 10MB | Chủ dự án yêu cầu sổ điểm danh và chèn file trong công việc; khóa theo ngày đã chốt (không thêm khóa tháng) |
 | 2026-10-03 | Lương: tính từ bảng công đã khóa (công hưởng lương = tổng công + phép năm; công chuẩn theo cấu hình chấm công, nửa buổi 0,5, tính cả ngày lễ); phụ cấp thâm niên theo % lương hợp đồng; kế toán / phó hiệu trưởng nhóm Tài chính tính, sửa thưởng-phạt, đánh dấu đã trả; hiệu trưởng duyệt, mở lại (lý do); phiếu lương gửi bằng thông báo trong app (email làm sau); thêm `PayrollPeriod.reopen` | Chủ dự án duyệt kế hoạch module Lương |
 | 2026-10-03 | Số suất ăn trả trong thực đơn tuần (`days[].portions`, cờ đã chốt / ước theo sĩ số) thay cho `/menus/{id}/portions` | Một lần gọi cho trang Thực đơn tuần; số suất gắn với ngày có món |
+| 2026-10-03 | Giáo viên xem (chỉ đọc) thực đơn tuần, món ăn, cảnh báo dị ứng; tắt Swagger/OpenAPI ngoài dev, test (`API_DOCS_ENABLED`); profile `seed` chỉ cho server demo | Chủ dự án đồng ý các điểm cần quyết định trong `docs/kiem-thu.md` |
 | 2026-10-03 | Giới hạn đăng nhập sai: 5 lần/tài khoản, 30 lần/IP trong 15 phút → 429 kèm `Retry-After`, quên mật khẩu tính chung (`app.auth.login-*`); cấp dưỡng chỉ xem danh sách và chi tiết lớp (sĩ số), không xem hồ sơ trẻ, điểm danh | Kiểm thử trước bàn giao (`docs/kiem-thu.md`): chủ dự án yêu cầu rate limit; code cũ sai ma trận "Xem (sĩ số)" |
 
 ## Nguồn

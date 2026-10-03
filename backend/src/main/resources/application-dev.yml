@@ -3,6 +3,12 @@ spring:
     # Seed dữ liệu dev chỉ nạp ở profile này
     locations: classpath:db/migration,classpath:db/dev
 
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 app:
   auth:
     # Khóa chỉ dùng cho dev; môi trường thật phải đặt JWT_SECRET riêng

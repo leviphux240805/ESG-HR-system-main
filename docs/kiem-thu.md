@@ -49,8 +49,8 @@ Cách hiểu đang dùng (khớp thiết kế, ghi lại để chủ dự án bi
   không thấy đơn và việc của người khác.
 - **Tìm phụ huynh theo SĐT** chỉ dành cho người quản lý lớp, vì chỉ dùng khi thêm trẻ.
 - **Gỡ tệp đính kèm của việc** chỉ người giao việc làm được; người nhận vẫn đính kèm được.
-- **Cần chủ dự án xác nhận:** giáo viên đang xem được thực đơn tuần, món ăn và cảnh báo dị ứng (chỉ đọc). Ô của giáo viên ở
-  dòng "Thực đơn & sức khỏe" trong ma trận ghi "Lớp (cân đo, sổ theo dõi)", không nhắc tới thực đơn.
+- **Chủ dự án đã đồng ý (03/10/2026):** giáo viên xem (chỉ đọc) thực đơn tuần, món ăn và cảnh báo dị ứng; ma trận trong
+  `docs/thiet-ke.md` đã ghi thêm "+ xem thực đơn".
 
 ## 3. Bảo mật
 
@@ -64,10 +64,9 @@ Cách hiểu đang dùng (khớp thiết kế, ghi lại để chủ dự án bi
 | Profile mặc định của image Docker | Đọc cấu hình | **Đã sửa:** chạy image mà quên `SPRING_PROFILES_ACTIVE` thì rơi về profile `dev`, nghĩa là dùng khóa JWT công khai và nạp tài khoản mẫu. Nay Dockerfile đặt mặc định `prod`, bắt buộc `JWT_SECRET` và không nạp seed |
 
 Lưu ý khi lên production thật:
-- Server demo (Render, profile `seed`) có tài khoản mẫu với mật khẩu `Matkhau@123` công khai. Không dùng profile `seed`
-  cho dữ liệu thật.
-- `/swagger-ui.html` và `/v3/api-docs` đang mở ở mọi profile. Nên tắt ở production bằng `springdoc.api-docs.enabled=false`
-  và `springdoc.swagger-ui.enabled=false`.
+- Server demo (Render, profile `seed`) có tài khoản mẫu với mật khẩu `Matkhau@123` công khai. **Đã chốt:** profile `seed`
+  chỉ dùng cho server demo; production dùng `prod` (đã ghi trong `application-seed.yml`, README).
+- `/swagger-ui.html` và `/v3/api-docs`: **đã tắt** ngoài profile dev và test (bật tạm bằng `API_DOCS_ENABLED=true`).
 - Giới hạn đăng nhập lưu trong bộ nhớ nên chỉ đúng khi chạy một instance backend (như Render hiện tại). Chạy nhiều instance
   thì cần chuyển bộ đếm sang DB hoặc Redis.
 
