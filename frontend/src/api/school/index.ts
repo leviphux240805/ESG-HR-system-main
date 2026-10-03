@@ -96,6 +96,10 @@ export async function deleteClass(id: string) {
   return unwrap(await api.DELETE("/api/v1/classes/{id}", { params: { path: { id } } }));
 }
 
+export async function createSchoolYear(body: S["SchoolYearRequest"]) {
+  return unwrap(await api.POST("/api/v1/school-years", { body }));
+}
+
 export const CHILD_FILTER_KEYS = ["classId", "gender", "status"] as const;
 
 export function useChildren(params: ListParams) {

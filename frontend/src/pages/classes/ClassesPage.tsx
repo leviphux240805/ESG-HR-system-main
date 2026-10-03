@@ -11,6 +11,7 @@ import {
   ArchiveRestore,
   ChevronRight,
   ClipboardCheck,
+  Loader2,
   MoreVertical,
   Pencil,
   Plus,
@@ -36,6 +37,7 @@ import { SelectField, TextField } from "@/features/staff/profile/fields";
 import {
   archiveClass,
   createClass,
+  createSchoolYear,
   deleteClass,
   queryClient,
   updateClass,
@@ -79,6 +81,7 @@ export default function ClassesPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<ClassItem | "new" | null>(null);
   const [deleting, setDeleting] = useState<ClassItem | null>(null);
+  const [creatingYear, setCreatingYear] = useState(false);
 
   const { schoolId } = useCurrentSchool();
   const canManage = useCan("manage", "classes");
@@ -185,6 +188,34 @@ export default function ClassesPage() {
       }
     }
   }, [watchedAgeGroupId, editing, ageGroupsQuery.data, form]);
+
+  // Tự động chọn năm học hiện hành khi danh sách năm học tải xong
+  useEffect(() => {
+    if (editing && !form.getValues("schoolYearId") && schoolYearsQuery.data && schoolYearsQuery.data.length > 0) {
+      const cur = schoolYearsQuery.data.find((y) => y.current) ?? schoolYearsQuery.data[0];
+      if (cur) {
+        form.setValue("schoolYearId", cur.id, { shouldValidate: true });
+      }
+    }
+  }, [editing, schoolYearsQuery.data, form]);
+
+  const handleQuickCreateYear = async () => {
+    try {
+      setCreatingYear(true);
+      const newYear = await createSchoolYear({
+        name: "2026–2027",
+        startDate: "2026-09-01",
+        endDate: "2027-05-31",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["school-years"] });
+      form.setValue("schoolYearId", newYear.id, { shouldValidate: true });
+      toast.success("Đã tạo năm học 2026–2027.");
+    } catch {
+      toast.error("Không thể tạo năm học.");
+    } finally {
+      setCreatingYear(false);
+    }
+  };
 
   const selectedGroup = ageGroupsQuery.data?.find((g) => g.id === watchedAgeGroupId);
   const isCapacityExceeded = selectedGroup && watchedCapacity > selectedGroup.maxClassSize;
@@ -394,6 +425,22 @@ export default function ClassesPage() {
             <SelectField form={form} name="schoolId" label="Trường" required options={schoolOptions} />
             <SelectField form={form} name="schoolYearId" label="Năm học" required options={yearOptions} />
           </div>
+          {yearOptions.length === 0 && canManage && (
+            <div className="flex items-center justify-between gap-2 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-200">
+              <span>Chưa có năm học nào.</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleQuickCreateYear}
+                disabled={creatingYear}
+                className="h-7 text-xs min-h-7"
+              >
+                {creatingYear ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Plus className="mr-1 h-3 w-3" />}
+                Tạo nhanh 2026–2027
+              </Button>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <TextField form={form} name="name" label="Tên lớp" required placeholder="Ví dụ: Mầm 1" />
             <SelectField form={form} name="ageGroupId" label="Khối" required options={ageGroupOptions} />
