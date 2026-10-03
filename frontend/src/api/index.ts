@@ -20,6 +20,7 @@ export * from "./health";
 export * from "./leave";
 export * from "./library";
 export * from "./me";
+export * from "./payroll";
 export * from "./reports";
 export * from "./school";
 export * from "./schools";

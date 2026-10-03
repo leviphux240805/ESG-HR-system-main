@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { matchPath } from "react-router-dom";
-import { Baby, BarChart3, Building2, BookOpen, BookOpenCheck, CalendarCheck, CalendarOff, ClipboardCheck, Clock, HeartPulse, Inbox, ListChecks, ListTodo, type LucideIcon, Receipt, Ruler, UtensilsCrossed, School, Soup, Sun, Tags, UserCog, Users, Wallet } from "lucide-react";
+import { Baby, Banknote, BarChart3, Building2, BookOpen, BookOpenCheck, CalendarCheck, CalendarOff, ClipboardCheck, Clock, FileText, HeartPulse, Inbox, ListChecks, ListTodo, type LucideIcon, Receipt, Ruler, UtensilsCrossed, School, Soup, Sun, Tags, UserCog, Users, Wallet } from "lucide-react";
 import type { Action, Resource, RoleCode } from "./permissions";
 
 /** Giai đoạn đang làm theo lộ trình (docs/thiet-ke.md). Mục của giai đoạn sau bị ẩn. Bản demo: mở mọi mục đã có trang. */
@@ -71,6 +71,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: "/thu-chi", label: "Thu chi", icon: BookOpen, phase: 6, permission: view("finance"), page: () => import("@/pages/finance/CashBookPage") },
       { path: "/hoc-phi/bieu-phi", label: "Biểu phí", icon: Tags, phase: 6, permission: view("finance"), page: () => import("@/pages/finance/FeeSchedulesPage") },
       { path: "/hoc-phi/khoan-thu", label: "Khoản thu", icon: ListChecks, phase: 6, permission: view("finance"), page: () => import("@/pages/finance/FeeTypesPage") },
+      { path: "/luong", label: "Bảng lương", icon: Banknote, phase: 4, permission: view("payroll"), page: () => import("@/pages/payroll/PayrollPage") },
     ],
   },
   {
@@ -83,7 +84,10 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Của tôi",
-    items: [{ path: "/cua-toi/cham-cong", label: "Chấm công của tôi", icon: Clock, phase: 1, page: () => import("@/pages/me/MyAttendancePage") }],
+    items: [
+      { path: "/cua-toi/cham-cong", label: "Chấm công của tôi", icon: Clock, phase: 1, page: () => import("@/pages/me/MyAttendancePage") },
+      { path: "/cua-toi/phieu-luong", label: "Phiếu lương của tôi", icon: FileText, phase: 4, page: () => import("@/pages/me/MyPayslipsPage") },
+    ],
   },
 ];
 

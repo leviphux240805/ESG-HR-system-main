@@ -289,5 +289,6 @@ công, lương cũ.
 1. Chủ dự án chạy thử theo README (mục "Thử nhanh") và nghiệm thu giai đoạn 1 + khung giao diện.
 - Hoàn thiện bản demo thành sản phẩm thật (2026-10-03): bảng theo dõi ở `docs/hoan-thien.md`. Xong: Nhân sự (mock đủ
   endpoint, sửa lệch ngày VN/UTC); Chấm công, nghỉ phép (route cấu hình, mock cấu hình/ngày lễ/import). Học phí, thu chi
-  (PDF phiếu thu ở bản demo). Backend 228/228. Tiếp theo: Lương.
+  (PDF phiếu thu ở bản demo). Backend 228/228. Lương (`/luong`,
+  `/cua-toi/phieu-luong`). Backend 231/231. Tiếp theo: Thực đơn, sức khỏe.
 

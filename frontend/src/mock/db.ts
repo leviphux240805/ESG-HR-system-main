@@ -167,6 +167,46 @@ export interface NotificationRec {
   readAt?: string;
 }
 
+/** Một dòng lương đã tính (đủ trường để dựng phiếu lương). */
+export interface PayrollRecordRec {
+  id: string;
+  staffId: string;
+  workDays: number;
+  salaryMode: S["SalaryConfigDto"]["salaryMode"];
+  coefficient?: number;
+  contract: number;
+  salaryByWork: number;
+  allowances: Record<string, number>;
+  allowanceTotal: number;
+  bonus: number;
+  fines: number;
+  gross: number;
+  social: number;
+  health: number;
+  unemployment: number;
+  insurance: number;
+  dependentCount: number;
+  totalDeduction: number;
+  taxable: number;
+  pit: number;
+  net: number;
+  note?: string;
+}
+
+export interface PayrollPeriodRec {
+  id: string;
+  schoolId: string;
+  /** "yyyy-MM" */
+  month: string;
+  status: "DRAFT" | "APPROVED" | "PAID";
+  standardWorkDays: number;
+  calculatedAt: string;
+  approvedAt?: string;
+  approvedByName?: string;
+  paidAt?: string;
+  records: PayrollRecordRec[];
+}
+
 export interface DemoDB {
   version: number;
   /** Ngày sinh dữ liệu; khác hôm nay thì sinh lại để "Hôm nay" luôn có số liệu mới. */
@@ -183,6 +223,7 @@ export interface DemoDB {
   assignments?: Record<string, S["AssignmentDto"][]>;
   changeRequests?: S["ChangeRequestDto"][];
   attendanceConfigs?: S["ConfigDto"][];
+  payrollPeriods?: PayrollPeriodRec[];
   /** Ngày lễ thêm trong bản demo (ngày lễ quốc gia cố định ở dates.ts) */
   customHolidays?: { id: string; date: string; name: string; schoolId?: string }[];
   certificates: Record<string, S["CertificateDto"][]>;

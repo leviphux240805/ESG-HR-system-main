@@ -19,9 +19,9 @@ endpoint trong `frontend/openapi.json`).
 | 6 | Công việc (đính kèm) | `/cong-viec` | Có | Có | — | Xong |
 | 7 | Hôm nay, Hộp duyệt | `/hom-nay`, `/hop-duyet` | Có | Có | — | Xong |
 | 8 | Học phí, thu chi | `/hoc-phi/phieu-thu`, `/hoc-phi/cong-no`, `/thu-chi`, `/hoc-phi/bieu-phi`, `/hoc-phi/khoan-thu`, tab Học phí ở `/tre/:id` | Có | Có | — | Xong |
-| 9 | Lương | (chưa có trang) | Không | Không (chỉ có bảng V8) | API tính lương, duyệt, phiếu lương; trang bảng lương + phiếu lương của tôi; mock; xuất Excel bảng lương ở Báo cáo đang rỗng | Chưa |
+| 9 | Lương | `/luong`, `/cua-toi/phieu-luong` | Có | Có | — (gửi phiếu lương qua email làm khi bật email) | Xong |
 | 10 | Thực đơn, sức khỏe | `/thuc-don`, `/thuc-don/mon-an`, `/suc-khoe/can-do`, `/suc-khoe/so-theo-doi`, tab Sức khỏe ở `/tre/:id` | Gần đủ | Có | Mock: file kết quả khám; API số suất ăn theo sĩ số (`/menus/{id}/portions`) | Chưa |
-| 11 | Báo cáo | `/bao-cao` | Có | Có | Xuất bảng lương phụ thuộc module Lương | Chưa |
+| 11 | Báo cáo | `/bao-cao` | Có | Có | Kiểm tra lại xuất bảng lương (đã có dữ liệu từ module Lương) | Chưa |
 | — | Tài liệu (ngoài danh sách) | `/tai-lieu`, `/cua-toi/van-ban`, `/cua-toi/ho-so` (có trang, chưa vào menu demo) | Không | Có | Mock toàn bộ thư viện văn bản, hồ sơ của tôi; route + menu (cần khách duyệt giao diện) | Chưa |
 
 ## Nhật ký
@@ -39,4 +39,10 @@ endpoint trong `frontend/openapi.json`).
 - 2026-10-03: Học phí, thu chi xong. Mock: PDF phiếu thu (vẽ phiếu bằng canvas, nhúng JPEG vào một trang PDF A5 viết
   tay, không thêm thư viện; chữ tiếng Việt đủ dấu), xem chứng từ thu chi qua kho file demo. Lỗi "tệp không còn" của
   kho file demo trả 404 có thông điệp thay vì lỗi chung.
-
+- 2026-10-03: Lương xong. Backend: `PayrollService` (tính từ bảng công đã khóa + cấu hình lương + người phụ thuộc +
+  `payroll_params`, giữ thưởng/phạt khi tính lại; duyệt, mở lại có lý do, đã trả; thông báo phiếu lương trong app),
+  `PayslipDocumentService` (phiếu lương PDF A5, bảng lương Excel), `PayrollController`, quyền `PayrollAccess`; font và
+  ô PDF dùng chung `common/pdf/PdfKit` (phiếu thu dùng lại). Giao diện: `/luong` (bảng lương, tính, duyệt, mở lại, đã
+  trả, xuất Excel, phiếu từng người + sửa thưởng/phạt), `/cua-toi/phieu-luong` (điện thoại). Mock: bản TS của
+  `PayrollCalculator` (test đối chiếu cùng ca với backend), bảng lương mẫu tháng trước đã duyệt, hai tháng trước đã
+  trả, phiếu lương PDF vẽ bằng canvas. E2E `payroll.spec.ts`; sửa `roles.spec.ts` theo menu hiện tại.

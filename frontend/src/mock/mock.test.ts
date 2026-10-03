@@ -152,6 +152,24 @@ describe("API giả", () => {
     resetDb();
   });
 
+  it("lương: tháng trước đã duyệt, giáo viên xem phiếu của mình; tháng chưa khóa công không tính được", async () => {
+    const school = db().schools[0].id;
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const [y, m] = thisMonth.split("-").map(Number);
+    const lastMonth = new Date(y, m - 2, 1).toLocaleDateString("sv-SE").slice(0, 7);
+    setSessionRole("principal");
+    const sheet = await call<{ status: string; rows: { netSalary: number }[]; totals: { netSalary: number } }>("GET", `/payroll/periods/${lastMonth}`, undefined, school);
+    expect(sheet.data.status).toBe("APPROVED");
+    expect(sheet.data.totals.netSalary).toBe(sheet.data.rows.reduce((s, r) => s + r.netSalary, 0));
+    expect((await call("POST", `/payroll/periods/${thisMonth}/calculate`, undefined, school)).status).toBe(409);
+
+    setSessionRole("teacher");
+    expect((await call("GET", `/payroll/periods/${lastMonth}`, undefined, school)).status).toBe(403);
+    const mine = await call<{ id: string }[]>("GET", "/me/payslips");
+    expect(mine.data.length).toBeGreaterThan(0);
+    expect((await call("GET", `/payroll/records/${mine.data[0].id}`)).status).toBe(200);
+  });
+
   it("nhân sự: BGH chỉ thấy cơ sở đang chọn, giáo viên không xem danh sách", async () => {
     setSessionRole("principal");
     const [a, b] = db().schools;

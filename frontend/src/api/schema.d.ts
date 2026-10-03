@@ -153,7 +153,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Duyệt đơn nghỉ hoặc việc (việc chuyển sang Hoàn thành) */
-        post: operations["approve_2"];
+        post: operations["approve_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -257,7 +257,7 @@ export interface paths {
             cookie?: never;
         };
         /** Xuất Excel bảng công tháng */
-        get: operations["export_3"];
+        get: operations["export_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -308,7 +308,7 @@ export interface paths {
             cookie?: never;
         };
         /** Bảng công tháng (nhân viên × ngày, tổng, trạng thái khóa) */
-        get: operations["sheet"];
+        get: operations["sheet_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1370,7 +1370,7 @@ export interface paths {
             cookie?: never;
         };
         /** Xuất Excel phiếu thu của tháng theo bộ lọc */
-        get: operations["export_2"];
+        get: operations["export_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1593,7 +1593,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Duyệt: ghi mã vào bảng công, trừ phép năm, báo người xin */
-        post: operations["approve_1"];
+        post: operations["approve_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1914,6 +1914,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/payslips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Phiếu lương của tôi (bảng đã duyệt) */
+        get: operations["mine_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/staff": {
         parameters: {
             query?: never;
@@ -2110,6 +2127,160 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["markRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/params": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tham số lương, bảo hiểm, thuế đang áp dụng */
+        get: operations["params"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/periods/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bảng lương tháng của trường đang chọn (rỗng nếu chưa tính) */
+        get: operations["sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/periods/{month}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duyệt bảng lương (hiệu trưởng); nhân viên nhận thông báo phiếu lương */
+        post: operations["approve_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/periods/{month}/calculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tính (lại) lương tháng từ bảng công đã khóa; giữ thưởng, phạt đã nhập */
+        post: operations["calculate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/periods/{month}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xuất Excel bảng lương tháng */
+        get: operations["export_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/periods/{month}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đánh dấu đã trả lương */
+        post: operations["pay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/periods/{month}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mở lại bảng lương đã duyệt, chưa trả (hiệu trưởng, kèm lý do) */
+        post: operations["reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/records/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Phiếu lương chi tiết */
+        get: operations["payslip"];
+        /** Sửa thưởng, phạt, ghi chú của một người (bảng nháp) */
+        put: operations["adjust"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payroll/records/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Phiếu lương PDF */
+        get: operations["payslipPdf"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3003,6 +3174,11 @@ export interface components {
              * @description Số người cần đọc
              */
             required: number;
+        };
+        AdjustRequest: {
+            bonus: number;
+            fines: number;
+            note?: string;
         };
         AgeGroupDto: {
             code: string;
@@ -4683,6 +4859,16 @@ export interface components {
             /** @description Người xem thuộc diện phải xác nhận văn bản này */
             required: boolean;
         };
+        MyPayslip: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            month: string;
+            netSalary: number;
+            schoolName: string;
+            /** @enum {string} */
+            status: "DRAFT" | "APPROVED" | "PAID";
+        };
         MySheet: {
             cells: {
                 [key: string]: components["schemas"]["Cell"];
@@ -4881,6 +5067,17 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        ParamsDto: {
+            baseSalary: number;
+            dependentDeduction: number;
+            /** Format: date */
+            effectiveFrom: string;
+            healthInsuranceRate: number;
+            note?: string;
+            personalDeduction: number;
+            socialInsuranceRate: number;
+            unemploymentInsuranceRate: number;
+        };
         PaymentDto: {
             amount: number;
             /** Format: uuid */
@@ -4908,6 +5105,106 @@ export interface components {
             /** Format: date */
             paidOn: string;
             reference?: string;
+        };
+        PayrollRow: {
+            allowances: number;
+            bonus: number;
+            contractSalary: number;
+            /** Format: int32 */
+            dependentCount: number;
+            fines: number;
+            fullName: string;
+            grossSalary: number;
+            /** Format: uuid */
+            id: string;
+            insuranceDeduction: number;
+            netSalary: number;
+            note?: string;
+            pit: number;
+            /** @enum {string} */
+            position: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
+            salaryByWork: number;
+            /** @enum {string} */
+            salaryMode: "FIXED" | "COEFFICIENT";
+            staffCode: string;
+            /** Format: uuid */
+            staffId: string;
+            workDays: number;
+        };
+        PayrollSheet: {
+            /** Format: date-time */
+            approvedAt?: string;
+            approvedByName?: string;
+            /** @description Bảng công tháng đã khóa (điều kiện tính lương) */
+            attendanceLocked: boolean;
+            /** Format: date-time */
+            calculatedAt?: string;
+            /** @description Duyệt, mở lại (hiệu trưởng) */
+            canApprove: boolean;
+            /** @description Tính, sửa thưởng/phạt, đánh dấu đã trả */
+            canEdit: boolean;
+            /** @description Nhân viên chưa có cấu hình lương nên chưa tính */
+            missingConfig: string[];
+            /**
+             * Format: date
+             * @description Ngày đầu tháng
+             */
+            month: string;
+            /** Format: date-time */
+            paidAt?: string;
+            rows: components["schemas"]["PayrollRow"][];
+            /** Format: uuid */
+            schoolId: string;
+            standardWorkDays?: number;
+            /**
+             * @description Rỗng = chưa tính lương tháng này
+             * @enum {string}
+             */
+            status?: "DRAFT" | "APPROVED" | "PAID";
+            totals: components["schemas"]["PayrollTotals"];
+        };
+        PayrollTotals: {
+            grossSalary: number;
+            insuranceDeduction: number;
+            netSalary: number;
+            pit: number;
+        };
+        Payslip: {
+            /** @description Khóa phụ cấp → số tiền */
+            allowances: {
+                [key: string]: number;
+            };
+            bonus: number;
+            coefficient?: number;
+            contractSalary: number;
+            /** Format: int32 */
+            dependentCount: number;
+            fines: number;
+            fullName: string;
+            grossSalary: number;
+            healthInsurance: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            month: string;
+            netSalary: number;
+            note?: string;
+            pit: number;
+            /** @enum {string} */
+            position: "TEACHER" | "NANNY" | "COOK" | "NURSE" | "ACCOUNTANT" | "SECURITY" | "MANAGER" | "OTHER";
+            salaryByWork: number;
+            /** @enum {string} */
+            salaryMode: "FIXED" | "COEFFICIENT";
+            schoolName: string;
+            socialInsurance: number;
+            staffCode: string;
+            standardWorkDays: number;
+            /** @enum {string} */
+            status: "DRAFT" | "APPROVED" | "PAID";
+            taxableIncome: number;
+            totalDeduction: number;
+            unemploymentInsurance: number;
+            workDays: number;
         };
         PickUpPerson: {
             fullName: string;
@@ -5012,6 +5309,9 @@ export interface components {
         };
         RenameFolderRequest: {
             name: string;
+        };
+        ReopenRequest: {
+            reason: string;
         };
         ResetPasswordRequest: {
             /** @description Mật khẩu mới: ít nhất 8 ký tự, gồm cả chữ và số */
@@ -6185,7 +6485,7 @@ export interface operations {
             };
         };
     };
-    approve_2: {
+    approve_3: {
         parameters: {
             query?: never;
             header?: {
@@ -6438,7 +6738,7 @@ export interface operations {
             };
         };
     };
-    export_3: {
+    export_4: {
         parameters: {
             query?: never;
             header?: {
@@ -6547,7 +6847,7 @@ export interface operations {
             };
         };
     };
-    sheet: {
+    sheet_1: {
         parameters: {
             query: {
                 /** @example 2026-09 */
@@ -9582,7 +9882,7 @@ export interface operations {
             };
         };
     };
-    export_2: {
+    export_3: {
         parameters: {
             query: {
                 month: string;
@@ -10052,7 +10352,7 @@ export interface operations {
             };
         };
     };
-    approve_1: {
+    approve_2: {
         parameters: {
             query?: never;
             header?: {
@@ -10940,6 +11240,35 @@ export interface operations {
             };
         };
     };
+    mine_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyPayslip"][];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     myProfile: {
         parameters: {
             query?: never;
@@ -11370,6 +11699,353 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["NotificationDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    params: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParamsDto"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sheet: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                /** @example 2026-09 */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayrollSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    approve_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayrollSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    calculate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayrollSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    pay: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayrollSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reopen: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReopenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayrollSheet"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    payslip: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Payslip"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adjust: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PayrollRow"];
+                };
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    payslipPdf: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */

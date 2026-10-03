@@ -504,7 +504,7 @@
     },
     "/api/v1/approvals/{type}/{id}/approve" : {
       "post" : {
-        "operationId" : "approve_2",
+        "operationId" : "approve_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "type",
@@ -866,7 +866,7 @@
     },
     "/api/v1/attendance/months/{month}/export" : {
       "get" : {
-        "operationId" : "export_3",
+        "operationId" : "export_4",
         "parameters" : [ {
           "example" : "2026-09",
           "in" : "path",
@@ -1018,7 +1018,7 @@
     },
     "/api/v1/attendance/staff" : {
       "get" : {
-        "operationId" : "sheet",
+        "operationId" : "sheet_1",
         "parameters" : [ {
           "example" : "2026-09",
           "in" : "query",
@@ -5522,7 +5522,7 @@
     },
     "/api/v1/invoices/export" : {
       "get" : {
-        "operationId" : "export_2",
+        "operationId" : "export_3",
         "parameters" : [ {
           "in" : "query",
           "name" : "month",
@@ -6235,7 +6235,7 @@
     },
     "/api/v1/leave-requests/{id}/approve" : {
       "post" : {
-        "operationId" : "approve_1",
+        "operationId" : "approve_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7441,6 +7441,38 @@
         "tags" : [ "Của tôi" ]
       }
     },
+    "/api/v1/me/payslips" : {
+      "get" : {
+        "operationId" : "mine_2",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MyPayslip"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Phiếu lương của tôi (bảng đã duyệt)",
+        "tags" : [ "Lương" ]
+      }
+    },
     "/api/v1/me/staff" : {
       "get" : {
         "operationId" : "myProfile",
@@ -8052,6 +8084,483 @@
           }
         },
         "tags" : [ "Thông báo" ]
+      }
+    },
+    "/api/v1/payroll/params" : {
+      "get" : {
+        "operationId" : "params",
+        "parameters" : [ {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ParamsDto"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Tham số lương, bảo hiểm, thuế đang áp dụng",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/periods/{month}" : {
+      "get" : {
+        "operationId" : "sheet",
+        "parameters" : [ {
+          "example" : "2026-09",
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PayrollSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Bảng lương tháng của trường đang chọn (rỗng nếu chưa tính)",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/periods/{month}/approve" : {
+      "post" : {
+        "operationId" : "approve_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PayrollSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Duyệt bảng lương (hiệu trưởng); nhân viên nhận thông báo phiếu lương",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/periods/{month}/calculate" : {
+      "post" : {
+        "operationId" : "calculate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PayrollSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Tính (lại) lương tháng từ bảng công đã khóa; giữ thưởng, phạt đã nhập",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/periods/{month}/export" : {
+      "get" : {
+        "operationId" : "export_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Xuất Excel bảng lương tháng",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/periods/{month}/pay" : {
+      "post" : {
+        "operationId" : "pay",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PayrollSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Đánh dấu đã trả lương",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/periods/{month}/reopen" : {
+      "post" : {
+        "operationId" : "reopen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "month",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReopenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PayrollSheet"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Mở lại bảng lương đã duyệt, chưa trả (hiệu trưởng, kèm lý do)",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/records/{id}" : {
+      "get" : {
+        "operationId" : "payslip",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Payslip"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Phiếu lương chi tiết",
+        "tags" : [ "Lương" ]
+      },
+      "put" : {
+        "operationId" : "adjust",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdjustRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PayrollRow"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Sửa thưởng, phạt, ghi chú của một người (bảng nháp)",
+        "tags" : [ "Lương" ]
+      }
+    },
+    "/api/v1/payroll/records/{id}/pdf" : {
+      "get" : {
+        "operationId" : "payslipPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "binary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Phiếu lương PDF",
+        "tags" : [ "Lương" ]
       }
     },
     "/api/v1/receivables" : {
@@ -11875,6 +12384,23 @@
           }
         },
         "required" : [ "acknowledged", "required" ]
+      },
+      "AdjustRequest" : {
+        "type" : "object",
+        "properties" : {
+          "bonus" : {
+            "type" : "number"
+          },
+          "fines" : {
+            "type" : "number"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "bonus", "fines" ]
       },
       "AgeGroupDto" : {
         "type" : "object",
@@ -16046,6 +16572,30 @@
         },
         "required" : [ "required" ]
       },
+      "MyPayslip" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "month" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "netSalary" : {
+            "type" : "number"
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "APPROVED", "PAID" ]
+          }
+        },
+        "required" : [ "id", "month", "netSalary", "schoolName", "status" ]
+      },
       "MySheet" : {
         "type" : "object",
         "properties" : {
@@ -16557,6 +17107,37 @@
         },
         "required" : [ "items", "page", "size", "totalElements", "totalPages" ]
       },
+      "ParamsDto" : {
+        "type" : "object",
+        "properties" : {
+          "baseSalary" : {
+            "type" : "number"
+          },
+          "dependentDeduction" : {
+            "type" : "number"
+          },
+          "effectiveFrom" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "healthInsuranceRate" : {
+            "type" : "number"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "personalDeduction" : {
+            "type" : "number"
+          },
+          "socialInsuranceRate" : {
+            "type" : "number"
+          },
+          "unemploymentInsuranceRate" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "baseSalary", "dependentDeduction", "effectiveFrom", "healthInsuranceRate", "personalDeduction", "socialInsuranceRate", "unemploymentInsuranceRate" ]
+      },
       "PaymentDto" : {
         "type" : "object",
         "properties" : {
@@ -16630,6 +17211,249 @@
           }
         },
         "required" : [ "amount", "method", "paidOn" ]
+      },
+      "PayrollRow" : {
+        "type" : "object",
+        "properties" : {
+          "allowances" : {
+            "type" : "number"
+          },
+          "bonus" : {
+            "type" : "number"
+          },
+          "contractSalary" : {
+            "type" : "number"
+          },
+          "dependentCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "fines" : {
+            "type" : "number"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "grossSalary" : {
+            "type" : "number"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "insuranceDeduction" : {
+            "type" : "number"
+          },
+          "netSalary" : {
+            "type" : "number"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "pit" : {
+            "type" : "number"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "salaryByWork" : {
+            "type" : "number"
+          },
+          "salaryMode" : {
+            "type" : "string",
+            "enum" : [ "FIXED", "COEFFICIENT" ]
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "staffId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "workDays" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "allowances", "bonus", "contractSalary", "dependentCount", "fines", "fullName", "grossSalary", "id", "insuranceDeduction", "netSalary", "pit", "position", "salaryByWork", "salaryMode", "staffCode", "staffId", "workDays" ]
+      },
+      "PayrollSheet" : {
+        "type" : "object",
+        "properties" : {
+          "approvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "approvedByName" : {
+            "type" : "string"
+          },
+          "attendanceLocked" : {
+            "type" : "boolean",
+            "description" : "Bảng công tháng đã khóa (điều kiện tính lương)"
+          },
+          "calculatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "canApprove" : {
+            "type" : "boolean",
+            "description" : "Duyệt, mở lại (hiệu trưởng)"
+          },
+          "canEdit" : {
+            "type" : "boolean",
+            "description" : "Tính, sửa thưởng/phạt, đánh dấu đã trả"
+          },
+          "missingConfig" : {
+            "type" : "array",
+            "description" : "Nhân viên chưa có cấu hình lương nên chưa tính",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "month" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Ngày đầu tháng"
+          },
+          "paidAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PayrollRow"
+            }
+          },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "standardWorkDays" : {
+            "type" : "number"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Rỗng = chưa tính lương tháng này",
+            "enum" : [ "DRAFT", "APPROVED", "PAID" ]
+          },
+          "totals" : {
+            "$ref" : "#/components/schemas/PayrollTotals"
+          }
+        },
+        "required" : [ "attendanceLocked", "canApprove", "canEdit", "missingConfig", "month", "rows", "schoolId", "totals" ]
+      },
+      "PayrollTotals" : {
+        "type" : "object",
+        "properties" : {
+          "grossSalary" : {
+            "type" : "number"
+          },
+          "insuranceDeduction" : {
+            "type" : "number"
+          },
+          "netSalary" : {
+            "type" : "number"
+          },
+          "pit" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "grossSalary", "insuranceDeduction", "netSalary", "pit" ]
+      },
+      "Payslip" : {
+        "type" : "object",
+        "properties" : {
+          "allowances" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "number"
+            },
+            "description" : "Khóa phụ cấp → số tiền"
+          },
+          "bonus" : {
+            "type" : "number"
+          },
+          "coefficient" : {
+            "type" : "number"
+          },
+          "contractSalary" : {
+            "type" : "number"
+          },
+          "dependentCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "fines" : {
+            "type" : "number"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "grossSalary" : {
+            "type" : "number"
+          },
+          "healthInsurance" : {
+            "type" : "number"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "month" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "netSalary" : {
+            "type" : "number"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "pit" : {
+            "type" : "number"
+          },
+          "position" : {
+            "type" : "string",
+            "enum" : [ "TEACHER", "NANNY", "COOK", "NURSE", "ACCOUNTANT", "SECURITY", "MANAGER", "OTHER" ]
+          },
+          "salaryByWork" : {
+            "type" : "number"
+          },
+          "salaryMode" : {
+            "type" : "string",
+            "enum" : [ "FIXED", "COEFFICIENT" ]
+          },
+          "schoolName" : {
+            "type" : "string"
+          },
+          "socialInsurance" : {
+            "type" : "number"
+          },
+          "staffCode" : {
+            "type" : "string"
+          },
+          "standardWorkDays" : {
+            "type" : "number"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "APPROVED", "PAID" ]
+          },
+          "taxableIncome" : {
+            "type" : "number"
+          },
+          "totalDeduction" : {
+            "type" : "number"
+          },
+          "unemploymentInsurance" : {
+            "type" : "number"
+          },
+          "workDays" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "allowances", "bonus", "contractSalary", "dependentCount", "fines", "fullName", "grossSalary", "healthInsurance", "id", "month", "netSalary", "pit", "position", "salaryByWork", "salaryMode", "schoolName", "socialInsurance", "staffCode", "standardWorkDays", "status", "taxableIncome", "totalDeduction", "unemploymentInsurance", "workDays" ]
       },
       "PickUpPerson" : {
         "type" : "object",
@@ -16850,6 +17674,17 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "ReopenRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
       },
       "ResetPasswordRequest" : {
         "type" : "object",

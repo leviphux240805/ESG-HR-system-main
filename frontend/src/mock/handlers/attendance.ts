@@ -77,7 +77,8 @@ export function totals(cells: Record<string, S["Cell"]>): S["Totals"] {
   return t;
 }
 
-function row(s: StaffRec, month: string): S["StaffRow"] {
+/** Một dòng bảng công tháng của nhân viên (cũng dùng để tính lương ở bản demo). */
+export function row(s: StaffRec, month: string): S["StaffRow"] {
   const cells: Record<string, S["Cell"]> = {};
   for (const date of monthDays(month)) {
     const cell = cellOf(s.id, date, configAt(s.schoolId, date).graceMinutes);

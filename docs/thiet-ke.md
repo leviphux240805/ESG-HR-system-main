@@ -395,7 +395,7 @@ Một ứng dụng Spring Boot duy nhất (modular monolith), chia package theo 
 | Công việc     | `GET/POST /tasks`, `PATCH /tasks/{id}/status`, `POST /tasks/{id}/comments`                                                                   |
 | Chấm công     | `POST /attendance/imports`, `GET /attendance/staff?month=`, `PUT /attendance/staff/{staffId}/{date}`, `POST /attendance/months/{month}/lock` |
 | Nghỉ phép     | `POST /leave-requests`, `POST /leave-requests/{id}/approve`, `.../reject`                                                                    |
-| Lương         | `POST /payroll/periods/{month}/calculate`, `POST .../approve`, `POST .../send-payslips`                                                      |
+| Lương         | `GET /payroll/periods/{month}`, `POST .../calculate`, `PUT /payroll/records/{id}` (thưởng, phạt), `POST .../approve`, `.../reopen` (lý do), `.../pay`, `GET .../export`, `GET /payroll/records/{id}`, `.../pdf`, `GET /me/payslips`, `GET /payroll/params` |
 | Lớp & trẻ     | `GET/POST /classes`, `GET/POST /children`, `POST /classes/promote` (lên lớp hàng loạt)                                                       |
 | Điểm danh trẻ | `GET /classes/{id}/attendance?date=`, `PUT /classes/{id}/attendance` (cả lớp một lần), `POST .../lock`, `GET /classes/{id}/attendance/month?month=` (sổ điểm danh), `GET .../month/export` (Excel) |
 | Sức khỏe      | `GET/PUT /classes/{id}/measurements?date=` (nhập theo lớp), `GET /children/{id}/growth-chart`, `GET/POST /health-logs`, `GET/POST /children/{id}/checkups` |
@@ -501,6 +501,7 @@ Giai đoạn 1 gồm:
 | 2026-10-02 | Tạm bỏ email khỏi luồng tài khoản (V14): `users.email` không bắt buộc (cần email hoặc phone), thêm `must_change_password`; tạo tài khoản kèm mật khẩu ban đầu (bỏ email mời), `POST /accounts/{id}/password` thay `send-reset`, `POST /auth/change-password`; ẩn "Quên mật khẩu" | Chủ dự án chưa dùng email; tài khoản do hiệu trưởng hoặc bên vận hành tạo |
 | 2026-10-02 | Thêm API điều hành `GET /today`, `POST /substitutions`, `GET /approvals` + duyệt/từ chối (V15: bảng `class_substitutions`) | Trang Hôm nay, Hộp duyệt và phân công dạy thay của bản demo chạy được với backend thật |
 | 2026-10-03 | Sổ điểm danh tháng (`/so-diem-danh`, API `.../attendance/month` + xuất Excel; ô chỉ sửa được khi ngày chưa chốt và người xem được điểm danh ngày đó); V16 `task_comment_files`, bình luận nhận `fileIds[]` (tối đa 10), file đính kèm công việc tối đa 10MB | Chủ dự án yêu cầu sổ điểm danh và chèn file trong công việc; khóa theo ngày đã chốt (không thêm khóa tháng) |
+| 2026-10-03 | Lương: tính từ bảng công đã khóa (công hưởng lương = tổng công + phép năm; công chuẩn theo cấu hình chấm công, nửa buổi 0,5, tính cả ngày lễ); phụ cấp thâm niên theo % lương hợp đồng; kế toán / phó hiệu trưởng nhóm Tài chính tính, sửa thưởng-phạt, đánh dấu đã trả; hiệu trưởng duyệt, mở lại (lý do); phiếu lương gửi bằng thông báo trong app (email làm sau); thêm `PayrollPeriod.reopen` | Chủ dự án duyệt kế hoạch module Lương |
 
 ## Nguồn
 

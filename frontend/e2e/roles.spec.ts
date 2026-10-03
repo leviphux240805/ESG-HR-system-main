@@ -11,7 +11,7 @@ test("giáo viên bị khóa ở cơ sở của mình, menu chỉ gồm mục đ
   await expect(selector).toContainText("Trường A – Hoa Sen");
 
   const menu = page.getByRole("navigation", { name: "Menu chính" });
-  await expect(menu.getByRole("link", { name: "Điểm danh" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Điểm danh", exact: true })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Phiếu lương của tôi" })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Nhân sự" })).toHaveCount(0);
   await expect(menu.getByRole("link", { name: "Học phí" })).toHaveCount(0);
@@ -19,13 +19,19 @@ test("giáo viên bị khóa ở cơ sở của mình, menu chỉ gồm mục đ
   await page.goto("/hoc-phi/phieu-thu");
   await expect(page.getByRole("heading", { name: "Bạn không có quyền truy cập trang này" })).toBeVisible();
   await page.getByRole("link", { name: "Về trang chủ" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  // Trang chủ chuyển tới trang đầu tiên của menu theo vai trò: giáo viên → Điểm danh
+  await expect(page).toHaveURL(/\/diem-danh/);
 });
 
-test("hiệu trưởng vào được trang quản lý (trang 'Sắp có' khi xem trước)", async ({ page }) => {
+test("hiệu trưởng vào được trang Bảng lương; giáo viên thì không", async ({ page, browser }) => {
   await login(page, ACCOUNTS.owner);
   await page.goto("/luong");
-  await expect(page.getByRole("heading", { name: /Lương – sắp có/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bảng lương", exact: true })).toBeVisible();
+  const teacher = await browser.newPage();
+  await login(teacher, ACCOUNTS.teacherA);
+  await teacher.goto("/luong");
+  await expect(teacher.getByRole("heading", { name: "Bạn không có quyền truy cập trang này" })).toBeVisible();
+  await teacher.close();
 });
 
 test("đường dẫn không tồn tại → 404", async ({ page }) => {

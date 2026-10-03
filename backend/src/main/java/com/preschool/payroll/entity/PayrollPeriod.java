@@ -75,6 +75,13 @@ public class PayrollPeriod extends BaseEntity {
 		this.approvedAt = at;
 	}
 
+	/** Mở lại bảng đã duyệt (chưa trả) để sửa và tính lại. */
+	public void reopen() {
+		this.status = PeriodStatus.DRAFT;
+		this.approvedBy = null;
+		this.approvedAt = null;
+	}
+
 	public void pay(Instant at) {
 		this.status = PeriodStatus.PAID;
 		this.paidAt = at;

@@ -1,13 +1,14 @@
 package com.preschool.finance.service;
 
+import static com.preschool.common.pdf.PdfKit.cell;
+import static com.preschool.common.pdf.PdfKit.money;
+import static com.preschool.common.pdf.PdfKit.plain;
+
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -20,10 +21,10 @@ import com.lowagie.text.Font;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
-import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.preschool.common.pdf.PdfKit;
 import com.preschool.finance.dto.InvoiceDtos.InvoiceDetail;
 import com.preschool.finance.dto.InvoiceDtos.InvoiceLineDto;
 import com.preschool.finance.dto.InvoiceDtos.InvoiceRow;
@@ -38,7 +39,6 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,10 +62,6 @@ public class InvoiceDocumentService {
 
 	private final SchoolRepository schools;
 
-	private BaseFont regular;
-
-	private BaseFont semibold;
-
 	public InvoiceDocumentService(InvoiceService invoices, SchoolRepository schools) {
 		this.invoices = invoices;
 		this.schools = schools;
@@ -80,10 +76,10 @@ public class InvoiceDocumentService {
 		InvoiceDetail detail = invoices.detail(id);
 		InvoiceRow row = detail.invoice();
 		School school = schools.findById(row.schoolId()).orElseThrow();
-		Font title = new Font(semibold(), 15);
-		Font bold = new Font(semibold(), 10);
-		Font normal = new Font(regular(), 10);
-		Font small = new Font(regular(), 8, Font.NORMAL, Color.DARK_GRAY);
+		Font title = new Font(PdfKit.semibold(), 15);
+		Font bold = new Font(PdfKit.semibold(), 10);
+		Font normal = new Font(PdfKit.regular(), 10);
+		Font small = new Font(PdfKit.regular(), 8, Font.NORMAL, Color.DARK_GRAY);
 
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			Document doc = new Document(PageSize.A5.rotate(), 28, 28, 24, 24);
@@ -215,53 +211,8 @@ public class InvoiceDocumentService {
 		table.addCell(cell("", font, Element.ALIGN_LEFT));
 	}
 
-	private static PdfPCell cell(String text, Font font, int align) {
-		PdfPCell cell = new PdfPCell(new Phrase(text, font));
-		cell.setHorizontalAlignment(align);
-		cell.setPadding(4);
-		return cell;
-	}
-
-	private static PdfPCell plain(String text, Font font) {
-		PdfPCell cell = new PdfPCell(new Phrase(text, font));
-		cell.setBorder(PdfPCell.NO_BORDER);
-		cell.setPaddingBottom(3);
-		return cell;
-	}
-
-	/** "1.500.000 đ" (font PDF không có ký hiệu ₫). */
-	static String money(BigDecimal amount) {
-		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-		symbols.setGroupingSeparator('.');
-		symbols.setDecimalSeparator(',');
-		return new DecimalFormat("#,##0", symbols).format(amount) + " đ";
-	}
-
 	private static String quantity(BigDecimal q) {
 		return q.stripTrailingZeros().toPlainString().replace('.', ',');
-	}
-
-	private synchronized BaseFont regular() {
-		if (regular == null) {
-			regular = font("fonts/poppins-regular.ttf");
-		}
-		return regular;
-	}
-
-	private synchronized BaseFont semibold() {
-		if (semibold == null) {
-			semibold = font("fonts/poppins-semibold.ttf");
-		}
-		return semibold;
-	}
-
-	private static BaseFont font(String path) {
-		try (InputStream in = new ClassPathResource(path).getInputStream()) {
-			return BaseFont.createFont(path, BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, in.readAllBytes(), null);
-		}
-		catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
 	}
 
 }
