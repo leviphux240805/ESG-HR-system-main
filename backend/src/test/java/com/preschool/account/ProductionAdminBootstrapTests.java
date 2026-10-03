@@ -38,7 +38,7 @@ class ProductionAdminBootstrapTests {
 		when(users.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		ProductionAdminBootstrap bootstrap = new ProductionAdminBootstrap(users, schools, encoder,
-				"Principal@Example.Test", "Bootstrap-Pass-2026");
+				"Hiệu trưởng", "", "Principal@Example.Test", "Bootstrap-Pass-2026");
 		bootstrap.run(new DefaultApplicationArguments(new String[0]));
 
 		var saved = org.mockito.ArgumentCaptor.forClass(User.class);
@@ -51,6 +51,42 @@ class ProductionAdminBootstrapTests {
 			assertThat(role.getRoleCode()).isEqualTo(RoleCode.PRINCIPAL);
 			assertThat(pbcSchools).extracting(School::getId).contains(role.getSchoolId());
 		});
+	}
+
+	@Test
+	void createsPrincipalByNameAndPhoneWithoutEmail() throws Exception {
+		UserRepository users = org.mockito.Mockito.mock(UserRepository.class);
+		SchoolRepository schools = org.mockito.Mockito.mock(SchoolRepository.class);
+		PasswordEncoder encoder = org.mockito.Mockito.mock(PasswordEncoder.class);
+		List<School> pbcSchools = pbcSchools();
+		when(schools.findAllByOrganizationIdAndActiveTrueOrderByCode(ORGANIZATION_ID)).thenReturn(pbcSchools);
+		when(users.findByPhone("0902023138")).thenReturn(Optional.empty());
+		when(encoder.encode("Bootstrap-Pass-2026")).thenReturn("bcrypt-hash");
+		when(users.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		new ProductionAdminBootstrap(users, schools, encoder, " Vũ Thị Kim Chi ", "0902 023 138", "",
+				"Bootstrap-Pass-2026")
+			.run(new DefaultApplicationArguments(new String[0]));
+
+		var saved = org.mockito.ArgumentCaptor.forClass(User.class);
+		verify(users).save(saved.capture());
+		User user = saved.getValue();
+		assertThat(user.getFullName()).isEqualTo("Vũ Thị Kim Chi");
+		assertThat(user.getPhone()).isEqualTo("0902023138");
+		assertThat(user.getEmail()).isNull();
+		assertThat(user.isMustChangePassword()).isTrue();
+		assertThat(user.getRoles()).hasSize(3);
+		verify(users, never()).findByEmail(any());
+	}
+
+	@Test
+	void requiresPhoneOrEmail() {
+		ProductionAdminBootstrap bootstrap = new ProductionAdminBootstrap(org.mockito.Mockito.mock(UserRepository.class),
+				org.mockito.Mockito.mock(SchoolRepository.class), org.mockito.Mockito.mock(PasswordEncoder.class),
+				"Vũ Thị Kim Chi", "", "", "Bootstrap-Pass-2026");
+		assertThatThrownBy(() -> bootstrap.run(new DefaultApplicationArguments(new String[0])))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("BOOTSTRAP_ADMIN_PHONE");
 	}
 
 	@Test
@@ -67,7 +103,7 @@ class ProductionAdminBootstrapTests {
 		when(users.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		ProductionAdminBootstrap bootstrap = new ProductionAdminBootstrap(users, schools, encoder,
-				"principal@example.test", "Bootstrap-Pass-2026");
+				"Hiệu trưởng", "", "principal@example.test", "Bootstrap-Pass-2026");
 		bootstrap.run(new DefaultApplicationArguments(new String[0]));
 
 		assertThat(user.getPasswordHash()).isEqualTo("changed-hash");
@@ -87,7 +123,7 @@ class ProductionAdminBootstrapTests {
 		when(users.findByEmail("principal@example.test")).thenReturn(Optional.of(user));
 
 		ProductionAdminBootstrap bootstrap = new ProductionAdminBootstrap(users, schools, encoder,
-				"principal@example.test", "Bootstrap-Pass-2026");
+				"Hiệu trưởng", "", "principal@example.test", "Bootstrap-Pass-2026");
 		assertThatThrownBy(() -> bootstrap.run(new DefaultApplicationArguments(new String[0])))
 			.isInstanceOf(IllegalStateException.class)
 			.hasMessageContaining("tổ chức khác");

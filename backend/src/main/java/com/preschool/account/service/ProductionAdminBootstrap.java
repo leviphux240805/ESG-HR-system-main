@@ -36,16 +36,28 @@ public class ProductionAdminBootstrap implements ApplicationRunner {
 
 	private final PasswordEncoder passwordEncoder;
 
+	private final String configuredName;
+
+	private final String configuredPhone;
+
 	private final String configuredEmail;
 
 	private final String configuredPassword;
 
+	/**
+	 * Hiệu trưởng đầu tiên của 3 trường PBC, lấy từ biến môi trường: họ tên, SĐT và/hoặc email (cần ít nhất một để
+	 * đăng nhập), mật khẩu tạm (phải đổi ở lần đăng nhập đầu).
+	 */
 	public ProductionAdminBootstrap(UserRepository users, SchoolRepository schools, PasswordEncoder passwordEncoder,
+			@Value("${BOOTSTRAP_ADMIN_NAME:Hiệu trưởng Phan Bội Châu}") String configuredName,
+			@Value("${BOOTSTRAP_ADMIN_PHONE:}") String configuredPhone,
 			@Value("${BOOTSTRAP_ADMIN_EMAIL:}") String configuredEmail,
 			@Value("${BOOTSTRAP_ADMIN_PASSWORD:}") String configuredPassword) {
 		this.users = users;
 		this.schools = schools;
 		this.passwordEncoder = passwordEncoder;
+		this.configuredName = configuredName;
+		this.configuredPhone = configuredPhone;
 		this.configuredEmail = configuredEmail;
 		this.configuredPassword = configuredPassword;
 	}
@@ -53,8 +65,21 @@ public class ProductionAdminBootstrap implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments args) {
-		String email = configuredEmail.trim().toLowerCase(Locale.ROOT);
-		if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+		String name = configuredName == null ? "" : configuredName.trim();
+		String phone = configuredPhone == null || configuredPhone.isBlank() ? null
+				: AuthService.normalizePhone(configuredPhone);
+		String email = configuredEmail == null || configuredEmail.isBlank() ? null
+				: configuredEmail.trim().toLowerCase(Locale.ROOT);
+		if (name.isEmpty() || name.length() > 200) {
+			throw new IllegalStateException("BOOTSTRAP_ADMIN_NAME phải có từ 1 đến 200 ký tự.");
+		}
+		if (phone == null && email == null) {
+			throw new IllegalStateException("Cần đặt BOOTSTRAP_ADMIN_PHONE hoặc BOOTSTRAP_ADMIN_EMAIL để hiệu trưởng đăng nhập.");
+		}
+		if (phone != null && !phone.matches("^0\\d{9}$")) {
+			throw new IllegalStateException("BOOTSTRAP_ADMIN_PHONE phải gồm 10 chữ số, bắt đầu bằng 0.");
+		}
+		if (email != null && !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
 			throw new IllegalStateException("BOOTSTRAP_ADMIN_EMAIL phải là địa chỉ email hợp lệ.");
 		}
 		if (configuredPassword == null || configuredPassword.length() < 12
@@ -69,9 +94,14 @@ public class ProductionAdminBootstrap implements ApplicationRunner {
 			throw new IllegalStateException("Migration trường PBC phải chạy trước khi tạo tài khoản hiệu trưởng.");
 		}
 
-		User user = users.findByEmail(email).orElse(null);
+		User byPhone = phone == null ? null : users.findByPhone(phone).orElse(null);
+		User byEmail = email == null ? null : users.findByEmail(email).orElse(null);
+		if (byPhone != null && byEmail != null && byPhone != byEmail) {
+			throw new IllegalStateException("BOOTSTRAP_ADMIN_PHONE và BOOTSTRAP_ADMIN_EMAIL thuộc hai tài khoản khác nhau.");
+		}
+		User user = byPhone != null ? byPhone : byEmail;
 		if (user != null && !ORGANIZATION_ID.equals(user.getOrganizationId())) {
-			throw new IllegalStateException("BOOTSTRAP_ADMIN_EMAIL đã được dùng ở một tổ chức khác.");
+			throw new IllegalStateException("SĐT/email hiệu trưởng bootstrap đã được dùng ở một tổ chức khác.");
 		}
 		if (user != null && !user.isActive()) {
 			throw new IllegalStateException("Tài khoản hiệu trưởng bootstrap hiện không hoạt động.");
@@ -79,7 +109,7 @@ public class ProductionAdminBootstrap implements ApplicationRunner {
 
 		if (user == null) {
 			String passwordHash = passwordEncoder.encode(configuredPassword);
-			user = new User(ORGANIZATION_ID, email, null, "Hiệu trưởng Phan Bội Châu", passwordHash);
+			user = new User(ORGANIZATION_ID, email, phone, name, passwordHash);
 			user.assignPassword(passwordHash);
 		}
 
