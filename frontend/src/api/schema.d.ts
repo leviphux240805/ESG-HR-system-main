@@ -4008,6 +4008,15 @@ export interface components {
             date: string;
             fatG: number;
             kcal: number;
+            /**
+             * Format: int32
+             * @description Số suất: trẻ có mặt, chưa điểm danh thì theo sĩ số
+             */
+            portions: number;
+            /** @description Chưa điểm danh, số suất lấy theo sĩ số */
+            portionsEstimated: boolean;
+            /** @description Điểm danh ngày này đã chốt */
+            portionsFinal: boolean;
             proteinG: number;
         };
         DayRate: {

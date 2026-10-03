@@ -52,6 +52,8 @@ import com.preschool.health.repository.MenuItemRepository;
 import com.preschool.health.repository.MenuRepository;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +67,8 @@ import tools.jackson.databind.json.JsonMapper;
 @Service
 @Transactional
 public class MenuService {
+
+	private final NamedParameterJdbcTemplate jdbc;
 
 	private static final TypeReference<List<Ingredient>> INGREDIENTS = new TypeReference<>() {
 	};
@@ -93,7 +97,7 @@ public class MenuService {
 
 	public MenuService(HealthAccess access, DishRepository dishes, MenuRepository menus, MenuItemRepository items,
 			AgeGroupRepository ageGroups, ChildRepository children, ClassEnrollmentRepository enrollments,
-			SchoolClassRepository classes, AuditService audit, JsonMapper json, Clock clock) {
+			SchoolClassRepository classes, AuditService audit, JsonMapper json, Clock clock, NamedParameterJdbcTemplate jdbc) {
 		this.access = access;
 		this.dishes = dishes;
 		this.menus = menus;
@@ -105,6 +109,7 @@ public class MenuService {
 		this.audit = audit;
 		this.json = json;
 		this.clock = clock;
+		this.jdbc = jdbc;
 	}
 
 	// ------------------------------------------------------------ món ăn
@@ -345,16 +350,51 @@ public class MenuService {
 				t[3] = t[3].add(nz(d.getCarbG()));
 			}
 		}
-		List<DayNutrition> days = totals.entrySet()
-			.stream()
-			.map(e -> new DayNutrition(e.getKey(), e.getValue()[0], e.getValue()[1], e.getValue()[2], e.getValue()[3]))
-			.toList();
+		Map<LocalDate, int[]> portions = portions(schoolId, ageGroupId, weekStart);
+		int enrolled = enrolledCount(schoolId, ageGroupId, weekStart);
+		List<DayNutrition> days = totals.entrySet().stream().map(e -> {
+			int[] p = portions.get(e.getKey());
+			return new DayNutrition(e.getKey(), e.getValue()[0], e.getValue()[1], e.getValue()[2], e.getValue()[3],
+					p == null ? enrolled : p[0], p != null && p[1] == 1, p == null);
+		}).toList();
 		int alerts = (int) warnings(schoolId, ageGroupId, list, dishById).stream()
 			.filter(w -> !w.matches().isEmpty())
 			.count();
 		return new MenuWeekDto(menu == null ? null : menu.getId(), schoolId, ageGroupId, weekStart,
 				menu == null ? MenuStatus.DRAFT : menu.getStatus(), menu == null ? null : menu.getNote(),
 				menu == null ? null : menu.getPublishedAt(), rows, days, alerts, access.canEditMenu(schoolId));
+	}
+
+	/** Số trẻ có mặt từng ngày trong tuần (theo khối nếu có) và cờ đã chốt điểm danh: ngày → [có mặt, đã chốt]. */
+	private Map<LocalDate, int[]> portions(UUID schoolId, UUID ageGroupId, LocalDate weekStart) {
+		MapSqlParameterSource p = new MapSqlParameterSource("schoolId", schoolId).addValue("ageGroupId", ageGroupId)
+			.addValue("from", java.sql.Date.valueOf(weekStart))
+			.addValue("to", java.sql.Date.valueOf(weekStart.plusDays(6)));
+		Map<LocalDate, int[]> out = new TreeMap<>();
+		jdbc.query("""
+				SELECT a.attend_date, count(*) FILTER (WHERE a.status = 'PRESENT') AS present,
+				       bool_and(a.locked_at IS NOT NULL) AS locked
+				FROM child_attendance a JOIN classes c ON c.id = a.class_id
+				WHERE a.school_id = :schoolId AND a.attend_date BETWEEN :from AND :to
+				""" + (ageGroupId == null ? "" : " AND c.age_group_id = :ageGroupId") + " GROUP BY a.attend_date", p,
+				rs -> {
+					out.put(rs.getDate("attend_date").toLocalDate(),
+							new int[] { rs.getInt("present"), rs.getBoolean("locked") ? 1 : 0 });
+				});
+		return out;
+	}
+
+	/** Sĩ số đang học (theo khối nếu có), dùng ước tính số suất cho ngày chưa điểm danh. */
+	private int enrolledCount(UUID schoolId, UUID ageGroupId, LocalDate weekStart) {
+		MapSqlParameterSource p = new MapSqlParameterSource("schoolId", schoolId).addValue("ageGroupId", ageGroupId)
+			.addValue("day", java.sql.Date.valueOf(weekStart));
+		Integer n = jdbc.queryForObject("""
+				SELECT count(*) FROM class_enrollments e JOIN children k ON k.id = e.child_id
+				JOIN classes c ON c.id = e.class_id JOIN school_years y ON y.id = c.school_year_id
+				WHERE c.school_id = :schoolId AND e.to_date IS NULL AND k.deleted_at IS NULL AND k.status = 'STUDYING'
+				  AND :day BETWEEN y.start_date AND y.end_date""" + (ageGroupId == null ? "" : " AND c.age_group_id = :ageGroupId"),
+				p, Integer.class);
+		return n == null ? 0 : n;
 	}
 
 	private List<AllergyWarning> warnings(UUID schoolId, UUID ageGroupId, List<MenuItem> list,

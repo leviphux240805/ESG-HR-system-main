@@ -199,6 +199,10 @@ const toDraft = (data: MenuWeek): DraftItem[] =>
   data.items.map((i) => ({ key: i.id, date: i.date, meal: i.meal, dishId: i.dishId, dishName: i.dishName, note: i.note ?? undefined }));
 
 /** Thực đơn tuần theo cơ sở và khối: lưới ngày × bữa, sao chép tuần, công bố, cảnh báo dị ứng. */
+/** Số suất: theo trẻ có mặt (đã chốt hoặc chưa), chưa điểm danh thì ước theo sĩ số. */
+const portionText = (n: { portions: number; portionsFinal: boolean; portionsEstimated: boolean }) =>
+  `${n.portions} suất${n.portionsEstimated ? " (theo sĩ số)" : n.portionsFinal ? " (đã chốt)" : ""}`;
+
 export default function MenuPage() {
   const queryClient = useQueryClient();
   const [week, setWeek] = useWeekParam();
@@ -382,6 +386,19 @@ export default function MenuPage() {
                         })}
                       </tr>
                     )}
+                    {!editing && (
+                      <tr className="border-t text-xs">
+                        <td className="p-2 text-muted-foreground">Số suất</td>
+                        {days.map((d) => {
+                          const n = nutrition.get(d);
+                          return (
+                            <td key={d} className="p-2 tabular-nums">
+                              {n ? portionText(n) : "—"}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -405,7 +422,7 @@ export default function MenuPage() {
                         ))}
                         {n && !editing && (
                           <p className="text-xs tabular-nums text-muted-foreground">
-                            {n.kcal} kcal · đạm {n.proteinG} g · béo {n.fatG} g · bột đường {n.carbG} g
+                            {portionText(n)} · {n.kcal} kcal · đạm {n.proteinG} g · béo {n.fatG} g · bột đường {n.carbG} g
                           </p>
                         )}
                       </CardContent>

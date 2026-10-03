@@ -14508,11 +14508,24 @@
           "kcal" : {
             "type" : "number"
           },
+          "portions" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Số suất: trẻ có mặt, chưa điểm danh thì theo sĩ số"
+          },
+          "portionsEstimated" : {
+            "type" : "boolean",
+            "description" : "Chưa điểm danh, số suất lấy theo sĩ số"
+          },
+          "portionsFinal" : {
+            "type" : "boolean",
+            "description" : "Điểm danh ngày này đã chốt"
+          },
           "proteinG" : {
             "type" : "number"
           }
         },
-        "required" : [ "carbG", "date", "fatG", "kcal", "proteinG" ]
+        "required" : [ "carbG", "date", "fatG", "kcal", "portions", "portionsEstimated", "portionsFinal", "proteinG" ]
       },
       "DayRate" : {
         "type" : "object",

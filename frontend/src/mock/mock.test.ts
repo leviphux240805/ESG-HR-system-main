@@ -218,8 +218,10 @@ describe("API giả", () => {
   it("thực đơn: giáo viên chỉ xem; sao chép tuần hỏi trước khi ghi đè; cảnh báo dị ứng liệt kê mọi trẻ có ghi chú", async () => {
     const school = db().schools[0].id;
     setSessionRole("teacher");
-    const seen = await call<{ items: unknown[]; canEdit: boolean }>("GET", "/menus/week?weekStart=2026-09-28", undefined, school);
+    const seen = await call<{ items: unknown[]; canEdit: boolean; days: { portions: number; portionsEstimated: boolean }[] }>("GET", "/menus/week?weekStart=2026-09-28", undefined, school);
     expect(seen.data.items.length).toBeGreaterThan(0);
+    // Số suất: số trẻ có mặt (hoặc sĩ số khi chưa điểm danh), luôn có cho ngày có món
+    expect(seen.data.days.every((d) => d.portions > 0)).toBe(true);
     expect(seen.data.canEdit).toBe(false);
     expect((await call("PUT", "/menus/week", { weekStart: "2026-09-28", items: [] }, school)).status).toBe(403);
 

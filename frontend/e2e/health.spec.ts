@@ -30,6 +30,8 @@ test.describe("thực đơn & sức khỏe", () => {
     await page.getByRole("button", { name: "Lưu thực đơn" }).click();
     await expect(page.getByText("Đã lưu thực đơn.")).toBeVisible();
     await expect(page.getByText("Súp cua").first()).toBeVisible();
+    // Số suất theo sĩ số (tuần tương lai chưa điểm danh)
+    await expect(page.getByText(/\d+ suất \(theo sĩ số\)/).first()).toBeVisible();
   });
 
   test("hiệu trưởng nhiều trường xem dashboard so sánh các trường", async ({ page }) => {

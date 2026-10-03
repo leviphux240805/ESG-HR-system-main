@@ -502,6 +502,7 @@ Giai đoạn 1 gồm:
 | 2026-10-02 | Thêm API điều hành `GET /today`, `POST /substitutions`, `GET /approvals` + duyệt/từ chối (V15: bảng `class_substitutions`) | Trang Hôm nay, Hộp duyệt và phân công dạy thay của bản demo chạy được với backend thật |
 | 2026-10-03 | Sổ điểm danh tháng (`/so-diem-danh`, API `.../attendance/month` + xuất Excel; ô chỉ sửa được khi ngày chưa chốt và người xem được điểm danh ngày đó); V16 `task_comment_files`, bình luận nhận `fileIds[]` (tối đa 10), file đính kèm công việc tối đa 10MB | Chủ dự án yêu cầu sổ điểm danh và chèn file trong công việc; khóa theo ngày đã chốt (không thêm khóa tháng) |
 | 2026-10-03 | Lương: tính từ bảng công đã khóa (công hưởng lương = tổng công + phép năm; công chuẩn theo cấu hình chấm công, nửa buổi 0,5, tính cả ngày lễ); phụ cấp thâm niên theo % lương hợp đồng; kế toán / phó hiệu trưởng nhóm Tài chính tính, sửa thưởng-phạt, đánh dấu đã trả; hiệu trưởng duyệt, mở lại (lý do); phiếu lương gửi bằng thông báo trong app (email làm sau); thêm `PayrollPeriod.reopen` | Chủ dự án duyệt kế hoạch module Lương |
+| 2026-10-03 | Số suất ăn trả trong thực đơn tuần (`days[].portions`, cờ đã chốt / ước theo sĩ số) thay cho `/menus/{id}/portions` | Một lần gọi cho trang Thực đơn tuần; số suất gắn với ngày có món |
 
 ## Nguồn
 

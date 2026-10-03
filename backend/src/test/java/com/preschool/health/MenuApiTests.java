@@ -166,4 +166,24 @@ class MenuApiTests extends HealthApiTestBase {
 			.andExpect(jsonPath("$.status").value("PUBLISHED"));
 	}
 
+	@Test
+	void portionsFollowPresentChildrenOrClassSize() throws Exception {
+		LocalDate day = today.getDayOfWeek() == java.time.DayOfWeek.SUNDAY ? today.minusDays(1) : today;
+		LocalDate week = day.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+		LocalDate other = day.equals(week) ? week.plusDays(1) : week;
+		String an = enroll("An", classId, null);
+		String binh = enroll("Bình", classId, null);
+		String cuong = enroll("Cường", classId, null);
+		as(principalA, put("/api/v1/classes/" + classId + "/attendance").contentType(MediaType.APPLICATION_JSON).content("""
+				{"date":"%s","rows":[{"childId":"%s","status":"PRESENT"},{"childId":"%s","status":"PRESENT"},{"childId":"%s","status":"EXCUSED"}]}"""
+			.formatted(day, an, binh, cuong)), schoolA.getId()).andExpect(status().isOk());
+		String dish = createDish(kitchenA, schoolA, "Cơm gà", "Gà", false);
+		saveWeek(kitchenA, schoolA, week, "[%s,%s]".formatted(item(day, "LUNCH", dish), item(other, "LUNCH", dish)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].portions".formatted(day)).value(2))
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].portionsEstimated".formatted(day)).value(false))
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].portions".formatted(other)).value(3))
+			.andExpect(jsonPath("$.days[?(@.date=='%s')].portionsEstimated".formatted(other)).value(true));
+	}
+
 }

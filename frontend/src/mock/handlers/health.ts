@@ -1,4 +1,5 @@
 import type { components } from "@/api/schema";
+import { fileUrl } from "../files";
 import { db, type DishRec, type HealthLogRec, type MeasurementRec, type MenuItemRec, type MenuRec } from "../db";
 import { addDays, weekday } from "../dates";
 import { ageInMonths, classify, curve } from "../growth";
@@ -147,11 +148,23 @@ function warnings(ctx: Ctx, ageGroupId: string | undefined, items: MenuItemRec[]
 function weekDto(ctx: Ctx, weekStart: string, ageGroupId: string | undefined, menu: MenuRec | undefined): S["MenuWeekDto"] {
   const items = menu ? itemsOf(menu.id) : [];
   const dishOf = (id: string) => db().dishes.find((d) => d.id === id);
+  // Số suất: trẻ có mặt theo điểm danh; chưa điểm danh thì theo sĩ số (khối của thực đơn nếu có)
+  const kids = db().children.filter((c) => {
+    const cls = db().classes.find((k) => k.id === c.classId);
+    return cls?.schoolId === ctx.schoolId && (!ageGroupId || `ag-${cls.ageGroup}` === ageGroupId);
+  });
+  const portions = (date: string) => {
+    const marks = db().childAttendance[date] ?? {};
+    const marked = kids.filter((k) => marks[k.id]);
+    return marked.length
+      ? { portions: marked.filter((k) => marks[k.id] === "P").length, portionsFinal: date < today(), portionsEstimated: false }
+      : { portions: kids.length, portionsFinal: false, portionsEstimated: true };
+  };
   const totals = new Map<string, S["DayNutrition"]>();
   for (const i of items) {
     const d = dishOf(i.dishId);
-    const t = totals.get(i.date) ?? { date: i.date, kcal: 0, proteinG: 0, fatG: 0, carbG: 0 };
-    totals.set(i.date, { date: i.date, kcal: t.kcal + (d?.kcal ?? 0), proteinG: t.proteinG + (d?.proteinG ?? 0), fatG: t.fatG + (d?.fatG ?? 0), carbG: t.carbG + (d?.carbG ?? 0) });
+    const t = totals.get(i.date) ?? { date: i.date, kcal: 0, proteinG: 0, fatG: 0, carbG: 0, ...portions(i.date) };
+    totals.set(i.date, { ...t, kcal: t.kcal + (d?.kcal ?? 0), proteinG: t.proteinG + (d?.proteinG ?? 0), fatG: t.fatG + (d?.fatG ?? 0), carbG: t.carbG + (d?.carbG ?? 0) });
   }
   return {
     id: menu?.id,
@@ -345,6 +358,12 @@ on("POST", "/children/{childId}/checkups", (ctx) => {
   const checkup = { id: newId(), schoolId: child.schoolId, childId: child.id, checkupDate: body.checkupDate, provider: body.provider, summary: body.summary.trim(), fileId: body.fileId };
   db().checkups.push(checkup);
   return checkup;
+});
+
+on("GET", "/checkups/{id}/file-url", (ctx) => {
+  const checkup = db().checkups.find((c) => c.id === ctx.params.id && ctx.schoolIds.includes(c.schoolId));
+  if (!checkup?.fileId) notFound("biên bản khám");
+  return { url: fileUrl(checkup.fileId), expiresAt: new Date(Date.now() + 5 * 60_000).toISOString() };
 });
 
 on("DELETE", "/checkups/{id}", (ctx) => {

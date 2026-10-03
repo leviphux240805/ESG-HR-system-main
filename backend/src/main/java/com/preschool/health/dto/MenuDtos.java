@@ -69,7 +69,10 @@ public final class MenuDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal kcal,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal proteinG,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal fatG,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal carbG) {
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal carbG,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Số suất: trẻ có mặt, chưa điểm danh thì theo sĩ số") int portions,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Điểm danh ngày này đã chốt") boolean portionsFinal,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Chưa điểm danh, số suất lấy theo sĩ số") boolean portionsEstimated) {
 	}
 
 	public record MenuWeekDto(

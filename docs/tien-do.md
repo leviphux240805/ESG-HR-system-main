@@ -290,5 +290,6 @@ công, lương cũ.
 - Hoàn thiện bản demo thành sản phẩm thật (2026-10-03): bảng theo dõi ở `docs/hoan-thien.md`. Xong: Nhân sự (mock đủ
   endpoint, sửa lệch ngày VN/UTC); Chấm công, nghỉ phép (route cấu hình, mock cấu hình/ngày lễ/import). Học phí, thu chi
   (PDF phiếu thu ở bản demo). Backend 228/228. Lương (`/luong`,
-  `/cua-toi/phieu-luong`). Backend 231/231. Tiếp theo: Thực đơn, sức khỏe.
+  `/cua-toi/phieu-luong`). Thực đơn, sức khỏe
+  (số suất). Backend 232/232. Tiếp theo: Báo cáo.
 
