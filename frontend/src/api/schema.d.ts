@@ -5610,18 +5610,8 @@ export interface components {
             code: string;
             licenseNo?: string;
             name: string;
-            /**
-             * Format: uuid
-             * @description Bắt buộc với phân hiệu: trường chính cùng tổ chức
-             */
-            parentId?: string;
             phone?: string;
             provinceCode?: string;
-            /**
-             * @description Rỗng = trường chính
-             * @enum {string}
-             */
-            type?: "MAIN" | "BRANCH";
             wardCode?: string;
         };
         SchoolSummary: {
