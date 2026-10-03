@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.preschool.classroom.dto.ClassroomDtos.AgeGroupDto;
 import com.preschool.classroom.dto.ClassroomDtos.AgeGroupRequest;
+import com.preschool.classroom.dto.ClassroomDtos.ArchiveClassRequest;
 import com.preschool.classroom.dto.ClassroomDtos.AssignTeacherRequest;
 import com.preschool.classroom.dto.ClassroomDtos.ClassDetail;
 import com.preschool.classroom.dto.ClassroomDtos.ClassItem;
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -81,13 +83,14 @@ public class ClassroomController {
 
 	@GetMapping("/classes")
 	@Operation(summary = "Lớp của năm học (rỗng = năm hiện hành) kèm sĩ số, giáo viên, có mặt hôm nay")
-	public List<ClassItem> classes(@RequestParam(required = false) UUID schoolYearId) {
-		return classroom.classes(schoolYearId);
+	public List<ClassItem> classes(@RequestParam(required = false) UUID schoolYearId,
+			@RequestParam(defaultValue = "false") boolean includeArchived) {
+		return classroom.classes(schoolYearId, includeArchived);
 	}
 
 	@PostMapping("/classes")
 	@ResponseStatus(HttpStatus.CREATED)
-	@Operation(summary = "Thêm lớp ở cơ sở đang chọn")
+	@Operation(summary = "Thêm lớp ở cơ sở đang chọn hoặc chỉ định")
 	public ClassItem createClass(@Valid @RequestBody ClassRequest request) {
 		return classroom.create(request);
 	}
@@ -102,6 +105,13 @@ public class ClassroomController {
 	@Operation(summary = "Sửa lớp")
 	public ClassItem updateClass(@PathVariable UUID id, @Valid @RequestBody ClassRequest request) {
 		return classroom.update(id, request);
+	}
+
+	@PatchMapping("/classes/{id}/archive")
+	@Operation(summary = "Lưu trữ hoặc khôi phục lớp")
+	public ClassItem archiveClass(@PathVariable UUID id, @RequestBody(required = false) ArchiveClassRequest request) {
+		boolean archive = request == null || request.archived() == null || request.archived();
+		return classroom.archive(id, archive);
 	}
 
 	@DeleteMapping("/classes/{id}")

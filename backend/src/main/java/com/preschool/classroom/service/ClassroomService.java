@@ -187,7 +187,7 @@ public class ClassroomService {
 
 	/** Lớp trong phạm vi đang chọn của một năm học (rỗng = năm hiện hành); giáo viên chỉ thấy lớp mình phụ trách. */
 	@Transactional(readOnly = true)
-	public List<ClassItem> classes(UUID schoolYearId) {
+	public List<ClassItem> classes(UUID schoolYearId, boolean includeArchived) {
 		access.requireViewAny();
 		SchoolYear year = schoolYearId != null ? requireYear(schoolYearId)
 				: schoolYears.findByCurrentTrue().orElse(null);
@@ -197,8 +197,14 @@ public class ClassroomService {
 		List<SchoolClass> list = classes.findBySchoolYearIdOrderByName(year.getId())
 			.stream()
 			.filter(c -> access.canViewClassSummary(c.getSchoolId(), c.getId()))
+			.filter(c -> includeArchived || !c.isArchived())
 			.toList();
 		return toItems(list);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ClassItem> classes(UUID schoolYearId) {
+		return classes(schoolYearId, false);
 	}
 
 	@Transactional(readOnly = true)
@@ -213,16 +219,18 @@ public class ClassroomService {
 
 	@Transactional
 	public ClassItem create(ClassRequest request) {
-		UUID schoolId = access.requireSelectedSchool();
+		UUID schoolId = request.schoolId() != null ? request.schoolId() : access.requireSelectedSchool();
 		access.requireManage(schoolId);
 		SchoolYear year = yearOrCurrent(request.schoolYearId());
 		AgeGroup group = requireAgeGroup(request.ageGroupId());
 		String name = request.name().trim();
-		if (classes.existsBySchoolIdAndSchoolYearIdAndName(schoolId, year.getId(), name)) {
+		if (classes.existsBySchoolIdAndSchoolYearIdAndNameIgnoreCase(schoolId, year.getId(), name)) {
 			throw duplicateClass();
 		}
 		SchoolClass c = classes.save(new SchoolClass(schoolId, year.getId(), group.getId(), name,
 				blankToNull(request.room()), capacity(request, group), blankToNull(request.note())));
+		syncTeacher(c, com.preschool.classroom.entity.ClassEnums.TeacherRole.MAIN, request.mainTeacherId(), false);
+		syncTeacher(c, com.preschool.classroom.entity.ClassEnums.TeacherRole.ASSISTANT, request.assistantTeacherId(), false);
 		return toItems(List.of(c)).getFirst();
 	}
 
@@ -230,13 +238,27 @@ public class ClassroomService {
 	public ClassItem update(UUID id, ClassRequest request) {
 		SchoolClass c = findVisible(id);
 		access.requireManage(c.getSchoolId());
+		if (request.schoolId() != null && !request.schoolId().equals(c.getSchoolId())) {
+			access.requireManage(request.schoolId());
+		}
+		SchoolYear year = request.schoolYearId() != null ? requireYear(request.schoolYearId()) : requireYear(c.getSchoolYearId());
 		AgeGroup group = requireAgeGroup(request.ageGroupId());
 		String name = request.name().trim();
-		if (classes.existsBySchoolIdAndSchoolYearIdAndNameAndIdNot(c.getSchoolId(), c.getSchoolYearId(), name, id)) {
+		if (classes.existsBySchoolIdAndSchoolYearIdAndNameIgnoreCaseAndIdNot(c.getSchoolId(), year.getId(), name, id)) {
 			throw duplicateClass();
 		}
 		c.update(group.getId(), name, blankToNull(request.room()), capacity(request, group),
 				blankToNull(request.note()));
+		syncTeacher(c, com.preschool.classroom.entity.ClassEnums.TeacherRole.MAIN, request.mainTeacherId(), true);
+		syncTeacher(c, com.preschool.classroom.entity.ClassEnums.TeacherRole.ASSISTANT, request.assistantTeacherId(), true);
+		return toItems(List.of(c)).getFirst();
+	}
+
+	@Transactional
+	public ClassItem archive(UUID id, boolean archive) {
+		SchoolClass c = findVisible(id);
+		access.requireManage(c.getSchoolId());
+		c.setArchived(archive);
 		return toItems(List.of(c)).getFirst();
 	}
 
@@ -246,10 +268,35 @@ public class ClassroomService {
 		SchoolClass c = findVisible(id);
 		access.requireManage(c.getSchoolId());
 		if (enrollments.existsByClassId(id) || attendance.existsByClassId(id)) {
-			throw ApiException.conflict("CLASS_IN_USE", "Lớp đã có trẻ hoặc điểm danh, không xóa được.");
+			throw ApiException.conflict("CLASS_NOT_EMPTY", "Chỉ được xóa hẳn khi lớp trống (chưa có trẻ). Hãy lưu trữ lớp nếu không còn dùng.");
 		}
 		classTeachers.deleteAll(classTeachers.findByClassIdOrderByFromDateDesc(id));
 		classes.delete(c);
+	}
+
+	private void syncTeacher(SchoolClass c, com.preschool.classroom.entity.ClassEnums.TeacherRole role,
+			UUID newStaffId, boolean updateMode) {
+		List<ClassTeacher> active = classTeachers.findByClassIdAndToDateIsNull(c.getId())
+			.stream()
+			.filter(t -> t.getRole() == role)
+			.toList();
+		UUID currentStaffId = active.isEmpty() ? null : active.get(0).getStaffId();
+		if (java.util.Objects.equals(currentStaffId, newStaffId)) {
+			return;
+		}
+		if (newStaffId == null && !updateMode) {
+			return;
+		}
+		for (ClassTeacher t : active) {
+			t.end(today());
+		}
+		if (newStaffId != null) {
+			Staff staff = staffRepo.findById(newStaffId)
+				.filter(s -> c.getSchoolId().equals(s.getSchoolId()) && s.isActive())
+				.orElseThrow(() -> ApiException.badRequest("INVALID_STAFF",
+						"Chọn nhân viên đang làm việc ở cơ sở của lớp."));
+			classTeachers.save(new ClassTeacher(c.getSchoolId(), c.getId(), newStaffId, role, today()));
+		}
 	}
 
 	// ------------------------------------------------------------ phân công giáo viên
@@ -351,7 +398,8 @@ public class ClassroomService {
 				.toList();
 			return new ClassItem(c.getId(), c.getSchoolId(), c.getSchoolYearId(), c.getName(), c.getRoom(),
 					c.getNote(), g.getId(), g.getCode(), g.getName(), c.getCapacity(), g.getMaxClassSize(),
-					kids.size(), boys, kids.size() - boys, teacherDtos, present, access.canManage(c.getSchoolId()));
+					kids.size(), boys, kids.size() - boys, teacherDtos, present, access.canManage(c.getSchoolId()),
+					c.isArchived());
 		}).toList();
 	}
 

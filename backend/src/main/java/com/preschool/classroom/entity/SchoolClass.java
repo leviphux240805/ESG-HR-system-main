@@ -36,6 +36,9 @@ public class SchoolClass extends BaseEntity {
 
 	private String note;
 
+	@Column(nullable = false)
+	private boolean archived = false;
+
 	protected SchoolClass() {
 	}
 
@@ -48,6 +51,7 @@ public class SchoolClass extends BaseEntity {
 		this.room = room;
 		this.capacity = capacity;
 		this.note = note;
+		this.archived = false;
 	}
 
 	public void update(UUID ageGroupId, String name, String room, int capacity, String note) {
@@ -84,6 +88,14 @@ public class SchoolClass extends BaseEntity {
 
 	public String getNote() {
 		return note;
+	}
+
+	public boolean isArchived() {
+		return archived;
+	}
+
+	public void setArchived(boolean archived) {
+		this.archived = archived;
 	}
 
 }

@@ -7,6 +7,7 @@ import type { ListParams } from "@/hooks/useListParams";
 
 type S = components["schemas"];
 export type ClassItem = S["ClassItem"];
+export type ClassRequest = S["ClassRequest"];
 export type ChildItem = S["ChildItem"];
 export type ChildDetail = S["ChildDetail"];
 export type ChildProfileRequest = S["ChildProfileRequest"];
@@ -65,10 +66,34 @@ export async function decideApproval(item: Pick<ApprovalItem, "type" | "id">, ap
 
 // ---- Lớp, trẻ ----
 
-/** Lớp của năm học hiện hành trong phạm vi đang chọn (giáo viên: lớp mình phụ trách). */
-export function useClasses() {
+/** Lớp của năm học trong phạm vi đang chọn (giáo viên: lớp mình phụ trách). */
+export function useClasses(options?: { schoolYearId?: string; includeArchived?: boolean }) {
   const { queryKey } = useCurrentSchool();
-  return useQuery({ queryKey: queryKey("classes"), queryFn: async () => unwrap(await api.GET("/api/v1/classes")) });
+  return useQuery({
+    queryKey: queryKey("classes", options?.schoolYearId, options?.includeArchived ? "all" : "active"),
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/v1/classes", {
+          params: { query: { schoolYearId: options?.schoolYearId, includeArchived: options?.includeArchived } },
+        }),
+      ),
+  });
+}
+
+export async function createClass(body: ClassRequest) {
+  return unwrap(await api.POST("/api/v1/classes", { body }));
+}
+
+export async function updateClass(id: string, body: ClassRequest) {
+  return unwrap(await api.PUT("/api/v1/classes/{id}", { params: { path: { id } }, body }));
+}
+
+export async function archiveClass(id: string, archived = true) {
+  return unwrap(await api.PATCH("/api/v1/classes/{id}/archive", { params: { path: { id } }, body: { archived } }));
+}
+
+export async function deleteClass(id: string) {
+  return unwrap(await api.DELETE("/api/v1/classes/{id}", { params: { path: { id } } }));
 }
 
 export const CHILD_FILTER_KEYS = ["classId", "gender", "status"] as const;

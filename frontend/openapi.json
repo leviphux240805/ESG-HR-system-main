@@ -3325,6 +3325,14 @@
             "format" : "uuid"
           }
         }, {
+          "in" : "query",
+          "name" : "includeArchived",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
           "in" : "header",
           "name" : "X-School-Id",
@@ -3406,7 +3414,7 @@
             "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
           }
         },
-        "summary" : "Thêm lớp ở cơ sở đang chọn",
+        "summary" : "Thêm lớp ở cơ sở đang chọn hoặc chỉ định",
         "tags" : [ "Lớp học" ]
       }
     },
@@ -3657,6 +3665,62 @@
           }
         },
         "summary" : "Sửa lớp",
+        "tags" : [ "Lớp học" ]
+      }
+    },
+    "/api/v1/classes/{id}/archive" : {
+      "patch" : {
+        "operationId" : "archiveClass",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "description" : "Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng.",
+          "in" : "header",
+          "name" : "X-School-Id",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ArchiveClassRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClassItem"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Lỗi (RFC 7807, thông điệp tiếng Việt)"
+          }
+        },
+        "summary" : "Lưu trữ hoặc khôi phục lớp",
         "tags" : [ "Lớp học" ]
       }
     },
@@ -12540,6 +12604,15 @@
         },
         "required" : [ "createdAt", "id", "requester", "type" ]
       },
+      "ArchiveClassRequest" : {
+        "type" : "object",
+        "properties" : {
+          "archived" : {
+            "type" : "boolean",
+            "description" : "true = lưu trữ, false = khôi phục; mặc định true"
+          }
+        }
+      },
       "AssignTeacherRequest" : {
         "type" : "object",
         "properties" : {
@@ -13651,6 +13724,9 @@
           "ageGroupName" : {
             "type" : "string"
           },
+          "archived" : {
+            "type" : "boolean"
+          },
           "boys" : {
             "type" : "integer",
             "format" : "int32"
@@ -13709,7 +13785,7 @@
             }
           }
         },
-        "required" : [ "ageGroupCode", "ageGroupId", "ageGroupName", "boys", "canManage", "capacity", "girls", "id", "maxClassSize", "name", "schoolId", "schoolYearId", "size", "teachers" ]
+        "required" : [ "ageGroupCode", "ageGroupId", "ageGroupName", "archived", "boys", "canManage", "capacity", "girls", "id", "maxClassSize", "name", "schoolId", "schoolYearId", "size", "teachers" ]
       },
       "ClassMeasurementSheet" : {
         "type" : "object",
@@ -13744,12 +13820,20 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "assistantTeacherId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "capacity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Rỗng = sĩ số tối đa của khối",
             "maximum" : 100,
             "minimum" : 1
+          },
+          "mainTeacherId" : {
+            "type" : "string",
+            "format" : "uuid"
           },
           "name" : {
             "type" : "string",
@@ -13766,10 +13850,14 @@
             "maxLength" : 50,
             "minLength" : 0
           },
+          "schoolId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "schoolYearId" : {
             "type" : "string",
             "format" : "uuid",
-            "description" : "Năm học; chỉ dùng khi tạo, rỗng = năm học hiện hành"
+            "description" : "Năm học; rỗng = năm học hiện hành"
           }
         },
         "required" : [ "ageGroupId", "name" ]

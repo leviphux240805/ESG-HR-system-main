@@ -279,6 +279,7 @@ class PermissionMatrixTests extends ApiTestSupport {
 			PUT /api/v1/tasks/{id}/checklist/{itemId} | P VP N
 			DELETE /api/v1/tasks/{id}/checklist/{itemId} | P VP
 			POST /api/v1/tasks/{id}/comments | P VP N
+			PATCH /api/v1/classes/{id}/archive | P VP
 			PATCH /api/v1/tasks/{id}/status | P VP N
 			""";
 

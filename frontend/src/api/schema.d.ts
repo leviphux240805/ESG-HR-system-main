@@ -878,7 +878,7 @@ export interface paths {
         /** Lớp của năm học (rỗng = năm hiện hành) kèm sĩ số, giáo viên, có mặt hôm nay */
         get: operations["classes"];
         put?: never;
-        /** Thêm lớp ở cơ sở đang chọn */
+        /** Thêm lớp ở cơ sở đang chọn hoặc chỉ định */
         post: operations["createClass"];
         delete?: never;
         options?: never;
@@ -921,6 +921,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classes/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Lưu trữ hoặc khôi phục lớp */
+        patch: operations["archiveClass"];
         trace?: never;
     };
     "/api/v1/classes/{id}/attendance": {
@@ -3235,6 +3252,10 @@ export interface components {
             /** @enum {string} */
             type: "LEAVE" | "TASK";
         };
+        ArchiveClassRequest: {
+            /** @description true = lưu trữ, false = khôi phục; mặc định true */
+            archived?: boolean;
+        };
         AssignTeacherRequest: {
             /**
              * Format: date
@@ -3659,6 +3680,7 @@ export interface components {
             /** Format: uuid */
             ageGroupId: string;
             ageGroupName: string;
+            archived: boolean;
             /** Format: int32 */
             boys: number;
             canManage: boolean;
@@ -3704,17 +3726,23 @@ export interface components {
         ClassRequest: {
             /** Format: uuid */
             ageGroupId: string;
+            /** Format: uuid */
+            assistantTeacherId?: string;
             /**
              * Format: int32
              * @description Rỗng = sĩ số tối đa của khối
              */
             capacity?: number;
+            /** Format: uuid */
+            mainTeacherId?: string;
             name: string;
             note?: string;
             room?: string;
+            /** Format: uuid */
+            schoolId?: string;
             /**
              * Format: uuid
-             * @description Năm học; chỉ dùng khi tạo, rỗng = năm học hiện hành
+             * @description Năm học; rỗng = năm học hiện hành
              */
             schoolYearId?: string;
         };
@@ -8432,6 +8460,7 @@ export interface operations {
         parameters: {
             query?: {
                 schoolYearId?: string;
+                includeArchived?: boolean;
             };
             header?: {
                 /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
@@ -8664,6 +8693,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    archiveClass: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Cơ sở đang chọn (UUID). Bỏ trống = tất cả cơ sở trong phạm vi của người dùng. */
+                "X-School-Id"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ArchiveClassRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClassItem"];
+                };
             };
             /** @description Lỗi (RFC 7807, thông điệp tiếng Việt) */
             default: {

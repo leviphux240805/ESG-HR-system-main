@@ -75,7 +75,8 @@ public final class ClassroomDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) int girls,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<TeacherDto> teachers,
 			@Schema(description = "Số trẻ có mặt hôm nay; rỗng = chưa điểm danh") Integer presentToday,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean canManage) {
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean canManage,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean archived) {
 	}
 
 	public record ClassDetail(
@@ -84,12 +85,19 @@ public final class ClassroomDtos {
 	}
 
 	public record ClassRequest(
-			@Schema(description = "Năm học; chỉ dùng khi tạo, rỗng = năm học hiện hành") UUID schoolYearId,
+			UUID schoolId,
+			@Schema(description = "Năm học; rỗng = năm học hiện hành") UUID schoolYearId,
 			@NotNull(message = "Vui lòng chọn khối.") UUID ageGroupId,
 			@NotBlank(message = "Vui lòng nhập tên lớp.") @Size(max = 100, message = "Tên lớp tối đa 100 ký tự.") String name,
 			@Size(max = 50) String room,
 			@Schema(description = "Rỗng = sĩ số tối đa của khối") @Min(value = 1, message = "Sĩ số phải lớn hơn 0.") @Max(value = 100, message = "Sĩ số không quá 100.") Integer capacity,
-			@Size(max = 500) String note) {
+			@Size(max = 500) String note,
+			UUID mainTeacherId,
+			UUID assistantTeacherId) {
+	}
+
+	public record ArchiveClassRequest(
+			@Schema(description = "true = lưu trữ, false = khôi phục; mặc định true") Boolean archived) {
 	}
 
 	public record AssignTeacherRequest(

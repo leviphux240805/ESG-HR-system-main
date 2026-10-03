@@ -3,6 +3,7 @@ package com.preschool.classroom;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -193,6 +194,120 @@ class ClassroomApiTests extends ApiTestSupport {
 		String id = classId(principalA, schoolA, "Tạm");
 		as(principalA, delete("/api/v1/classes/" + id), schoolA.getId()).andExpect(status().isNoContent());
 		as(principalA, get("/api/v1/classes/" + id), schoolA.getId()).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void nonEmptyClassCannotBeDeleted() throws Exception {
+		String id = classId(principalA, schoolA, "Lớp có trẻ");
+		as(principalA, post("/api/v1/children").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "profile":{"fullName":"Bé A","gender":"MALE","dob":"2022-01-01"},
+				  "enrolledAt":"2026-09-01",
+				  "classId":"%s",
+				  "guardians":[{"fullName":"Bố","relationship":"Bố","primary":true,"canPickUp":true}]
+				}""".formatted(id)), schoolA.getId()).andExpect(status().isCreated());
+
+		as(principalA, delete("/api/v1/classes/" + id), schoolA.getId())
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("CLASS_NOT_EMPTY"));
+	}
+
+	@Test
+	void principalArchivesEmptyClassAndArchivedClassesAreOptIn() throws Exception {
+		String id = classId(principalA, schoolA, "Lớp lưu trữ");
+		as(principalA, patch("/api/v1/classes/" + id + "/archive"), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.archived").value(true));
+
+		as(principalA, get("/api/v1/classes").param("schoolYearId", yearId), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$[?(@.id == '%s')]".formatted(id), hasSize(0)));
+
+		as(principalA, get("/api/v1/classes").param("schoolYearId", yearId).param("includeArchived", "true"), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$[?(@.id == '%s')]".formatted(id), hasSize(1)));
+
+		as(principalA, patch("/api/v1/classes/" + id + "/archive").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"archived\":false}"), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.archived").value(false));
+
+		as(principalA, get("/api/v1/classes").param("schoolYearId", yearId), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$[?(@.id == '%s')]".formatted(id), hasSize(1)));
+	}
+
+	@Test
+	void createAndUpdateClassSupportsTeachersAndTargetSchool() throws Exception {
+		String vip = as(principalA, post("/api/v1/classes").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "schoolId":"%s",
+				  "schoolYearId":"%s",
+				  "ageGroupId":"%s",
+				  "name":"Lớp Hoa Hồng",
+				  "room":"Phòng 102",
+				  "capacity":20,
+				  "mainTeacherId":"%s"
+				}""".formatted(schoolA.getId(), yearId, ageGroupId, teacherStaff.getId())), schoolA.getId())
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.teachers", hasSize(1)))
+			.andExpect(jsonPath("$.teachers[0].staffId").value(teacherStaff.getId().toString()))
+			.andReturn().getResponse().getContentAsString();
+		String vipId = JsonPath.read(vip, "$.id");
+
+		as(principalA, put("/api/v1/classes/" + vipId).contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "ageGroupId":"%s",
+				  "name":"Lớp Hoa Hồng VIP",
+				  "capacity":25,
+				  "mainTeacherId":null
+				}""".formatted(ageGroupId)), schoolA.getId())
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.name").value("Lớp Hoa Hồng VIP"))
+			.andExpect(jsonPath("$.capacity").value(25))
+			.andExpect(jsonPath("$.teachers", hasSize(0)));
+	}
+
+	@Test
+	void unassignedSchoolIsStrictlyBlocked() throws Exception {
+		String id = classId(principalA, schoolA, "Lớp Trường A");
+
+		as(principalB, post("/api/v1/classes").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "schoolId":"%s",
+				  "schoolYearId":"%s",
+				  "ageGroupId":"%s",
+				  "name":"Lớp Gian Lận"
+				}""".formatted(schoolA.getId(), yearId, ageGroupId)), schoolB.getId())
+			.andExpect(status().isForbidden());
+
+		as(principalB, post("/api/v1/classes").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "schoolYearId":"%s",
+				  "ageGroupId":"%s",
+				  "name":"Lớp Gian Lận 2"
+				}""".formatted(yearId, ageGroupId)), schoolA.getId())
+			.andExpect(status().isForbidden());
+
+		as(principalB, put("/api/v1/classes/" + id).contentType(MediaType.APPLICATION_JSON).content("""
+				{"ageGroupId":"%s","name":"Đổi lén"}""".formatted(ageGroupId)), schoolB.getId())
+			.andExpect(status().isNotFound());
+
+		as(principalB, put("/api/v1/classes/" + id).contentType(MediaType.APPLICATION_JSON).content("""
+				{"ageGroupId":"%s","name":"Đổi lén"}""".formatted(ageGroupId)), schoolA.getId())
+			.andExpect(status().isForbidden());
+
+		as(principalB, patch("/api/v1/classes/" + id + "/archive"), schoolB.getId())
+			.andExpect(status().isNotFound());
+
+		as(principalB, patch("/api/v1/classes/" + id + "/archive"), schoolA.getId())
+			.andExpect(status().isForbidden());
+
+		as(principalB, delete("/api/v1/classes/" + id), schoolB.getId())
+			.andExpect(status().isNotFound());
+
+		as(principalB, delete("/api/v1/classes/" + id), schoolA.getId())
+			.andExpect(status().isForbidden());
 	}
 
 	@Test

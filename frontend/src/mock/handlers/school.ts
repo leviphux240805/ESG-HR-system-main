@@ -197,6 +197,7 @@ on("GET", "/classes", (ctx): S["ClassItem"][] => {
         fromDate: year?.startDate ?? today(),
       })),
       presentToday: marks && kids.some((k) => marks[k.id]) ? kids.filter((k) => marks[k.id] === "P").length : undefined,
+      archived: false,
       canManage: ctx.user.isBgh,
     };
   });
