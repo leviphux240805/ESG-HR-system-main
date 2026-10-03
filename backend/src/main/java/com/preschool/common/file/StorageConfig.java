@@ -51,6 +51,11 @@ public class StorageConfig {
 	@Bean
 	ApplicationRunner createBucketIfMissing(StorageProperties props, S3Client s3) {
 		return args -> {
+			if (props.misconfigured()) {
+				log.error("Kho file chưa cấu hình: app.storage.endpoint = {} (đặt S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, "
+						+ "S3_BUCKET). Tải file lên sẽ báo lỗi 503.", props.endpoint());
+				return;
+			}
 			if (!props.createBucket()) {
 				return;
 			}

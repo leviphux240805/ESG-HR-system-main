@@ -13,6 +13,7 @@ app:
     # endpoint/access-key/secret-key do TestcontainersConfiguration đặt theo container MinIO
     bucket: test-files
     create-bucket: true
+    allow-local-endpoint: true
     max-size-bytes: 1048576
   jobs:
     # Test gọi trực tiếp service của job; không để lịch @Scheduled chạy xen giữa

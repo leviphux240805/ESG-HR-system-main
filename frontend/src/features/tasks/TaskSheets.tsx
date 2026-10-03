@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Loader2, Pencil, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -114,10 +115,23 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
         name="assigneeIds"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>
+            {/* Nhóm ô chọn: nhãn không trỏ "for" vào một ô nhập cụ thể */}
+            <p id="task-assignees-label" className="text-sm font-medium leading-none">
               Người nhận<span className="text-destructive ml-0.5">*</span>
-            </FormLabel>
-            <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2">
+            </p>
+            <div role="group" aria-labelledby="task-assignees-label" className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2">
+              {assignees.isLoading && Array.from({ length: 3 }, (_, i) => <Skeleton key={i} className="h-11 w-full" />)}
+              {assignees.isError && (
+                <div className="flex flex-wrap items-center gap-2 p-2 text-sm text-destructive">
+                  Không tải được danh sách nhân viên.
+                  <Button type="button" variant="outline" className="min-h-11" onClick={() => assignees.refetch()}>
+                    Thử lại
+                  </Button>
+                </div>
+              )}
+              {assignees.isSuccess && !assignees.data.length && (
+                <p className="p-2 text-sm text-muted-foreground">Trường đang chọn chưa có nhân viên đang làm.</p>
+              )}
               {(assignees.data ?? []).map((s) => {
                 const checked = field.value.includes(s.id);
                 return (

@@ -68,6 +68,10 @@ public class FileService {
 	@Transactional
 	public UploadUrlResponse createUpload(UploadUrlRequest request) {
 		SchoolScope scope = SchoolScope.require();
+		if (props.misconfigured()) {
+			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "STORAGE_NOT_CONFIGURED",
+					"Máy chủ chưa cấu hình kho lưu trữ file nên chưa tải file lên được. Vui lòng báo quản trị hệ thống.");
+		}
 		String mimeType = request.contentType().trim().toLowerCase(Locale.ROOT);
 		if (!props.allowedMimeTypes().contains(mimeType)) {
 			throw ApiException.badRequest("FILE_TYPE_NOT_ALLOWED",

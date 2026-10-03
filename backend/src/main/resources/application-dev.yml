@@ -17,3 +17,5 @@ app:
     refresh-cookie-secure: ${COOKIE_SECURE:false}
   storage:
     create-bucket: true
+    # MinIO trong docker compose chạy ở localhost
+    allow-local-endpoint: true

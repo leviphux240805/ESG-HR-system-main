@@ -26,6 +26,8 @@ import org.springframework.validation.annotation.Validated;
  * @param downloadUrlTtl thời hạn link tải
  * @param maxSizeBytes kích thước tối đa một file
  * @param allowedMimeTypes các loại file được phép
+ * @param allowLocalEndpoint cho phép endpoint localhost (dev/test với MinIO trên máy); môi trường thật thì endpoint
+ *        localhost nghĩa là quên đặt S3_ENDPOINT, link upload trình duyệt không dùng được
  */
 @Validated
 @ConfigurationProperties("app.storage")
@@ -42,5 +44,13 @@ public record StorageProperties(
 		@DefaultValue({ "application/pdf", "image/jpeg", "image/png", "image/webp",
 				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel",
 				"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-				"application/msword" }) @NotEmpty List<String> allowedMimeTypes) {
+				"application/msword" }) @NotEmpty List<String> allowedMimeTypes,
+		@DefaultValue("false") boolean allowLocalEndpoint) {
+
+	/** Endpoint còn là localhost ngoài dev/test: chưa cấu hình kho file (R2/S3). */
+	public boolean misconfigured() {
+		String host = endpoint.getHost();
+		return !allowLocalEndpoint && (host == null || host.equals("localhost") || host.startsWith("127."));
+	}
+
 }

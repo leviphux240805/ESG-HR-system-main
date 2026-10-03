@@ -64,7 +64,7 @@ export function AttachmentDropzone({ onFiles, maxSizeMb, schoolId, disabled, cla
       onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setOver(false)}
       onDrop={onDrop}
     >
-      <input ref={inputRef} type="file" multiple accept={FILE_ACCEPT} className="hidden" onChange={(e) => handle(e.target.files)} data-testid="attach-input" />
+      <input ref={inputRef} name="attachments" type="file" multiple accept={FILE_ACCEPT} className="hidden" onChange={(e) => handle(e.target.files)} data-testid="attach-input" />
       {children(button)}
       {over && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg text-sm font-medium text-primary">

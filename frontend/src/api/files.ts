@@ -42,6 +42,9 @@ export async function openFile(fileId: string) {
  * Upload một file: xin link ký → PUT nội dung thẳng lên storage → xác nhận với backend.
  * Nội dung file không đi qua backend.
  */
+/** Thời gian tối đa đẩy một file (10 MB qua mạng di động chậm vẫn kịp). */
+const UPLOAD_TIMEOUT_MS = 120_000;
+
 export async function uploadFile(file: File, schoolId?: string): Promise<StoredFile> {
   if (IS_DEMO) return (await import("@/mock")).storeFile(file, schoolId);
   const upload = unwrap(
@@ -50,7 +53,17 @@ export async function uploadFile(file: File, schoolId?: string): Promise<StoredF
     }),
   );
 
-  const put = await fetch(upload.uploadUrl, { method: upload.method, headers: upload.headers, body: file });
+  // Không để nút "Đang tải" treo mãi khi kho file không phản hồi (mạng chập chờn, cấu hình sai)
+  const timeout = AbortSignal.timeout(UPLOAD_TIMEOUT_MS);
+  const put = await fetch(upload.uploadUrl, { method: upload.method, headers: upload.headers, body: file, signal: timeout }).catch(() => {
+    throw new ApiError(0, {
+      title: "Không tải được file lên",
+      status: 0,
+      detail: timeout.aborted
+        ? "Tải file quá lâu, vui lòng kiểm tra mạng rồi thử lại."
+        : "Không kết nối được tới kho lưu trữ file, vui lòng thử lại.",
+    });
+  });
   if (!put.ok) {
     throw new ApiError(put.status, {
       title: "Không tải được file lên",
