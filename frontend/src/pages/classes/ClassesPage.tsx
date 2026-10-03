@@ -232,7 +232,7 @@ export default function ClassesPage() {
       <PageHeader
         title="Lớp học"
         description="Sĩ số, giáo viên phụ trách và tình hình đi học hôm nay."
-        action={
+        actions={
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
