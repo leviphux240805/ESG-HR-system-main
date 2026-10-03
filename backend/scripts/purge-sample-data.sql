@@ -221,6 +221,11 @@ BEGIN
         RAISE EXCEPTION 'Kiểm tra sau xóa thất bại: dữ liệu ba trường PBC phải được giữ nguyên.';
     END IF;
 
+    -- Seed dev đã xóa: bỏ luôn dòng lịch sử Flyway của nó (prod không còn file R__dev_seed)
+    IF to_regclass('flyway_schema_history') IS NOT NULL THEN
+        DELETE FROM flyway_schema_history WHERE version IS NULL AND description = 'dev seed';
+    END IF;
+
     RAISE NOTICE 'Đã xóa % dòng dữ liệu mẫu; giữ nguyên ba trường PBC.', deleted_rows;
 END
 $purge$;

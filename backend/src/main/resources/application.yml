@@ -20,6 +20,9 @@ spring:
           time_zone: UTC
   flyway:
     locations: classpath:db/migration
+    # Database từng chạy seed dev (Neon của bản demo cũ) có dòng lịch sử "dev seed" (R__) mà prod không có:
+    # bỏ qua migration lặp lại đã mất thay vì dừng khởi động. Script purge-sample-data.sql xóa luôn dòng này.
+    ignore-migration-patterns: "*:future,repeatable:missing"
   data:
     web:
       pageable:

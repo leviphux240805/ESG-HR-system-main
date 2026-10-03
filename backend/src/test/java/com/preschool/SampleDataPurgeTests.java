@@ -36,6 +36,11 @@ class SampleDataPurgeTests {
 		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 		assertThat(count(jdbc, "SELECT count(*) FROM " + SCHEMA + ".schools WHERE code LIKE 'CS-%' OR code = 'SM-1'")).isEqualTo(4);
 
+		// Như Render: database đã chạy seed dev, khởi động profile prod (không có db/dev) vẫn qua validate
+		assertThat(prodFlyway().validateWithResult().validationSuccessful).isTrue();
+		assertThat(Flyway.configure().dataSource(dataSource).schemas(SCHEMA).locations("classpath:db/migration").load()
+			.validateWithResult().validationSuccessful).as("cấu hình Flyway mặc định thì lỗi như log Render").isFalse();
+
 		String script = Files.readString(Path.of("scripts", "purge-sample-data.sql"));
 		String startMarker = "DO $purge$";
 		String endMarker = "$purge$;";
@@ -51,6 +56,18 @@ class SampleDataPurgeTests {
 		assertThat(count(jdbc, "SELECT count(*) FROM " + SCHEMA + ".schools WHERE code LIKE 'CS-%' OR code = 'SM-1'")).isZero();
 		assertThat(count(jdbc, "SELECT count(*) FROM " + SCHEMA + ".schools WHERE organization_id = '7d3c0b8e-5a41-4c2e-9f1a-0b5c0a000001' AND code IN ('PBC', 'PBC-PH1', 'PBC-PH2')")).isEqualTo(3);
 		assertThat(count(jdbc, "SELECT count(*) FROM " + SCHEMA + ".organizations WHERE id IN ('00000000-0000-0000-0000-0000000000f0', '00000000-0000-0000-0000-0000000000f2')")).isZero();
+		assertThat(count(jdbc, "SELECT count(*) FROM " + SCHEMA + ".flyway_schema_history WHERE description = 'dev seed'")).isZero();
+		prodFlyway().migrate();
+	}
+
+	/** Cùng cấu hình Flyway của profile prod (application.yml). */
+	private Flyway prodFlyway() {
+		return Flyway.configure()
+			.dataSource(dataSource)
+			.schemas(SCHEMA)
+			.locations("classpath:db/migration")
+			.ignoreMigrationPatterns("*:future", "repeatable:missing")
+			.load();
 	}
 
 	private static long count(JdbcTemplate jdbc, String sql) {
