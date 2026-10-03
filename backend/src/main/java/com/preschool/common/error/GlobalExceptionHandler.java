@@ -67,7 +67,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		List<Map<String, String>> errors = new ArrayList<>();
 		for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-			errors.add(Map.of("field", error.getField(), "message", String.valueOf(error.getDefaultMessage())));
+			// Lỗi chuyển kiểu (tham số lọc sai định dạng) có thông điệp tiếng Anh kèm tên lớp Java: thay bằng câu chung
+			String message = error.isBindingFailure() ? "Giá trị không hợp lệ."
+					: String.valueOf(error.getDefaultMessage());
+			errors.add(Map.of("field", error.getField(), "message", message));
 		}
 		ex.getBindingResult()
 			.getGlobalErrors()

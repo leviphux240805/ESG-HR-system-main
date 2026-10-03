@@ -2,6 +2,8 @@ app:
   auth:
     jwt-secret: test-only-secret-0123456789abcdefghijklmnop
     refresh-cookie-secure: false
+    # Mọi test MockMvc chung một IP: nới giới hạn theo IP (LoginRateLimiterTests kiểm riêng)
+    login-max-attempts-per-ip: 100000
   storage:
     # endpoint/access-key/secret-key do TestcontainersConfiguration đặt theo container MinIO
     bucket: test-files

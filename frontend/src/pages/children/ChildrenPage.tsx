@@ -20,7 +20,7 @@ export default function ChildrenPage() {
   const params = useListParams({ filterKeys: CHILD_FILTER_KEYS, defaultSort: { field: "fullName", direction: "asc" } });
   const query = useChildren(params);
   const classes = useClasses();
-  const canManage = useCan("manage", "classes");
+  const canManage = useCan("manage", "children");
   const [creating, setCreating] = useState(false);
 
   const filters = useMemo<FilterDef[]>(

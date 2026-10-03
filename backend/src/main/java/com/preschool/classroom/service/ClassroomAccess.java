@@ -16,13 +16,13 @@ import org.springframework.stereotype.Component;
 
 /**
  * Quyền module Lớp học, hồ sơ trẻ, điểm danh (ma trận thiết kế): hiệu trưởng và phó hiệu trưởng nhóm Lớp & trẻ quản
- * lý trường được gán; kế toán, y tế, cấp dưỡng chỉ xem; giáo viên chỉ thấy lớp đang được phân công; nhân viên khác
- * không truy cập. Danh mục chung của tổ chức (năm học, khối) do hiệu trưởng sửa.
+ * lý trường được gán; kế toán, y tế chỉ xem; cấp dưỡng chỉ xem danh sách lớp và sĩ số (không xem hồ sơ trẻ, điểm
+ * danh); giáo viên chỉ thấy lớp đang được phân công; nhân viên khác không truy cập. Danh mục chung của tổ chức (năm học, khối) do hiệu trưởng sửa.
  */
 @Component
 public class ClassroomAccess {
 
-	private static final Set<RoleCode> VIEW_ROLES = EnumSet.of(RoleCode.ACCOUNTANT, RoleCode.NURSE, RoleCode.KITCHEN);
+	private static final Set<RoleCode> VIEW_ROLES = EnumSet.of(RoleCode.ACCOUNTANT, RoleCode.NURSE);
 
 	private final ClassTeacherRepository classTeachers;
 
@@ -37,6 +37,15 @@ public class ClassroomAccess {
 	/** Xem mọi lớp, mọi trẻ của trường. */
 	public boolean canViewAll(UUID schoolId) {
 		return canManage(schoolId) || VIEW_ROLES.stream().anyMatch(r -> scope().hasRoleAt(r, schoolId));
+	}
+
+	/** Danh sách lớp, sĩ số: thêm cấp dưỡng. */
+	public boolean canViewHeadcount(UUID schoolId) {
+		return canViewAll(schoolId) || scope().hasRoleAt(RoleCode.KITCHEN, schoolId);
+	}
+
+	public boolean canViewClassSummary(UUID schoolId, UUID classId) {
+		return canViewHeadcount(schoolId) || canViewClass(schoolId, classId);
 	}
 
 	/** Giáo viên ở trường này (chỉ thấy lớp được phân công). */
@@ -58,9 +67,17 @@ public class ClassroomAccess {
 		return scope().isPrincipal();
 	}
 
+	/** Xem danh sách lớp (kể cả cấp dưỡng). */
 	public void requireViewAny() {
-		if (scope().effectiveSchoolIds().stream().noneMatch(s -> canViewAll(s) || isTeacherAt(s))) {
+		if (scope().effectiveSchoolIds().stream().noneMatch(s -> canViewHeadcount(s) || isTeacherAt(s))) {
 			throw ApiException.forbidden("CLASSROOM_FORBIDDEN", "Bạn không có quyền xem lớp học.");
+		}
+	}
+
+	/** Xem hồ sơ trẻ. */
+	public void requireViewChildren() {
+		if (scope().effectiveSchoolIds().stream().noneMatch(s -> canViewAll(s) || isTeacherAt(s))) {
+			throw ApiException.forbidden("CLASSROOM_FORBIDDEN", "Bạn không có quyền xem hồ sơ trẻ.");
 		}
 	}
 

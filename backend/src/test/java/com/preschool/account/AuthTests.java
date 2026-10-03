@@ -85,6 +85,21 @@ class AuthTests extends ApiTestSupport {
 	}
 
 	@Test
+	void tooManyWrongPasswordsBlockTheAccountForAWhile() throws Exception {
+		User user = data.principal(data.school());
+		for (int i = 0; i < 5; i++) {
+			postLogin(user.getEmail(), "sai-mat-khau").andExpect(status().isUnauthorized());
+		}
+		// Lần thứ 6, kể cả đúng mật khẩu, bị chặn; không lộ chi tiết kỹ thuật
+		postLogin(user.getEmail(), TestData.PASSWORD).andExpect(status().isTooManyRequests())
+			.andExpect(header().exists(HttpHeaders.RETRY_AFTER))
+			.andExpect(jsonPath("$.code").value("TOO_MANY_ATTEMPTS"))
+			.andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith("Bạn đã thử quá nhiều lần.")));
+		// Tài khoản khác không bị ảnh hưởng
+		login(data.principal(data.school()).getEmail(), false);
+	}
+
+	@Test
 	void disabledAccountCannotLogin() throws Exception {
 		User user = data.user(RoleCode.STAFF, data.school());
 		data.deactivate(user);

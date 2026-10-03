@@ -5,6 +5,13 @@
 Theo `docs/hoan-thien.md`: 11/11 module đã có API thật và mock cùng dữ liệu (Quyền → Báo cáo). Còn lại: Tài liệu
 (trang có sẵn nhưng chưa vào menu, chưa có mock) – cần khách duyệt giao diện trước khi làm.
 
+## Kiểm thử trước bàn giao (2026-10-03)
+
+Xong, kết quả và kịch bản UAT ở `docs/kiem-thu.md`: backend 240/240, Vitest 107/107, E2E 53 qua / 0 lỗi / 6 bỏ qua
+(Tài liệu chưa vào menu). Đã sửa 8 nhóm lỗi (quyền cấp dưỡng, rate limit đăng nhập, lộ thông điệp kỹ thuật, profile
+Docker mặc định, 500 khi thiếu người tạo, N+1 sổ điểm danh, giờ báo ăn seed, E2E cũ). Cần chủ dự án xác nhận: giáo viên
+xem thực đơn tuần. Việc tiếp theo: khách chạy UAT; duyệt giao diện Tài liệu; tắt Swagger ở production.
+
 ## Nhánh `demo` – bản giới thiệu khách hàng "Mầm Non Việt" (2026-09-30)
 
 Chỉ frontend, API giả trong trình duyệt (`frontend/src/mock`); người dùng chính là ban giám hiệu. Không merge vào

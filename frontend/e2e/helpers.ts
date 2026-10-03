@@ -44,6 +44,21 @@ export async function apiAs(request: APIRequestContext, identifier: string, scho
       expect(res.ok(), await res.text()).toBeTruthy();
       return res.json();
     },
+    /** POST không bắt buộc thành công (dọn trạng thái của lần chạy trước). */
+    async tryPost(path: string, data: unknown): Promise<number> {
+      return (await request.post(path, { data, headers })).status();
+    },
+    /** Tải file lên như trình duyệt: xin presigned URL, PUT thẳng vào kho file, xác nhận; trả id file. */
+    async upload(file: { name: string; mimeType: string; buffer: Buffer }): Promise<string> {
+      const ticket = await this.post<{ file: { id: string }; uploadUrl: string; headers: Record<string, string> }>(
+        "/api/v1/files/upload-url",
+        { fileName: file.name, contentType: file.mimeType, sizeBytes: file.buffer.length },
+      );
+      const put = await request.put(ticket.uploadUrl, { data: file.buffer, headers: ticket.headers });
+      expect(put.ok(), await put.text()).toBeTruthy();
+      await this.post(`/api/v1/files/${ticket.file.id}/complete`, {});
+      return ticket.file.id;
+    },
   };
 }
 

@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { clearPendingChangeRequests, login, publishDocument, randomDigits } from "./helpers";
 
+test.skip(true, "Tài liệu, Hồ sơ của tôi chưa vào menu – chờ khách duyệt giao diện (docs/hoan-thien.md)");
+
 // Seed dev: tài khoản 0900000005 (giáo viên Cơ sở A) gắn hồ sơ nhân viên; 0900000004 hiệu trưởng A; 0900000003 kế toán A.
 
 test.beforeEach(async ({ request }) => {

@@ -6,7 +6,9 @@ import com.preschool.account.dto.TokenResponse;
 import com.preschool.account.service.AuthService;
 import com.preschool.account.service.AuthService.AuthResult;
 import com.preschool.common.openapi.OpenApiConfig;
+import com.preschool.common.error.ApiException;
 import com.preschool.security.AuthProperties;
+import com.preschool.security.LoginRateLimiter;
 import com.preschool.security.SchoolScope;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,9 +17,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -36,16 +40,33 @@ public class AuthController {
 
 	private final AuthProperties props;
 
-	public AuthController(AuthService authService, AuthProperties props) {
+	private final LoginRateLimiter limiter;
+
+	public AuthController(AuthService authService, AuthProperties props, LoginRateLimiter limiter) {
 		this.authService = authService;
 		this.props = props;
+		this.limiter = limiter;
 	}
 
 	@PostMapping("/login")
 	@Operation(summary = "Đăng nhập bằng email hoặc số điện thoại",
-			description = "Trả access token trong body và đặt refresh token vào cookie httpOnly.")
-	public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
-		return tokens(authService.login(request.identifier(), request.password(), request.rememberMeOrDefault()));
+			description = "Trả access token trong body và đặt refresh token vào cookie httpOnly. Sai quá nhiều lần "
+					+ "trong 15 phút thì trả 429 kèm Retry-After.")
+	public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
+		String ip = LoginRateLimiter.clientIp(http);
+		limiter.check(request.identifier(), ip);
+		try {
+			AuthResult result = authService.login(request.identifier(), request.password(),
+					request.rememberMeOrDefault());
+			limiter.succeeded(request.identifier());
+			return tokens(result);
+		}
+		catch (ApiException ex) {
+			if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+				limiter.failed(request.identifier(), ip);
+			}
+			throw ex;
+		}
 	}
 
 	@PostMapping("/refresh")

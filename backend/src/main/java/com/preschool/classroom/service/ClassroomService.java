@@ -196,14 +196,16 @@ public class ClassroomService {
 		}
 		List<SchoolClass> list = classes.findBySchoolYearIdOrderByName(year.getId())
 			.stream()
-			.filter(c -> access.canViewClass(c.getSchoolId(), c.getId()))
+			.filter(c -> access.canViewClassSummary(c.getSchoolId(), c.getId()))
 			.toList();
 		return toItems(list);
 	}
 
 	@Transactional(readOnly = true)
 	public ClassDetail detail(UUID id) {
-		SchoolClass c = findVisible(id);
+		SchoolClass c = classes.findById(id)
+			.filter(x -> access.canViewClassSummary(x.getSchoolId(), x.getId()))
+			.orElseThrow(() -> ApiException.notFound("Không tìm thấy lớp."));
 		List<ClassTeacher> history = classTeachers.findByClassIdOrderByFromDateDesc(id);
 		Map<UUID, String> names = staffNames(history.stream().map(ClassTeacher::getStaffId).toList());
 		return new ClassDetail(toItems(List.of(c)).getFirst(), history.stream().map(t -> toDto(t, names)).toList());

@@ -17,6 +17,9 @@ import org.springframework.validation.annotation.Validated;
  * @param refreshTokenTtl thời hạn refresh token (mặc định 7 ngày)
  * @param refreshCookieSecure bật cờ Secure (bắt buộc khi chạy HTTPS)
  * @param refreshReuseGrace khoảng thời gian coi việc dùng lại token vừa xoay là do hai tab refresh cùng lúc
+ * @param loginMaxAttempts số lần đăng nhập sai tối đa của một tài khoản trong {@code loginWindow}
+ * @param loginMaxAttemptsPerIp số lần sai tối đa từ một địa chỉ IP trong {@code loginWindow}
+ * @param loginWindow cửa sổ đếm lần sai (cũng là thời gian bị chặn tối đa)
  */
 @Validated
 @ConfigurationProperties("app.auth")
@@ -25,7 +28,10 @@ public record AuthProperties(
 		@DefaultValue("15m") Duration accessTokenTtl,
 		@DefaultValue("7d") Duration refreshTokenTtl,
 		@DefaultValue("true") boolean refreshCookieSecure,
-		@DefaultValue("10s") Duration refreshReuseGrace) {
+		@DefaultValue("10s") Duration refreshReuseGrace,
+		@DefaultValue("5") int loginMaxAttempts,
+		@DefaultValue("30") int loginMaxAttemptsPerIp,
+		@DefaultValue("15m") Duration loginWindow) {
 
 	/** Tên cookie httpOnly chứa refresh token. */
 	public static final String REFRESH_COOKIE_NAME = "refresh_token";

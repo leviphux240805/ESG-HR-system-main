@@ -10,5 +10,8 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 # Gói 512MB (Render free): giới hạn heap, GC nhẹ, bớt bộ nhớ JIT
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+# Không rơi về profile dev (khóa JWT công khai, seed tài khoản mẫu) khi quên đặt SPRING_PROFILES_ACTIVE;
+# profile prod không có file riêng nên bắt buộc JWT_SECRET và không nạp seed
+ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]

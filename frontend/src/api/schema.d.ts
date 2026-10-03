@@ -386,7 +386,7 @@ export interface paths {
         put?: never;
         /**
          * Đăng nhập bằng email hoặc số điện thoại
-         * @description Trả access token trong body và đặt refresh token vào cookie httpOnly.
+         * @description Trả access token trong body và đặt refresh token vào cookie httpOnly. Sai quá nhiều lần trong 15 phút thì trả 429 kèm Retry-After.
          */
         post: operations["login"];
         delete?: never;

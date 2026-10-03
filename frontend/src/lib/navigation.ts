@@ -38,10 +38,10 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Lớp & trẻ",
     items: [
       // Đầu nhóm: trang mặc định của giáo viên
-      { path: "/diem-danh", label: "Điểm danh", icon: ClipboardCheck, phase: 1, permission: view("classes"), page: () => import("@/pages/children/RollCallPage") },
-      { path: "/so-diem-danh", label: "Sổ điểm danh", icon: BookOpenCheck, phase: 1, permission: view("classes"), page: () => import("@/pages/children/RollBookPage") },
+      { path: "/diem-danh", label: "Điểm danh", icon: ClipboardCheck, phase: 1, permission: view("children"), page: () => import("@/pages/children/RollCallPage") },
+      { path: "/so-diem-danh", label: "Sổ điểm danh", icon: BookOpenCheck, phase: 1, permission: view("children"), page: () => import("@/pages/children/RollBookPage") },
       { path: "/lop-hoc", label: "Lớp học", icon: School, phase: 1, permission: view("classes"), page: () => import("@/pages/classes/ClassesPage") },
-      { path: "/tre", label: "Hồ sơ trẻ", icon: Baby, phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildrenPage") },
+      { path: "/tre", label: "Hồ sơ trẻ", icon: Baby, phase: 1, permission: view("children"), page: () => import("@/pages/children/ChildrenPage") },
     ],
   },
   {
@@ -106,7 +106,7 @@ export interface SubRoute {
 }
 
 export const SUB_ROUTES: SubRoute[] = [
-  { path: "/tre/:id", label: "Chi tiết", parent: "/tre", phase: 1, permission: view("classes"), page: () => import("@/pages/children/ChildProfilePage") },
+  { path: "/tre/:id", label: "Chi tiết", parent: "/tre", phase: 1, permission: view("children"), page: () => import("@/pages/children/ChildProfilePage") },
   { path: "/cham-cong/cau-hinh", label: "Cấu hình chấm công", parent: "/cham-cong", phase: 1, permission: manage("attendance"), page: () => import("@/pages/attendance/AttendanceConfigPage") },
   { path: "/nhan-su/moi", label: "Thêm nhân viên", parent: "/nhan-su", phase: 1, permission: manage("staff"), page: () => import("@/pages/staff/StaffCreatePage") },
   { path: "/nhan-su/de-xuat", label: "Đề xuất cập nhật hồ sơ", parent: "/nhan-su", phase: 1, permission: view("staff"), page: () => import("@/pages/staff/ChangeRequestsPage") },

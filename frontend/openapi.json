@@ -1260,7 +1260,7 @@
     },
     "/api/v1/auth/login" : {
       "post" : {
-        "description" : "Trả access token trong body và đặt refresh token vào cookie httpOnly.",
+        "description" : "Trả access token trong body và đặt refresh token vào cookie httpOnly. Sai quá nhiều lần trong 15 phút thì trả 429 kèm Retry-After.",
         "operationId" : "login",
         "requestBody" : {
           "content" : {

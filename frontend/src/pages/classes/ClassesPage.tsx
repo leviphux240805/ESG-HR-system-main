@@ -7,10 +7,12 @@ import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState, ErrorState, PageSkeleton } from "@/components/common/States";
 import { useClasses } from "@/api";
+import { useCan } from "@/hooks/useCan";
 
 /** Danh sách lớp của cơ sở: sĩ số, giáo viên, có mặt hôm nay. */
 export default function ClassesPage() {
   const query = useClasses();
+  const canViewChildren = useCan("view", "children");
 
   return (
     <div>
@@ -55,6 +57,7 @@ export default function ClassesPage() {
                     <Badge variant="secondary">Hôm nay có mặt {c.presentToday}</Badge>
                   )}
                 </div>
+                {canViewChildren && (
                 <div className="flex gap-2">
                   <Button asChild variant="outline" className="min-h-11 flex-1">
                     <Link to={`/tre?classId=${c.id}`}>
@@ -67,6 +70,7 @@ export default function ClassesPage() {
                     </Link>
                   </Button>
                 </div>
+                )}
               </CardContent>
             </Card>
           ))}

@@ -173,6 +173,11 @@ FROM (VALUES ('00000000-0000-0000-0000-000000000801', '00000000-0000-0000-0000-0
 JOIN children c ON c.id = v.child_id::uuid
 WHERE NOT EXISTS (SELECT 1 FROM class_enrollments e WHERE e.child_id = c.id);
 
+-- Trường A báo ăn 23:59 để giáo viên thử điểm danh giờ nào cũng được (E2E, UAT); Trường B giữ mặc định 08:30
+INSERT INTO child_attendance_configs (organization_id, school_id, effective_from, meal_cutoff_time)
+VALUES ('00000000-0000-0000-0000-0000000000f0', '00000000-0000-0000-0000-00000000000a', '2020-01-01', '23:59')
+ON CONFLICT DO NOTHING;
+
 -- ---------------------------------------------------------------- học phí (giai đoạn 6)
 -- Biểu phí năm học 2026–2027: học phí theo khối, tiền ăn theo ngày, CSVC một lần, năng khiếu tự chọn.
 INSERT INTO fee_schedules (school_id, school_year_id, age_group_id, fee_type_id, amount, effective_from)

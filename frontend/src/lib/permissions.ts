@@ -17,7 +17,8 @@ export type Resource =
   | "documents" // Tài liệu
   | "tasks" // Công việc
   | "attendance" // Chấm công & nghỉ phép
-  | "classes" // Lớp học, hồ sơ trẻ, điểm danh
+  | "classes" // Lớp học (danh sách lớp, sĩ số)
+  | "children" // Hồ sơ trẻ, điểm danh
   | "menu" // Thực đơn
   | "health" // Sức khỏe trẻ (cân đo, sổ theo dõi)
   | "finance" // Học phí & thu chi
@@ -48,6 +49,7 @@ export const PERMISSION_MATRIX: Record<Resource, Row> = {
   attendance: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "VIEW", TEACHER: "SELF", NURSE: "SELF", KITCHEN: "SELF", STAFF: "SELF" },
   // Cấp dưỡng: xem (sĩ số)
   classes: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "VIEW", TEACHER: "CLASS", NURSE: "VIEW", KITCHEN: "VIEW", STAFF: "NONE" },
+  children: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "VIEW", TEACHER: "CLASS", NURSE: "VIEW", KITCHEN: "NONE", STAFF: "NONE" },
   // Module "Thực đơn & sức khỏe" tách hai phần: cấp dưỡng sửa thực đơn nhưng không xem sức khỏe; giáo viên xem
   // thực đơn, cân đo và ghi sổ theo dõi lớp mình
   menu: { PRINCIPAL: "SCHOOL", VICE_PRINCIPAL: "GROUP", ACCOUNTANT: "NONE", TEACHER: "VIEW", NURSE: "SCHOOL", KITCHEN: "SCHOOL", STAFF: "NONE" },
@@ -69,6 +71,7 @@ export const RESOURCE_GROUP: Record<Resource, FunctionGroup | "ANY" | null> = {
   tasks: "HR",
   attendance: "HR",
   classes: "CLASSROOM",
+  children: "CLASSROOM",
   menu: "NUTRITION",
   health: "NUTRITION",
   finance: "FINANCE",

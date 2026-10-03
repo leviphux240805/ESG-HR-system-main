@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
-import { ACCOUNTS, login, gridCell } from "./helpers";
+import { ACCOUNTS, SCHOOL_A, apiAs, login, gridCell } from "./helpers";
 
 // Seed dev: cấu hình chấm công mặc định toàn chuỗi; Nguyễn Thị Lan (Cơ sở A, mã chấm công 105).
 
@@ -50,7 +50,10 @@ test("hiệu trưởng xem tất cả trường được nhắc chọn một tr�
 });
 
 // Định nghĩa "xong" (1): import file Excel mẫu → đối soát → khóa tháng
-test("import file máy chấm công mẫu, xử lý sai lệch, khóa công, mở khóa có lý do", async ({ page, browser }) => {
+test("import file máy chấm công mẫu, xử lý sai lệch, khóa công, mở khóa có lý do", async ({ page, browser, request }) => {
+  // Lần chạy trước dừng giữa chừng có thể để tháng 9 ở trạng thái đã khóa
+  const owner = await apiAs(request, ACCOUNTS.owner, SCHOOL_A);
+  await owner.tryPost("/api/v1/attendance/months/2026-09/unlock", { reason: "Chạy lại e2e" });
   await login(page, "0900000004");
   await page.goto("/cham-cong?month=2026-09");
   await page.getByRole("button", { name: "Import máy chấm công" }).click();

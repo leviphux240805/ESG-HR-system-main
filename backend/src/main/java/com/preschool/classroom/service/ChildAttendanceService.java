@@ -236,8 +236,19 @@ public class ChildAttendanceService {
 
 	/** Lý do không được điểm danh lớp này vào ngày này; rỗng = được. */
 	ApiException editBlock(SchoolClass c, LocalDate date, boolean locked) {
-		boolean manager = access.canManage(c.getSchoolId());
-		boolean teacher = access.isTeacherAt(c.getSchoolId()) && access.myClassIds().contains(c.getId());
+		return editBlock(c, date, locked, canManage(c), teachesClass(c));
+	}
+
+	boolean canManage(SchoolClass c) {
+		return access.canManage(c.getSchoolId());
+	}
+
+	boolean teachesClass(SchoolClass c) {
+		return access.isTeacherAt(c.getSchoolId()) && access.myClassIds().contains(c.getId());
+	}
+
+	/** Như trên, quyền tính sẵn (sổ điểm danh xét cả tháng, không truy vấn lại cho từng ngày). */
+	ApiException editBlock(SchoolClass c, LocalDate date, boolean locked, boolean manager, boolean teacher) {
 		if (!manager && !teacher) {
 			return ApiException.forbidden("ATTENDANCE_FORBIDDEN", "Bạn không có quyền điểm danh lớp này.");
 		}

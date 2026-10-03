@@ -123,7 +123,7 @@ public class ChildService {
 
 	@Transactional(readOnly = true)
 	public PageResponse<ChildItem> list(ChildQuery filter, Pageable pageable) {
-		access.requireViewAny();
+		access.requireViewChildren();
 		Page<Child> page = children.findAll(specOf(filter), sanitize(pageable));
 		return new PageResponse<>(toItems(page.getContent()), page.getNumber(), page.getSize(),
 				page.getTotalElements(), page.getTotalPages());

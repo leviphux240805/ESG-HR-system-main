@@ -49,6 +49,8 @@ describe("can – ma trận quyền theo thiết kế", () => {
   it("cấp dưỡng xem sĩ số, quản lý thực đơn; nhân viên khác không vào lớp", () => {
     expect(can(["KITCHEN"], "view", "classes")).toBe(true);
     expect(can(["KITCHEN"], "manage", "classes")).toBe(false);
+    expect(can(["KITCHEN"], "view", "children")).toBe(false);
+    expect(can(["NURSE"], "view", "children")).toBe(true);
     expect(can(["KITCHEN"], "manage", "menu")).toBe(true);
     expect(can(["KITCHEN"], "view", "health")).toBe(false);
     expect(can(["TEACHER"], "manage", "menu")).toBe(false);

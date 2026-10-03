@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { ACCOUNTS, login } from "./helpers";
 
-// Seed dev: Nguyễn Thị Lan (Cơ sở A) hợp đồng hết hạn sau 20 ngày; Phạm Thị Hoa (Cơ sở B) sau 75 ngày.
+// Seed dev: Nguyễn Thị Lan (Cơ sở A) hợp đồng hết hạn 20 ngày, Phạm Thị Hoa (Cơ sở B) 75 ngày sau ngày nạp seed lần đầu.
 
 test("hiệu trưởng xem giấy tờ sắp hết hạn của cơ sở mình, bấm mở đúng tab hồ sơ", async ({ page }) => {
   await login(page, "0900000004");
@@ -10,7 +10,7 @@ test("hiệu trưởng xem giấy tờ sắp hết hạn của cơ sở mình, b
   await expect(page.getByRole("heading", { name: "Giấy tờ sắp hết hạn" })).toBeVisible();
 
   const lan = page.getByRole("row").filter({ hasText: "Nguyễn Thị Lan" }).filter({ hasText: "Hợp đồng" });
-  await expect(lan).toContainText("Còn 20 ngày");
+  await expect(lan).toContainText(/Còn \d+ ngày/);
   // Cơ sở B không nằm trong phạm vi, kể cả khi mở rộng 90 ngày
   await page.getByRole("radio", { name: "90 ngày tới" }).click();
   await expect(page).toHaveURL(/within=90/);
@@ -23,7 +23,8 @@ test("hiệu trưởng xem giấy tờ sắp hết hạn của cơ sở mình, b
 
 test("chủ chuỗi: 30 ngày chưa thấy hợp đồng 75 ngày, 90 ngày thì thấy; lọc theo loại", async ({ page }) => {
   await login(page, ACCOUNTS.owner);
-  await page.goto("/nhan-su/giay-to-het-han");
+  // 100 dòng/trang: dữ liệu E2E khác (điều chuyển nhân viên) cũng có hợp đồng sắp hết hạn
+  await page.goto("/nhan-su/giay-to-het-han?size=100");
   const hoa = page.getByRole("row").filter({ hasText: "Phạm Thị Hoa" }).filter({ hasText: "Hợp đồng" });
   await expect(page.getByRole("row").filter({ hasText: "Nguyễn Thị Lan" }).first()).toBeVisible();
   await expect(hoa).toHaveCount(0);

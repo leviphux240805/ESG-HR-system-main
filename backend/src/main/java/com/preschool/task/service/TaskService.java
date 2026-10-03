@@ -639,8 +639,12 @@ public class TaskService {
 
 	private Map<UUID, String> userNames(Collection<UUID> ids) {
 		List<UUID> clean = ids.stream().filter(Objects::nonNull).distinct().toList();
-		return clean.isEmpty() ? Map.of()
-				: users.findAllById(clean).stream().collect(Collectors.toMap(User::getId, User::getFullName));
+		// HashMap: get(null) trả null (việc do job sinh không có người tạo); Map.of() thì ném NullPointerException
+		Map<UUID, String> names = new java.util.HashMap<>();
+		if (!clean.isEmpty()) {
+			users.findAllById(clean).forEach(u -> names.put(u.getId(), u.getFullName()));
+		}
+		return names;
 	}
 
 	private UUID requireMyStaffId() {

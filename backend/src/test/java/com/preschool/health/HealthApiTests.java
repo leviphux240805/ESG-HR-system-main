@@ -119,8 +119,9 @@ class HealthApiTests extends HealthApiTestBase {
 			.andExpect(jsonPath("$.items", hasSize(0)));
 		log(principalB, schoolB, an).andExpect(status().isNotFound());
 
+		// cấp dưỡng không thấy chi tiết lớp (chỉ sĩ số) nên lớp coi như không tồn tại
 		as(kitchenA, get("/api/v1/classes/" + classId + "/measurements"), schoolA.getId())
-			.andExpect(status().isForbidden());
+			.andExpect(status().isNotFound());
 		as(kitchenA, get("/api/v1/health-logs"), schoolA.getId()).andExpect(status().isForbidden());
 		as(accountantA, get("/api/v1/children/" + an + "/health"), schoolA.getId()).andExpect(status().isForbidden());
 	}

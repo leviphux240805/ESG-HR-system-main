@@ -439,10 +439,11 @@ public class HealthService {
 
 	private Map<UUID, String> userNames(Stream<UUID> ids) {
 		Collection<UUID> distinct = ids.filter(Objects::nonNull).collect(Collectors.toCollection(HashSet::new));
-		if (distinct.isEmpty()) {
-			return Map.of();
-		}
+		// HashMap kể cả khi rỗng: bản ghi không có người ghi (nhập từ ngoài) gọi get(null)
 		Map<UUID, String> out = new HashMap<>();
+		if (distinct.isEmpty()) {
+			return out;
+		}
 		for (User u : users.findAllById(distinct)) {
 			out.put(u.getId(), u.getFullName());
 		}

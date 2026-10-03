@@ -90,18 +90,25 @@ public class RollBookService {
 			.filter(h -> h.getSchoolId() == null || h.getSchoolId().equals(c.getSchoolId()))
 			.collect(Collectors.toMap(Holiday::getHolidayDate, Holiday::getName, (a, b) -> a));
 
+		// Ngày lễ và quyền tính một lần cho cả tháng (trước đây truy vấn lại cho từng ngày)
+		boolean manager = childAttendance.canManage(c);
+		boolean teacher = childAttendance.teachesClass(c);
+		Map<LocalDate, List<AttendanceStatus>> statusesByDay = marks.stream()
+			.collect(Collectors.groupingBy(ChildAttendance::getAttendDate,
+					Collectors.mapping(ChildAttendance::getStatus, Collectors.toList())));
 		List<RollBookDay> days = new ArrayList<>();
 		Set<LocalDate> pastSchoolDays = new java.util.HashSet<>();
 		for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
 			LocalDate day = d;
-			boolean schoolDay = childAttendance.isSchoolDay(c.getSchoolId(), day);
+			boolean schoolDay = day.getDayOfWeek() != java.time.DayOfWeek.SUNDAY && !holidayNames.containsKey(day);
 			if (schoolDay && !day.isAfter(today)) {
 				pastSchoolDays.add(day);
 			}
 			boolean locked = lockedDays.contains(day);
-			List<AttendanceStatus> statuses = marks.stream().filter(m -> m.getAttendDate().equals(day)).map(ChildAttendance::getStatus).toList();
+			List<AttendanceStatus> statuses = statusesByDay.getOrDefault(day, List.of());
 			days.add(new RollBookDay(day, day.getDayOfWeek().getValue(), schoolDay, holidayNames.get(day), locked,
-					schoolDay && childAttendance.editBlock(c, day, locked) == null, count(statuses, AttendanceStatus.PRESENT),
+					schoolDay && childAttendance.editBlock(c, day, locked, manager, teacher) == null,
+					count(statuses, AttendanceStatus.PRESENT),
 					count(statuses, AttendanceStatus.EXCUSED), count(statuses, AttendanceStatus.ABSENT)));
 		}
 
