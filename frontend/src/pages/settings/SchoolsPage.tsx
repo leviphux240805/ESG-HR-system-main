@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TextField } from "@/features/staff/profile/fields";
 import { AddressFields, addressText, useAddressData } from "@/features/staff/AddressFields";
 import { type SchoolDto, saveSchool, setSchoolActive, useSchools } from "@/api";
+import { groupSchools } from "@/lib/schoolHierarchy";
 
 const schema = z.object({
   code: z
@@ -66,6 +67,34 @@ export default function SchoolsPage() {
     await refreshMe();
   };
 
+  const renderSchool = (s: SchoolDto) => (
+    <Card key={s.id} className={s.active ? undefined : "opacity-70"}>
+      <CardContent className="space-y-2 p-4">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">{s.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {s.code}{s.type === "BRANCH" ? " · Phân hiệu" : " · Trường chính"}
+              {s.phone && ` · ${s.phone}`}
+            </p>
+          </div>
+          <Badge variant={s.active ? "secondary" : "outline"}>{s.active ? "Đang hoạt động" : "Đã ngừng"}</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">{addressText(provinces, s.provinceCode, s.wardCode, s.addressDetail) || "Chưa có địa chỉ"}</p>
+        {s.canEdit && (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="min-h-11" onClick={() => open(s)}>
+              <Pencil className="w-4 h-4 mr-2" /> Sửa
+            </Button>
+            <Button variant="ghost" className="min-h-11" onClick={() => setToggling(s)}>
+              {s.active ? "Ngừng hoạt động" : "Mở lại"}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   if (query.isLoading) return <PageSkeleton />;
 
   return (
@@ -84,33 +113,16 @@ export default function SchoolsPage() {
       ) : query.data!.length === 0 ? (
         <EmptyState icon={School} title="Chưa có trường" description="Bấm “Thêm trường” để tạo trường đầu tiên." />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {query.data!.map((s) => (
-            <Card key={s.id} className={s.active ? undefined : "opacity-70"}>
-              <CardContent className="space-y-2 p-4">
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.code}
-                      {s.phone && ` · ${s.phone}`}
-                    </p>
-                  </div>
-                  <Badge variant={s.active ? "secondary" : "outline"}>{s.active ? "Đang hoạt động" : "Đã ngừng"}</Badge>
+        <div className="space-y-4">
+          {groupSchools(query.data!).map(({ school, branches }) => (
+            <section key={school.id} className="space-y-3">
+              {renderSchool(school)}
+              {branches.length > 0 && (
+                <div className="ml-4 space-y-3 border-l-2 border-muted pl-3 sm:ml-6 sm:pl-4">
+                  {branches.map(renderSchool)}
                 </div>
-                <p className="text-sm text-muted-foreground">{addressText(provinces, s.provinceCode, s.wardCode, s.addressDetail) || "Chưa có địa chỉ"}</p>
-                {s.canEdit && (
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="min-h-11" onClick={() => open(s)}>
-                      <Pencil className="w-4 h-4 mr-2" /> Sửa
-                    </Button>
-                    <Button variant="ghost" className="min-h-11" onClick={() => setToggling(s)}>
-                      {s.active ? "Ngừng hoạt động" : "Mở lại"}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </section>
           ))}
         </div>
       )}

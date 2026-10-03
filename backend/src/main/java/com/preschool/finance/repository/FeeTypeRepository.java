@@ -14,6 +14,8 @@ public interface FeeTypeRepository extends JpaRepository<FeeType, UUID> {
 
 	Optional<FeeType> findByCode(String code);
 
+	Optional<FeeType> findByOrganizationIdAndCode(UUID organizationId, String code);
+
 	boolean existsByCode(String code);
 
 }

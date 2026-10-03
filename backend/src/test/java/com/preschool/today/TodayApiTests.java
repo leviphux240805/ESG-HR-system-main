@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.TestData;
 import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
@@ -86,7 +87,8 @@ class TodayApiTests extends ApiTestSupport {
 				{"name":"H%s","startDate":"%s","endDate":"%s"}""".formatted(UUID.randomUUID().toString().substring(0, 8),
 				today.minusMonths(2), today.plusMonths(6))))
 			.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-		String ageGroupId = ageGroups.findByCode("MAU_GIAO_4_5").orElseThrow().getId().toString();
+		String ageGroupId = ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "MAU_GIAO_4_5")
+			.orElseThrow().getId().toString();
 		classId = JsonPath.read(as(principalA, post("/api/v1/classes").contentType(MediaType.APPLICATION_JSON).content("""
 				{"schoolYearId":"%s","ageGroupId":"%s","name":"Chồi Hôm Nay"}""".formatted(JsonPath.read(year, "$.id"),
 				ageGroupId)), schoolA.getId())

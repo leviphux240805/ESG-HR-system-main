@@ -40,7 +40,8 @@ class ClassroomSchemaTests {
 		return jdbc.queryForObject("""
 				INSERT INTO classes (school_id, school_year_id, age_group_id, name, capacity)
 				VALUES (?, ?, ?, ?, 25) RETURNING id""", UUID.class, school.getId(), yearId,
-				ageGroups.findByCode("MAU_GIAO_3_4").orElseThrow().getId(), name);
+				ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "MAU_GIAO_3_4")
+					.orElseThrow().getId(), name);
 	}
 
 	private UUID newChild(School school, String name) {
@@ -51,9 +52,11 @@ class ClassroomSchemaTests {
 
 	@Test
 	void ageGroupsSeededInOrderWithMaxClassSize() {
-		List<String> codes = ageGroups.findAllByOrderByOrderNo().stream().map(g -> g.getCode()).toList();
+		List<String> codes = ageGroups.findAllByOrganizationIdOrderByOrderNo(TestData.DEFAULT_ORG)
+			.stream().map(g -> g.getCode()).toList();
 		assertThat(codes).containsExactly("NHA_TRE", "MAU_GIAO_3_4", "MAU_GIAO_4_5", "MAU_GIAO_5_6");
-		assertThat(ageGroups.findByCode("NHA_TRE").orElseThrow().getMaxClassSize()).isPositive();
+		assertThat(ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "NHA_TRE")
+			.orElseThrow().getMaxClassSize()).isPositive();
 	}
 
 	@Test
@@ -129,7 +132,8 @@ class ClassroomSchemaTests {
 	@Test
 	void mealCutoffDefaultsToChainWideConfig() {
 		assertThat(jdbc.queryForObject("""
-				SELECT meal_cutoff_time::text FROM child_attendance_configs WHERE school_id IS NULL""", String.class))
+				SELECT meal_cutoff_time::text FROM child_attendance_configs
+				WHERE organization_id = ? AND school_id IS NULL""", String.class, TestData.DEFAULT_ORG))
 			.isEqualTo("08:30:00");
 	}
 

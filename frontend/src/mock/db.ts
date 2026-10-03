@@ -31,7 +31,11 @@ export interface SchoolRec {
   id: string;
   code: string;
   name: string;
-  address: string;
+  type: "MAIN" | "BRANCH";
+  parentId?: string;
+  provinceCode: string;
+  wardCode: string;
+  addressDetail: string;
   phone?: string;
   /** Rỗng = đang hoạt động */
   active?: boolean;
@@ -264,7 +268,7 @@ export interface DemoDB {
   notifications: NotificationRec[];
 }
 
-export const DB_VERSION = 6;
+export const DB_VERSION = 7;
 const STORAGE_KEY = "mnv.demo.db";
 
 let current: DemoDB | null = null;

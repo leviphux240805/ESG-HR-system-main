@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.TestData;
 import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
@@ -84,7 +85,7 @@ class FeeCatalogApiTests extends ApiTestSupport {
 	}
 
 	private String feeTypeId(String code) {
-		return feeTypes.findByCode(code).orElseThrow().getId().toString();
+		return feeTypes.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, code).orElseThrow().getId().toString();
 	}
 
 	private String scheduleBody(String feeTypeCode, long amount, String from) {

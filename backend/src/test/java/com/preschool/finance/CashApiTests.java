@@ -120,7 +120,8 @@ class CashApiTests extends ApiTestSupport {
 
 	@Test
 	void manualEntriesRejectSystemCategoriesAndInvalidInput() throws Exception {
-		String tuition = categories.findBySystemCode(CashCategory.TUITION).orElseThrow().getId().toString();
+		String tuition = categories.findByOrganizationIdAndSystemCode(schoolA.getOrganizationId(), CashCategory.TUITION)
+			.orElseThrow().getId().toString();
 		create(accountantA, schoolA, tuition, 100_000).andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errors[0].field").value("categoryId"));
 		create(accountantA, schoolA, food, 0).andExpect(status().isBadRequest())
@@ -153,7 +154,8 @@ class CashApiTests extends ApiTestSupport {
 			.andExpect(jsonPath("$.active").value(false));
 		create(accountantA, schoolA, id, 1000).andExpect(status().isBadRequest());
 
-		String tuition = categories.findBySystemCode(CashCategory.TUITION).orElseThrow().getId().toString();
+		String tuition = categories.findByOrganizationIdAndSystemCode(schoolA.getOrganizationId(), CashCategory.TUITION)
+			.orElseThrow().getId().toString();
 		as(principalAB, put("/api/v1/cash-categories/" + tuition).contentType(MediaType.APPLICATION_JSON)
 			.content("""
 					{"name":"Học phí","active":true,"orderNo":1}"""))

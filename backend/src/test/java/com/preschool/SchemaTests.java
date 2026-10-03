@@ -77,8 +77,8 @@ class SchemaTests {
 			.load()
 			.migrate();
 
-		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.schools", Integer.class)).isEqualTo(4);
-		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.organizations", Integer.class)).isEqualTo(2);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.schools", Integer.class)).isEqualTo(7);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.organizations", Integer.class)).isEqualTo(3);
 		assertThat(jdbc.queryForObject("SELECT count(DISTINCT role_code) FROM dev_seed_check.user_roles", Integer.class))
 			.isEqualTo(RoleCode.values().length);
 		assertThat(jdbc.queryForObject("SELECT count(*) FROM dev_seed_check.staff", Integer.class)).isEqualTo(12);

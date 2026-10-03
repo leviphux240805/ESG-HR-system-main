@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.TestData;
 import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
@@ -92,7 +93,8 @@ class InvoiceApiTests extends ApiTestSupport {
 			.andReturn()
 			.getResponse()
 			.getContentAsString(), "$.id");
-		String ageGroup = ageGroups.findByCode("MAU_GIAO_4_5").orElseThrow().getId().toString();
+		String ageGroup = ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "MAU_GIAO_4_5")
+			.orElseThrow().getId().toString();
 		String classA = JsonPath.read(as(principalA, post("/api/v1/classes").contentType(MediaType.APPLICATION_JSON)
 			.content("""
 					{"schoolYearId":"%s","ageGroupId":"%s","name":"Lá 1","capacity":30}""".formatted(year, ageGroup)),
@@ -111,7 +113,7 @@ class InvoiceApiTests extends ApiTestSupport {
 	private void schedule(String year, String code, long amount) throws Exception {
 		as(accountantA, post("/api/v1/fee-schedules").contentType(MediaType.APPLICATION_JSON).content("""
 				{"schoolYearId":"%s","feeTypeId":"%s","amount":%d,"effectiveFrom":"2026-08-01"}""".formatted(year,
-				feeTypes.findByCode(code).orElseThrow().getId(), amount)), schoolA.getId())
+				feeTypes.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, code).orElseThrow().getId(), amount)), schoolA.getId())
 			.andExpect(status().isCreated());
 	}
 

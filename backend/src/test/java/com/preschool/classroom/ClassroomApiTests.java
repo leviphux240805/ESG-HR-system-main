@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.TestData;
 import com.preschool.account.entity.FunctionGroup;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
@@ -70,7 +71,8 @@ class ClassroomApiTests extends ApiTestSupport {
 		teacher = data.userForStaff(RoleCode.TEACHER, schoolA, teacherStaff);
 		yearId = createYear(admin).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
 		yearId = JsonPath.read(yearId, "$.id");
-		ageGroupId = ageGroups.findByCode("MAU_GIAO_4_5").orElseThrow().getId().toString();
+		ageGroupId = ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "MAU_GIAO_4_5")
+			.orElseThrow().getId().toString();
 	}
 
 	private ResultActions createYear(User user) throws Exception {

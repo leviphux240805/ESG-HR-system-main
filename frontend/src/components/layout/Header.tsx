@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { CHANGE_PASSWORD_PATH } from "@/components/layout/RouteGuards";
@@ -18,6 +18,7 @@ import { IS_DEMO, resetDemoData } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { findNavItem, ROLE_LABELS } from "@/lib/navigation";
 import { APP_NAME } from "@/lib/brand";
+import { groupSchools } from "@/lib/schoolHierarchy";
 import { useCurrentSchool } from "@/hooks/useCurrentSchool";
 import { NotificationBell } from "./NotificationBell";
 import { DemoBadge } from "./DemoBadge";
@@ -28,6 +29,7 @@ const ALL_SCHOOLS = "ALL";
 /** Bộ chọn trường: có từ 2 trường thì thêm "Tất cả trường"; người chỉ có một trường thì bị khóa vào trường đó. */
 function SchoolSelector() {
   const { schoolId, schools, canChooseAll, locked, select } = useCurrentSchool();
+  const groups = groupSchools(schools);
   if (schools.length === 0 && !canChooseAll) return null;
 
   return (
@@ -41,10 +43,18 @@ function SchoolSelector() {
       </SelectTrigger>
       <SelectContent>
         {canChooseAll && <SelectItem value={ALL_SCHOOLS}>Tất cả trường</SelectItem>}
-        {schools.map((school) => (
-          <SelectItem key={school.id} value={school.id}>
-            {school.name}
-          </SelectItem>
+        {groups.map(({ school, branches }) => branches.length ? (
+          <SelectGroup key={school.id}>
+            <SelectLabel>{school.name}</SelectLabel>
+            <SelectItem value={school.id}>{school.name} (Trường chính)</SelectItem>
+            {branches.map((branch) => (
+              <SelectItem key={branch.id} value={branch.id} className="pl-8">
+                {branch.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        ) : (
+          <SelectItem key={school.id} value={school.id}>{school.name}</SelectItem>
         ))}
       </SelectContent>
     </Select>

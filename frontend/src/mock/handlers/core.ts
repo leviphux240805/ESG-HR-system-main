@@ -14,7 +14,7 @@ on("GET", "/me", ({ user }) => {
     roles: record.grants.map((g) => ({ ...g, functionGroups: g.functionGroups ?? [] })),
     schools: db()
       .schools.filter((s) => user.schoolIds.includes(s.id))
-      .map(({ id, code, name }) => ({ id, code, name })),
+      .map(({ id, code, name, type, parentId }) => ({ id, code, name, type, parentId })),
   };
 });
 

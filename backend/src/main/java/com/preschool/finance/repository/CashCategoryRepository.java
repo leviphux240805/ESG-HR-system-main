@@ -14,4 +14,6 @@ public interface CashCategoryRepository extends JpaRepository<CashCategory, UUID
 
 	Optional<CashCategory> findBySystemCode(String systemCode);
 
+	Optional<CashCategory> findByOrganizationIdAndSystemCode(UUID organizationId, String systemCode);
+
 }

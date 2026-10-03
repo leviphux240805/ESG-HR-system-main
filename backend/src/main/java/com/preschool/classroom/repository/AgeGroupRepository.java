@@ -12,6 +12,10 @@ public interface AgeGroupRepository extends JpaRepository<AgeGroup, UUID> {
 
 	List<AgeGroup> findAllByOrderByOrderNo();
 
+	List<AgeGroup> findAllByOrganizationIdOrderByOrderNo(UUID organizationId);
+
 	Optional<AgeGroup> findByCode(String code);
+
+	Optional<AgeGroup> findByOrganizationIdAndCode(UUID organizationId, String code);
 
 }

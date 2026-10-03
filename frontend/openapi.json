@@ -18254,17 +18254,26 @@
           "name" : {
             "type" : "string"
           },
+          "parentId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Trường chính của phân hiệu"
+          },
           "phone" : {
             "type" : "string"
           },
           "provinceCode" : {
             "type" : "string"
           },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "MAIN", "BRANCH" ]
+          },
           "wardCode" : {
             "type" : "string"
           }
         },
-        "required" : [ "active", "canEdit", "code", "id", "name" ]
+        "required" : [ "active", "canEdit", "code", "id", "name", "type" ]
       },
       "SchoolMetrics" : {
         "type" : "object",
@@ -18386,9 +18395,18 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "parentId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Trường chính của phân hiệu"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "MAIN", "BRANCH" ]
           }
         },
-        "required" : [ "code", "id", "name" ]
+        "required" : [ "code", "id", "name", "type" ]
       },
       "SchoolYearDto" : {
         "type" : "object",

@@ -5547,8 +5547,15 @@ export interface components {
             id: string;
             licenseNo?: string;
             name: string;
+            /**
+             * Format: uuid
+             * @description Trường chính của phân hiệu
+             */
+            parentId?: string;
             phone?: string;
             provinceCode?: string;
+            /** @enum {string} */
+            type: "MAIN" | "BRANCH";
             wardCode?: string;
         };
         SchoolMetrics: {
@@ -5603,8 +5610,18 @@ export interface components {
             code: string;
             licenseNo?: string;
             name: string;
+            /**
+             * Format: uuid
+             * @description Bắt buộc với phân hiệu: trường chính cùng tổ chức
+             */
+            parentId?: string;
             phone?: string;
             provinceCode?: string;
+            /**
+             * @description Rỗng = trường chính
+             * @enum {string}
+             */
+            type?: "MAIN" | "BRANCH";
             wardCode?: string;
         };
         SchoolSummary: {
@@ -5612,6 +5629,13 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            /**
+             * Format: uuid
+             * @description Trường chính của phân hiệu
+             */
+            parentId?: string;
+            /** @enum {string} */
+            type: "MAIN" | "BRANCH";
         };
         SchoolYearDto: {
             current: boolean;

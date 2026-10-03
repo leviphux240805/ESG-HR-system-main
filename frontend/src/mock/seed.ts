@@ -65,9 +65,10 @@ const FOOD_SUPPLIERS = ["Công ty Thực phẩm sạch Hà Nội", "HTX rau an t
 const formatDay = (date: string) => `${date.slice(8)}/${date.slice(5, 7)}`;
 
 const SCHOOL_DEFS = [
-  { code: "MNV-HB", name: "Trường Hoa Ban", address: "Số 18 Nguyễn Chí Thanh, phường Láng, Hà Nội", classes: ["Ong Vàng", "Thỏ Ngọc", "Họa Mi", "Sóc Nâu"] },
-  { code: "MNV-SM", name: "Trường Sen Mai", address: "Số 45 Lê Văn Lương, phường Yên Hòa, Hà Nội", classes: ["Cá Heo", "Bướm Xinh", "Sơn Ca", "Hướng Dương"] },
-];
+  { code: "PBC", name: "Trường MN Phan Bội Châu", type: "MAIN" as const, provinceCode: "31", wardCode: "11311", addressDetail: "85 Quang Trung", classes: ["Ong Vàng", "Thỏ Ngọc", "Họa Mi", "Sóc Nâu"] },
+  { code: "PBC-PH1", name: "Trường MN Phan Bội Châu – Phân hiệu 1", type: "BRANCH" as const, parentCode: "PBC", provinceCode: "31", wardCode: "11311", addressDetail: "134 Hạ Lý", classes: ["Cá Heo", "Bướm Xinh", "Sơn Ca", "Hướng Dương"] },
+  { code: "PBC-PH2", name: "Trường MN Phan Bội Châu – Phân hiệu 2", type: "BRANCH" as const, parentCode: "PBC", provinceCode: "31", wardCode: "11311", addressDetail: "191 Phan Bội Châu", classes: ["Mặt Trời", "Cầu Vồng", "Sao Mai", "Măng Non"] },
+] as const;
 
 // Mỗi cơ sở 15 nhân viên
 const STAFF_PLAN: { position: StaffRec["position"]; count: number }[] = [
@@ -211,7 +212,16 @@ export function generateDb(todayDate = new Date()): DemoDB {
   let staffNo = 0;
   let childNo = 0;
   SCHOOL_DEFS.forEach((def, schoolIndex) => {
-    const school = { id: faker.string.uuid(), code: def.code, name: def.name, address: def.address };
+    const school = {
+      id: faker.string.uuid(),
+      code: def.code,
+      name: def.name,
+      type: def.type,
+      parentId: def.type === "BRANCH" ? db.schools.find((item) => item.code === def.parentCode)!.id : undefined,
+      provinceCode: def.provinceCode,
+      wardCode: def.wardCode,
+      addressDetail: def.addressDetail,
+    };
     db.schools.push(school);
     const members: StaffRec[] = [];
     for (const { position, count } of STAFF_PLAN) {

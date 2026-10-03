@@ -5,6 +5,8 @@
 Theo `docs/hoan-thien.md`: 11/11 module đã có API thật và mock cùng dữ liệu (Quyền → Báo cáo). Còn lại: Tài liệu
 (trang có sẵn nhưng chưa vào menu, chưa có mock) – cần khách duyệt giao diện trước khi làm.
 
+Đã thêm mô hình trường chính/phân hiệu và dữ liệu Trường MN Phan Bội Châu cùng hai phân hiệu; bộ chọn và trang Trường hiển thị theo nhóm.
+
 ## Kiểm thử trước bàn giao (2026-10-03)
 
 Xong, kết quả và kịch bản UAT ở `docs/kiem-thu.md`: backend 240/240, Vitest 107/107, E2E 53 qua / 0 lỗi / 6 bỏ qua

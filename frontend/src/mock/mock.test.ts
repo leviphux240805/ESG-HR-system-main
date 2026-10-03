@@ -26,11 +26,15 @@ describe("dữ liệu demo", () => {
     const a = generateDb(day);
     const b = generateDb(day);
     expect(a.children.map((c) => c.fullName)).toEqual(b.children.map((c) => c.fullName));
-    expect(a.schools).toHaveLength(2);
-    expect(a.classes).toHaveLength(8);
-    expect(a.staff).toHaveLength(30);
-    expect(a.children.length).toBeGreaterThanOrEqual(184);
-    expect(a.children.length).toBeLessThanOrEqual(216);
+    expect(a.schools).toHaveLength(3);
+    expect(a.schools.map((school) => school.code)).toEqual(["PBC", "PBC-PH1", "PBC-PH2"]);
+    expect(a.schools[0]).toMatchObject({ type: "MAIN", provinceCode: "31", wardCode: "11311", addressDetail: "85 Quang Trung" });
+    expect(a.schools[1]).toMatchObject({ type: "BRANCH", parentId: a.schools[0].id, addressDetail: "134 Hạ Lý" });
+    expect(a.schools[2]).toMatchObject({ type: "BRANCH", parentId: a.schools[0].id, addressDetail: "191 Phan Bội Châu" });
+    expect(a.classes).toHaveLength(12);
+    expect(a.staff).toHaveLength(45);
+    expect(a.children.length).toBeGreaterThanOrEqual(276);
+    expect(a.children.length).toBeLessThanOrEqual(324);
     expect(a.startDate).toBe("2026-07-01");
   });
 });
@@ -287,19 +291,23 @@ describe("API giả", () => {
 
   it("hiệu trưởng: \"Tất cả trường\" gộp số liệu, tạo trường mới, gán phó hiệu trưởng cần nhóm chức năng", async () => {
     setSessionRole("principal");
-    const [a, b] = db().schools;
+    const schools = db().schools;
+    const a = schools[0];
     const all = await call<{ chainView: boolean; schools: { schoolId: string }[]; totals: { children: number } }>("GET", "/reports/dashboard");
     expect(all.data.chainView).toBe(true);
-    expect(all.data.schools.map((s) => s.schoolId)).toEqual([a.id, b.id]);
+    expect(all.data.schools.map((s) => s.schoolId)).toEqual(schools.map((school) => school.id));
     const one = await call<{ totals: { children: number } }>("GET", "/reports/dashboard", undefined, a.id);
     expect(all.data.totals.children).toBeGreaterThan(one.data.totals.children);
     const approvals = await call<unknown[]>("GET", "/approvals");
     const approvalsA = await call<unknown[]>("GET", "/approvals", undefined, a.id);
     expect(approvals.data.length).toBeGreaterThanOrEqual(approvalsA.data.length);
 
-    const created = await call<{ id: string; canEdit: boolean }>("POST", "/schools", { code: "MNV-MOI", name: "Trường Mới" });
+    const created = await call<{ id: string; type: string; canEdit: boolean }>("POST", "/schools", { code: "MNV-MOI", name: "Trường Mới" });
     expect(created.data.canEdit).toBe(true);
-    expect((await call<{ schools: { id: string }[] }>("GET", "/me")).data.schools.map((s) => s.id)).toContain(created.data.id);
+    expect(created.data.type).toBe("MAIN");
+    const meResponse = await call<{ schools: { id: string; code: string; type: string; parentId?: string }[] }>("GET", "/me");
+    expect(meResponse.data.schools.map((s) => s.id)).toContain(created.data.id);
+    expect(meResponse.data.schools.find((s) => s.code === "PBC-PH1")).toMatchObject({ type: "BRANCH", parentId: schools[0].id });
 
     type Account = { id: string; principal: boolean; roles: { role: string; editable: boolean }[] };
     const accounts = (await call<{ items: Account[] }>("GET", "/accounts?size=100", undefined, a.id)).data.items;

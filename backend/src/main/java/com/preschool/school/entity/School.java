@@ -7,6 +7,8 @@ import org.hibernate.annotations.Filter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
 @Entity
@@ -19,6 +21,14 @@ public class School extends OrganizationEntity {
 
 	@Column(nullable = false)
 	private String name;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private SchoolType type = SchoolType.MAIN;
+
+	/** Trường chính của phân hiệu; rỗng với trường chính. */
+	@Column(name = "parent_id")
+	private java.util.UUID parentId;
 
 	@Column(name = "province_code")
 	private String provinceCode;
@@ -60,6 +70,20 @@ public class School extends OrganizationEntity {
 		this.addressDetail = addressDetail;
 		this.phone = phone;
 		this.licenseNo = licenseNo;
+	}
+
+	/** Đặt loại trường; phân hiệu phải có trường chính, trường chính thì không. */
+	public void setHierarchy(SchoolType type, java.util.UUID parentId) {
+		this.type = type;
+		this.parentId = type == SchoolType.BRANCH ? parentId : null;
+	}
+
+	public SchoolType getType() {
+		return type;
+	}
+
+	public java.util.UUID getParentId() {
+		return parentId;
 	}
 
 	public String getCode() {

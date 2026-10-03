@@ -54,7 +54,8 @@ public class MeController {
 					.toList(),
 				accessService.allowedSchools(access)
 					.stream()
-					.map(s -> new MeResponse.SchoolSummary(s.getId(), s.getCode(), s.getName()))
+					.map(s -> new MeResponse.SchoolSummary(s.getId(), s.getCode(), s.getName(), s.getType(),
+							s.getParentId()))
 					.toList());
 	}
 

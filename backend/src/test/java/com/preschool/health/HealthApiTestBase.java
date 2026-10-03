@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import com.jayway.jsonpath.JsonPath;
 import com.preschool.ApiTestSupport;
+import com.preschool.TestData;
 import com.preschool.account.entity.RoleCode;
 import com.preschool.account.entity.User;
 import com.preschool.classroom.repository.AgeGroupRepository;
@@ -56,7 +57,8 @@ public abstract class HealthApiTestBase extends ApiTestSupport {
 			.getResponse()
 			.getContentAsString();
 		yearId = JsonPath.read(year, "$.id");
-		ageGroupId = ageGroups.findByCode("MAU_GIAO_4_5").orElseThrow().getId().toString();
+		ageGroupId = ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "MAU_GIAO_4_5")
+			.orElseThrow().getId().toString();
 	}
 
 	protected String createClass(String name) throws Exception {

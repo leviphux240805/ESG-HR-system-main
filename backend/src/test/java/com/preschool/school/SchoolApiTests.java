@@ -55,6 +55,7 @@ class SchoolApiTests extends ApiTestSupport {
 		String code = code();
 		String id = JsonPath.read(create(principal, code).andExpect(status().isCreated())
 			.andExpect(jsonPath("$.canEdit").value(true))
+			.andExpect(jsonPath("$.type").value("MAIN"))
 			.andReturn().getResponse().getContentAsString(), "$.id");
 
 		as(principal, get("/api/v1/me")).andExpect(jsonPath("$.schools", hasSize(3)))

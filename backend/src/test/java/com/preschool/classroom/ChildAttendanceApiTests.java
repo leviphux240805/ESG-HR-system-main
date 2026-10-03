@@ -89,7 +89,8 @@ class ChildAttendanceApiTests extends ApiTestSupport {
 			.getResponse()
 			.getContentAsString();
 		String yearId = JsonPath.read(year, "$.id");
-		String ageGroupId = ageGroups.findByCode("MAU_GIAO_4_5").orElseThrow().getId().toString();
+		String ageGroupId = ageGroups.findByOrganizationIdAndCode(TestData.DEFAULT_ORG, "MAU_GIAO_4_5")
+			.orElseThrow().getId().toString();
 		classId = createClass(yearId, ageGroupId, "Chồi 1");
 		otherClassId = createClass(yearId, ageGroupId, "Chồi 2");
 		as(principalA, post("/api/v1/classes/" + classId + "/teachers").contentType(MediaType.APPLICATION_JSON)

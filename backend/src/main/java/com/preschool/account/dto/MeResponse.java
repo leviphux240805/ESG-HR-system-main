@@ -37,7 +37,9 @@ public record MeResponse(
 	public record SchoolSummary(
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) UUID id,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String code,
-			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String name) {
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String name,
+			@Schema(requiredMode = Schema.RequiredMode.REQUIRED) com.preschool.school.entity.SchoolType type,
+			@Schema(description = "Trường chính của phân hiệu") UUID parentId) {
 	}
 
 }

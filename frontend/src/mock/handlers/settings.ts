@@ -20,7 +20,11 @@ const schoolDto = (ctx: Ctx, s: ReturnType<typeof db>["schools"][number]): S["Sc
   id: s.id,
   code: s.code,
   name: s.name,
-  addressDetail: s.address,
+  type: s.type,
+  parentId: s.parentId,
+  provinceCode: s.provinceCode,
+  wardCode: s.wardCode,
+  addressDetail: s.addressDetail,
   phone: s.phone,
   active: s.active !== false,
   canEdit: principalSchools(ctx).includes(s.id),
@@ -39,12 +43,12 @@ function applySchool(ctx: Ctx, id: string | null, body: S["SchoolRequest"]) {
   if (!code || !name) throw new MockError(400, "Vui lòng nhập mã và tên trường.");
   if (db().schools.some((s) => s.id !== id && s.code.toLowerCase() === code.toLowerCase()))
     throw new MockError(409, "Mã trường đã được dùng.", "SCHOOL_CODE_EXISTS");
-  return { code, name, address: body.addressDetail ?? "", phone: body.phone };
+  return { code, name, provinceCode: body.provinceCode ?? "", wardCode: body.wardCode ?? "", addressDetail: body.addressDetail ?? "", phone: body.phone };
 }
 
 on("POST", "/schools", (ctx) => {
   requirePrincipal(ctx);
-  const school = { id: newId(), ...applySchool(ctx, null, ctx.body), active: true };
+  const school = { id: newId(), ...applySchool(ctx, null, ctx.body), type: "MAIN" as const, active: true };
   db().schools.push(school);
   db().users[ctx.user.role].grants.push({ role: "PRINCIPAL", schoolId: school.id });
   return schoolDto(ctx, school);

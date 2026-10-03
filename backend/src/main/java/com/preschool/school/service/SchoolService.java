@@ -69,8 +69,9 @@ public class SchoolService {
 		me.addRole(RoleCode.PRINCIPAL, school.getId());
 		users.save(me);
 		audit.record("schools", school.getId(), Action.CREATE, null, snapshot(school));
-		return new SchoolDto(school.getId(), school.getCode(), school.getName(), school.getProvinceCode(),
-				school.getWardCode(), school.getAddressDetail(), school.getPhone(), school.getLicenseNo(), true, true);
+		return new SchoolDto(school.getId(), school.getCode(), school.getName(), school.getType(), school.getParentId(),
+				school.getProvinceCode(), school.getWardCode(), school.getAddressDetail(), school.getPhone(),
+				school.getLicenseNo(), true, true);
 	}
 
 	public SchoolDto update(UUID id, SchoolRequest r) {
@@ -122,8 +123,8 @@ public class SchoolService {
 	}
 
 	private static SchoolDto toDto(School s, SchoolAccess access) {
-		return new SchoolDto(s.getId(), s.getCode(), s.getName(), s.getProvinceCode(), s.getWardCode(),
-				s.getAddressDetail(), s.getPhone(), s.getLicenseNo(), s.isActive(),
+		return new SchoolDto(s.getId(), s.getCode(), s.getName(), s.getType(), s.getParentId(), s.getProvinceCode(),
+				s.getWardCode(), s.getAddressDetail(), s.getPhone(), s.getLicenseNo(), s.isActive(),
 				access.hasRole(RoleCode.PRINCIPAL, s.getId()));
 	}
 
