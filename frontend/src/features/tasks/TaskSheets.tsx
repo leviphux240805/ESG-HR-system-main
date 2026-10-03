@@ -134,12 +134,20 @@ export function TaskFormSheet({ open, onOpenChange, task }: { open: boolean; onO
               )}
               {(assignees.data ?? []).map((s) => {
                 const checked = field.value.includes(s.id);
+                const checkboxId = `task-assignee-${s.id}`;
                 return (
-                  <label key={s.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 hover:bg-muted">
-                    <Checkbox checked={checked} onCheckedChange={(c) => field.onChange(c === true ? [...field.value, s.id] : field.value.filter((id) => id !== s.id))} />
-                    <span className="flex-1 text-sm">{s.fullName}</span>
-                    <span className="text-xs text-muted-foreground">{POSITION_LABELS[s.position]}</span>
-                  </label>
+                  <div key={s.id} className="flex min-h-11 items-center gap-3 rounded-md px-2 hover:bg-muted">
+                    <Checkbox
+                      id={checkboxId}
+                      name={field.name}
+                      aria-labelledby={`${checkboxId}-name`}
+                      aria-describedby={`${checkboxId}-position`}
+                      checked={checked}
+                      onCheckedChange={(c) => field.onChange(c === true ? [...field.value, s.id] : field.value.filter((id) => id !== s.id))}
+                    />
+                    <span id={`${checkboxId}-name`} className="flex-1 text-sm">{s.fullName}</span>
+                    <span id={`${checkboxId}-position`} className="text-xs text-muted-foreground">{POSITION_LABELS[s.position]}</span>
+                  </div>
                 );
               })}
             </div>
@@ -252,12 +260,24 @@ export function TaskDetailSheet({ taskId, onClose, onEdit }: { taskId: string | 
                 <p className="text-sm font-medium">
                   Checklist ({task.checklistDone}/{task.checklistTotal})
                 </p>
-                {detail.checklist.map((item) => (
-                  <label key={item.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 hover:bg-muted">
-                    <Checkbox checked={item.done} disabled={busy || task.status === "DONE"} onCheckedChange={(c) => run(() => toggleChecklist(task.id, item.id, c === true))} />
-                    <span className={cn("text-sm", item.done && "text-muted-foreground line-through")}>{item.content}</span>
-                  </label>
-                ))}
+                {detail.checklist.map((item) => {
+                  const checkboxId = `task-checklist-${item.id}`;
+                  return (
+                    <div key={item.id} className="flex min-h-11 items-center gap-3 rounded-md px-2 hover:bg-muted">
+                      <Checkbox
+                        id={checkboxId}
+                        name="checklistItems"
+                        aria-labelledby={`${checkboxId}-label`}
+                        checked={item.done}
+                        disabled={busy || task.status === "DONE"}
+                        onCheckedChange={(c) => run(() => toggleChecklist(task.id, item.id, c === true))}
+                      />
+                      <span id={`${checkboxId}-label`} className={cn("text-sm", item.done && "text-muted-foreground line-through")}>
+                        {item.content}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
